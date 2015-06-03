@@ -26,18 +26,30 @@ import java.util.Map;
 import org.apache.cloudstack.spring.module.model.ModuleDefinition;
 import org.apache.cloudstack.spring.module.model.ModuleDefinitionSet;
 import org.apache.cloudstack.spring.module.model.impl.DefaultModuleDefinitionSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ModuleBasedContextFactory {
 
+    private final Logger log = LoggerFactory.getLogger(this.getClass());
+    
+    
     public ModuleDefinitionSet loadModules(Collection<ModuleDefinition> defs, String root) throws IOException {
-        
         Map<String, ModuleDefinition> modules = wireUpModules(root, defs);
-        
+        printFoundModules(modules.values());
+       
         DefaultModuleDefinitionSet moduleSet = new DefaultModuleDefinitionSet(modules, root);
         moduleSet.load();
         
         return moduleSet;
     }
+    
+
+	private void printFoundModules(Collection<ModuleDefinition> defs) {
+		for(ModuleDefinition m : defs){
+        	log.debug(String.format("Module [%s] found by module definition locator.", m.getName()));
+        }
+	}
     
     protected Map<String, ModuleDefinition> wireUpModules(String root, Collection<ModuleDefinition> defs) throws IOException {
         Map<String, ModuleDefinition> modules = new HashMap<String, ModuleDefinition>();

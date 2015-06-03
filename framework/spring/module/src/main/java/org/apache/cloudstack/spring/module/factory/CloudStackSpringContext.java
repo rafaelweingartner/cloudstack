@@ -62,12 +62,19 @@ public class CloudStackSpringContext {
     
     public void init() throws IOException {
         Collection<ModuleDefinition> defs = loader.locateModules(contextName);
+        printFoundModules(defs);
         
         if ( defs.size() == 0 )
             throw new RuntimeException("No modules found to load for Spring");
         
         moduleDefinitionSet = factory.loadModules(defs, baseName);
     }
+
+	private void printFoundModules(Collection<ModuleDefinition> defs) {
+		for(ModuleDefinition m : defs){
+        	log.debug(String.format("Module [%s] found by module definition locator.", m.getName()));
+        }
+	}
     
     public void registerShutdownHook() {
         ApplicationContext base = moduleDefinitionSet.getApplicationContext(baseName);

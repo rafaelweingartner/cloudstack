@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.cloudstack.spring.module.locator.ModuleDefinitionLocator;
 import org.apache.cloudstack.spring.module.model.ModuleDefinition;
 import org.apache.cloudstack.spring.module.model.impl.DefaultModuleDefinition;
@@ -33,6 +34,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 
 public class ClasspathModuleDefinitionLocator implements ModuleDefinitionLocator {
     
+	private final Logger logger = Logger.getLogger(this.getClass());
+	 
     protected ResourcePatternResolver getResolver() {
         return new PathMatchingResourcePatternResolver();
     }
@@ -48,12 +51,18 @@ public class ClasspathModuleDefinitionLocator implements ModuleDefinitionLocator
     protected Map<String, ModuleDefinition> discoverModules(String baseDir, ResourcePatternResolver resolver) throws IOException {
         Map<String, ModuleDefinition> result = new HashMap<String, ModuleDefinition>();
         
-        for ( Resource r : resolver.getResources(ModuleLocationUtils.getModulesLocation(baseDir)) ) {
+        String modulesLocation = ModuleLocationUtils.getModulesLocation(baseDir);
+        logger.debug(String.format("Location in which we are looking for modules/extensions :%s", modulesLocation));
+		
+        for (Resource r : resolver.getResources(modulesLocation) ) {
             DefaultModuleDefinition def = new DefaultModuleDefinition(baseDir, r, resolver);
             def.init();
             
-            if ( def.isValid() )
-                result.put(def.getName(), def);
+            boolean isValid = def.isValid();
+			if (isValid){
+				result.put(def.getName(), def);
+			}
+			logger.debug(String.format("Module [%s] found on [%s], isModuleValid:[%s].", r.getFilename(), r.getFile().getAbsolutePath(), isValid));
         }
         
         return result;

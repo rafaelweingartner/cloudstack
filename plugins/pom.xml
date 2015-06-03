@@ -67,8 +67,9 @@
     <module>alert-handlers/syslog-alerts</module>
     <module>network-elements/internal-loadbalancer</module>
     <module>network-elements/vxlan</module>
-    <!-- do we really need this?! -->
-    <module>consolidation</module>
+    <!-- do we really need this?! 
+	    <module>consolidation</module>
+    -->
   </modules>
 
   <dependencies>

@@ -76,7 +76,8 @@ public class NumbersUtil {
             return Long.toString(bytes) + " bytes";
         }
         StringBuilder builder = new StringBuilder();
-        Formatter format = new Formatter(builder, Locale.getDefault());
+        //TODO should we really set it static to US format?!
+        Formatter format = new Formatter(builder, Locale.US);
         if (bytes < MB) {
             format.format("%.2f KB", (float)bytes / (float)KB);
         } else if (bytes < GB) {

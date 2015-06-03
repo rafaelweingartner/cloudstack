@@ -27,15 +27,15 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
-import org.apache.cloudstack.api.Identity;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.org.Cluster;
-import com.cloud.org.Managed.ManagedState;
 import com.cloud.org.Grouping;
+import com.cloud.org.Managed.ManagedState;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.db.GenericDao;
-import org.apache.cloudstack.api.InternalIdentity;
 
 @Entity
 @Table(name="cluster")
@@ -79,6 +79,19 @@ public class ClusterVO implements Cluster {
     @Column(name="uuid")
     String uuid;
 
+    /** 
+     * Attributes used by the consolidation agent to optimize the clusters of the cloud environment.
+     * */
+    @Column(name="last_consolidated")
+    @Temporal(value=TemporalType.TIMESTAMP)
+    private Date lastConsolidated;
+    
+    /**
+     * Consolidation status (Consolidated, Consolidating)
+     * */
+    @Column(name="consolidation_Status")
+    @Enumerated(value=EnumType.STRING)
+    private String consolidationStatus;
     public ClusterVO() {
     	clusterType = Cluster.ClusterType.CloudManaged;
     	allocationState = Grouping.AllocationState.Enabled;
@@ -186,4 +199,20 @@ public class ClusterVO implements Cluster {
     public void setUuid(String uuid) {
     	this.uuid = uuid;
     }
+
+	public Date getLastConsolidated() {
+		return lastConsolidated;
+	}
+
+	public void setLastConsolidated(Date lastConsolidated) {
+		this.lastConsolidated = lastConsolidated;
+	}
+
+	public String getConsolidationStatus() {
+		return consolidationStatus;
+	}
+
+	public void setConsolidationStatus(String consolidationStatus) {
+		this.consolidationStatus = consolidationStatus;
+	}
 }

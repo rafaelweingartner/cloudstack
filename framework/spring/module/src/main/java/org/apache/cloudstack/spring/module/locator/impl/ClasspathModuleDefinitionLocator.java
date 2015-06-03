@@ -62,7 +62,7 @@ public class ClasspathModuleDefinitionLocator implements ModuleDefinitionLocator
 			if (isValid){
 				result.put(def.getName(), def);
 			}
-			logger.debug(String.format("Module [%s] found on [%s], isModuleValid:[%s].", r.getFilename(), r.getFile().getAbsolutePath(), isValid));
+			logger.debug(String.format("Module [%s], isModuleValid:[%s].", r.getFilename(), isValid));
         }
         
         return result;

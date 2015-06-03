@@ -22,7 +22,7 @@
 	<dependencies>
 		<!-- dependency of the consolidation agent -->
 		<dependency>
-			<groupId>org.apache.cloudstack</groupId>
+			<groupId>br.ufsc.lrg.cloudstack</groupId>
 			<artifactId>cloudstack-plugin-consolidation</artifactId>
 			<version>${project.version}</version>
 		</dependency>

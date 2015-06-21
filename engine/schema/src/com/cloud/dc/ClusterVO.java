@@ -108,7 +108,7 @@ public class ClusterVO implements Cluster {
     	this.allocationState = Grouping.AllocationState.Enabled;
     	this.managedState = ManagedState.Managed;
     	this.uuid = UUID.randomUUID().toString();
-    	this.consolidationStatus = ConsolidationStatus.ToConsolidate;
+    	this.consolidationStatus = ConsolidationStatus.Consolidated;
     }
 
     public long getId() {
@@ -217,37 +217,21 @@ public class ClusterVO implements Cluster {
 		return consolidationStatus;
 	}
 
-	/**
-	 * @param String, can be "Consolidating", "ToConsolidate" or "Unavailable", and corresponds to its respective enum type 
-	 * */
-	public void setConsolidationStatus(String ConsolidaStatus) {
-		if(ConsolidaStatus == "Consolidating")
-			this.consolidationStatus = ConsolidationStatus.Consolidating;
-		if(ConsolidaStatus == "ToConsolidate")
-			this.consolidationStatus = ConsolidationStatus.ToConsolidate;
-		if(ConsolidaStatus == "Unavailable")
-			this.consolidationStatus = ConsolidationStatus.Unavailable;
+	public void setConsolidationStatus(ConsolidationStatus consolidationStatus) {
+		this.consolidationStatus = consolidationStatus;
 	}
 	
 	/**
 	 * Consolidation status of the cluster (Consolidating, ToConsolidate or Unavailable) 
 	 * */
 	public static enum ConsolidationStatus {
-		Consolidating {
-		    public String toString() {
-		        return "Consolidating";
-		    }
-		},
-		ToConsolidate {
-		    public String toString() {
-		        return "ToConsolidate";
-		    }
-		},
-		Unavailable {
-		    public String toString() {
-		        return "Unavailable";
-		    }
-		};
+		Consolidating,
+		Consolidated;
+		
+		public static boolean isConsolidating(ConsolidationStatus consolidationStatus){
+			return Consolidating == consolidationStatus;
+		}
+		
 	}
 	
 }

@@ -91,7 +91,8 @@ public class ClusterVO implements Cluster {
      * */
     @Column(name="consolidation_Status")
     @Enumerated(value=EnumType.STRING)
-    private String consolidationStatus;
+    private ConsolidationStatus consolidationStatus;
+    
     public ClusterVO() {
     	clusterType = Cluster.ClusterType.CloudManaged;
     	allocationState = Grouping.AllocationState.Enabled;
@@ -107,6 +108,7 @@ public class ClusterVO implements Cluster {
     	this.allocationState = Grouping.AllocationState.Enabled;
     	this.managedState = ManagedState.Managed;
     	this.uuid = UUID.randomUUID().toString();
+    	this.consolidationStatus = ConsolidationStatus.ToConsolidate;
     }
 
     public long getId() {
@@ -207,12 +209,45 @@ public class ClusterVO implements Cluster {
 	public void setLastConsolidated(Date lastConsolidated) {
 		this.lastConsolidated = lastConsolidated;
 	}
-
-	public String getConsolidationStatus() {
+	
+	/**
+	 * @return consolidationStatus can be Consolidating, ToConsolidate or Unavailable 
+	 * */
+	public ConsolidationStatus getConsolidationStatus() {
 		return consolidationStatus;
 	}
 
-	public void setConsolidationStatus(String consolidationStatus) {
-		this.consolidationStatus = consolidationStatus;
+	/**
+	 * @param String, can be "Consolidating", "ToConsolidate" or "Unavailable", and corresponds to its respective enum type 
+	 * */
+	public void setConsolidationStatus(String ConsolidaStatus) {
+		if(ConsolidaStatus == "Consolidating")
+			this.consolidationStatus = ConsolidationStatus.Consolidating;
+		if(ConsolidaStatus == "ToConsolidate")
+			this.consolidationStatus = ConsolidationStatus.ToConsolidate;
+		if(ConsolidaStatus == "Unavailable")
+			this.consolidationStatus = ConsolidationStatus.Unavailable;
 	}
+	
+	/**
+	 * Consolidation status of the cluster (Consolidating, ToConsolidate or Unavailable) 
+	 * */
+	public static enum ConsolidationStatus {
+		Consolidating {
+		    public String toString() {
+		        return "Consolidating";
+		    }
+		},
+		ToConsolidate {
+		    public String toString() {
+		        return "ToConsolidate";
+		    }
+		},
+		Unavailable {
+		    public String toString() {
+		        return "Unavailable";
+		    }
+		};
+	}
+	
 }

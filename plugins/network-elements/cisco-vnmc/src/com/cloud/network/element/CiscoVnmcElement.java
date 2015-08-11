@@ -29,10 +29,10 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 import javax.persistence.EntityExistsException;
 
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -125,7 +125,6 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionCallbackWithExceptionNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.ExceptionUtil;
@@ -984,4 +983,13 @@ public class CiscoVnmcElement extends AdapterBase implements SourceNatServicePro
             _networkAsa1000vMapDao.remove(networkAsaMap.getId());
         }
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getType() != Host.Type.ExternalFirewall) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for ExternalFirewall ");			
+	}
+
 }

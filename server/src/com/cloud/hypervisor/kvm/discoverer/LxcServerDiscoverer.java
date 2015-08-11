@@ -16,8 +16,13 @@
 // under the License.
 package com.cloud.hypervisor.kvm.discoverer;
 
+import com.cloud.host.Host;
+import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.Discoverer;
+import com.cloud.utils.exception.CloudRuntimeException;
+
 import org.apache.log4j.Logger;
 
 import javax.ejb.Local;
@@ -29,5 +34,13 @@ public class LxcServerDiscoverer extends LibvirtServerDiscoverer {
     public Hypervisor.HypervisorType getHypervisorType() {
         return Hypervisor.HypervisorType.LXC;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.LXC) {
+            return ;
+        }
+		throw new CloudRuntimeException("Shut down Host not implemented for LXC");
+	}
 
 }

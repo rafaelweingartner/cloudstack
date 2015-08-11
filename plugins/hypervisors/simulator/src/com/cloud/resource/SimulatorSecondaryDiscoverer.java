@@ -173,4 +173,9 @@ public class SimulatorSecondaryDiscoverer extends SecondaryStorageDiscoverer imp
     public boolean processTimeout(long agentId, long seq) {
         return false;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;		
+	}
 }

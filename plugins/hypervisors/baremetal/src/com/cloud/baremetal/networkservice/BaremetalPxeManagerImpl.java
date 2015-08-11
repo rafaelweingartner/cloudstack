@@ -32,7 +32,6 @@ import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.AddBaremetalKickStartPxeCmd;
 import org.apache.cloudstack.api.AddBaremetalPxeCmd;
 import org.apache.cloudstack.api.AddBaremetalPxePingServerCmd;
@@ -50,6 +49,7 @@ import com.cloud.deploy.DeployDestination;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.PhysicalNetworkDao;
 import com.cloud.network.dao.PhysicalNetworkVO;
@@ -248,5 +248,13 @@ public class BaremetalPxeManagerImpl extends ManagerBase implements BaremetalPxe
 	    cmds.add(AddBaremetalPxePingServerCmd.class);
 	    cmds.add(ListBaremetalPxeServersCmd.class);
 		return cmds;
+	}
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.BareMetal) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for BareMetal ");		
 	}
 }

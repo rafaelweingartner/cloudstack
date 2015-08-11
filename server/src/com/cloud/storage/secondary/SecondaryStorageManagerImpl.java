@@ -1395,4 +1395,9 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
     public void setSecondaryStorageVmAllocators(List<SecondaryStorageVmAllocator> ssVmAllocators) {
         this._ssVmAllocators = ssVmAllocators;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;		
+	}
 }

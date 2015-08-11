@@ -29,11 +29,10 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.ConfigurePortForwardingRulesOnLogicalRouterAnswer;
@@ -949,5 +948,12 @@ NiciraNvpElementService, ResourceStateAdapter, IpDeployer {
 
         return answer.getResult();
     }
+
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.L2Networking) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented for L2Networking");
+	}
 
 }

@@ -16,6 +16,46 @@
 // under the License.
 package com.cloud.hypervisor.xen.resource;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringReader;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Queue;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
+
+import javax.ejb.Local;
+import javax.naming.ConfigurationException;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
+import org.apache.cloudstack.storage.to.TemplateObjectTO;
+import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
+import org.apache.xmlrpc.XmlRpcException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
+
 import com.cloud.agent.IAgentControl;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.AttachIsoCommand;
@@ -93,6 +133,7 @@ import com.cloud.agent.api.SetupAnswer;
 import com.cloud.agent.api.SetupCommand;
 import com.cloud.agent.api.SetupGuestNetworkAnswer;
 import com.cloud.agent.api.SetupGuestNetworkCommand;
+import com.cloud.agent.api.ShutdownCommand;
 import com.cloud.agent.api.StartAnswer;
 import com.cloud.agent.api.StartCommand;
 import com.cloud.agent.api.StartupCommand;
@@ -239,44 +280,6 @@ import com.xensource.xenapi.VLAN;
 import com.xensource.xenapi.VM;
 import com.xensource.xenapi.VMGuestMetrics;
 import com.xensource.xenapi.XenAPIObject;
-import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
-import org.apache.cloudstack.storage.to.TemplateObjectTO;
-import org.apache.cloudstack.storage.to.VolumeObjectTO;
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-import org.apache.xmlrpc.XmlRpcException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-
-import javax.ejb.Local;
-import javax.naming.ConfigurationException;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Queue;
-import java.util.Random;
-import java.util.Set;
-import java.util.UUID;
 
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process
@@ -607,12 +610,30 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             return execute((PvlanSetupCommand) cmd);
         } else if (clazz == SetMonitorServiceCommand.class) {
             return execute((SetMonitorServiceCommand) cmd);
+        } else if (clazz == ShutdownCommand.class) {
+            return shutDown((ShutdownCommand) cmd);
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
     }
 
-    protected void scaleVM(Connection conn, VM vm, VirtualMachineTO vmSpec, Host host) throws XenAPIException, XmlRpcException {
+    private Answer shutDown(ShutdownCommand cmd) {
+    	Connection conn = getConnection();
+    	try {
+			Host host = Host.getByUuid(conn, _host.uuid);
+			host.disable(conn);
+			host.shutdown(conn);
+    	} catch (BadServerResponse e) {
+			e.printStackTrace();
+		} catch (XenAPIException e) {
+			e.printStackTrace();
+		} catch (XmlRpcException e) {
+			e.printStackTrace();
+		}   	
+		return null;
+	}
+
+	protected void scaleVM(Connection conn, VM vm, VirtualMachineTO vmSpec, Host host) throws XenAPIException, XmlRpcException {
 
         Long staticMemoryMax = vm.getMemoryStaticMax(conn);
         Long staticMemoryMin = vm.getMemoryStaticMin(conn);
@@ -655,8 +676,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         try {
             Connection conn = getConnection();
             Set<VM> vms = VM.getByNameLabel(conn, vmName);
-            Host host = Host.getByUuid(conn, _host.uuid);
 
+            Host host = Host.getByUuid(conn, _host.uuid);
             // If DMC is not enable then don't execute this command.
             if (!isDmcEnabled(conn, host)) {
                 throw new CloudRuntimeException("Unable to scale the vm: " + vmName + " as DMC - Dynamic memory control is not enabled for the XenServer:" + _host.uuid + " ,check your license and hypervisor version.");

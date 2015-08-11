@@ -26,12 +26,12 @@ import java.util.UUID;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.response.ExternalLoadBalancerResponse;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -105,7 +105,6 @@ import com.cloud.offerings.dao.NetworkOfferingDao;
 import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceState;
 import com.cloud.resource.ResourceStateAdapter;
-import com.cloud.resource.ResourceStateAdapter.DeleteHostAnswer;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.user.Account;
@@ -1220,4 +1219,12 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
         }
         return null;
    }
+
+    @Override
+	public void shutDownHost(HostVO host) {
+    	if (host.getType() != com.cloud.host.Host.Type.ExternalLoadBalancer) {
+            return ;
+        }
+		throw new CloudRuntimeException("Shut down Host not implemented for ExternalLoadBalancer");		
+	}
 }

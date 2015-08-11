@@ -138,4 +138,12 @@ public interface ResourceManager extends ResourceService {
      * @return
      */
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId);
+    
+    
+    /**
+     * Power on a host with wake on lan (required support and correct configurations on target Host). 
+     * @see this method is used by a plugin in development, and was not planned to be used in other scope.
+     * @param HostVO
+     */
+    public void wakeOnLan(HostVO host); 
 }

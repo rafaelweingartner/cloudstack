@@ -44,6 +44,7 @@ import com.cloud.exception.DiscoveredWithErrorException;
 import com.cloud.exception.DiscoveryException;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceInUseException;
+import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor;
@@ -60,7 +61,6 @@ import com.cloud.hypervisor.vmware.resource.VmwareResource;
 import com.cloud.hypervisor.vmware.util.VmwareContext;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.Networks.TrafficType;
-import com.cloud.network.Network;
 import com.cloud.network.PhysicalNetwork;
 import com.cloud.network.VmwareTrafficLabel;
 import com.cloud.network.dao.CiscoNexusVSMDeviceDao;
@@ -79,6 +79,7 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 import com.cloud.utils.UriUtils;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.vmware.vim25.ClusterDasConfigInfo;
 import com.vmware.vim25.ManagedObjectReference;
 
@@ -825,5 +826,13 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
     public void setNetworkElements(List<NetworkElement> networkElements) {
         this.networkElements = networkElements;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.VMware) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for VMware ");		
+	}
 
 }

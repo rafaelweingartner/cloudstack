@@ -27,7 +27,7 @@ public class ShutdownCommand extends Command {
 
     private String reason;
     private String detail;
-
+    
     protected ShutdownCommand() {
         super();
     }
@@ -37,7 +37,7 @@ public class ShutdownCommand extends Command {
         this.reason = reason;
         this.detail = detail;
     }
-
+    
     /**
      * @return return the reason the agent shutdown.  If Unknown, call getDetail() for any details.
      */

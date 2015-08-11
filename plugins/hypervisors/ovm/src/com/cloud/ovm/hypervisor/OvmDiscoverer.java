@@ -37,6 +37,7 @@ import com.cloud.configuration.Config;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.exception.DiscoveryException;
+import com.cloud.host.Host;
 import com.cloud.host.HostInfo;
 import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -257,5 +258,13 @@ public class OvmDiscoverer extends DiscovererBase implements Discoverer, Resourc
         _resourceMgr.deleteRoutingHost(host, isForced, isForceDeleteStorage);
         return new DeleteHostAnswer(true);
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.Ovm) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for Ovm ");		
+	}
 
 }

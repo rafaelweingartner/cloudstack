@@ -28,6 +28,8 @@ import org.apache.cloudstack.api.command.admin.host.ReconnectHostCmd;
 import org.apache.cloudstack.api.command.admin.host.UpdateHostCmd;
 import org.apache.cloudstack.api.command.admin.host.UpdateHostPasswordCmd;
 
+//import com.cloud.host.HostVO;
+
 import com.cloud.exception.DiscoveryException;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceInUseException;
@@ -71,7 +73,7 @@ public interface ResourceService {
     List<? extends Host> discoverHosts(AddSecondaryStorageCmd cmd) throws IllegalArgumentException, DiscoveryException, InvalidParameterValueException;
 
     Host maintain(PrepareForMaintenanceCmd cmd);
-
+    
     /**
      * Deletes a host
      *
@@ -93,5 +95,12 @@ public interface ResourceService {
     List<HypervisorType> getSupportedHypervisorTypes(long zoneId, boolean forVirtualRouter, Long podId);
 
     boolean releaseHostReservation(Long hostId);
-
+    
+    /**
+     * Shut Down a host.
+     * @see this method is used by a plugin in development, and was not planned to be used in other scope.
+     * @param hostId
+     */
+    void shutdownHost(long hostId);
+    
 }

@@ -25,9 +25,8 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupProxyCommand;
@@ -42,6 +41,7 @@ import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.ConsoleProxyDao;
 import com.cloud.vm.dao.VMInstanceDao;
@@ -131,5 +131,10 @@ public class StaticConsoleProxyManager extends AgentBasedConsoleProxyManager imp
             throws UnableDeleteHostException {
         return null;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;
+	}
 
 }

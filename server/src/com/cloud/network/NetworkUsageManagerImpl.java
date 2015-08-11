@@ -29,6 +29,10 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.api.command.admin.usage.AddTrafficMonitorCmd;
+import org.apache.cloudstack.api.command.admin.usage.DeleteTrafficMonitorCmd;
+import org.apache.cloudstack.api.command.admin.usage.ListTrafficMonitorsCmd;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -67,18 +71,9 @@ import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
-
-import org.apache.cloudstack.api.command.admin.usage.AddTrafficMonitorCmd;
-import org.apache.cloudstack.api.command.admin.usage.DeleteTrafficMonitorCmd;
-import org.apache.cloudstack.api.command.admin.usage.ListTrafficMonitorsCmd;
-import org.apache.cloudstack.api.response.TrafficMonitorResponse;
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-
 import com.cloud.usage.UsageIPAddressVO;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
-import com.cloud.user.User;
 import com.cloud.user.UserStatisticsVO;
 import com.cloud.user.dao.UserStatisticsDao;
 import com.cloud.utils.NumbersUtil;
@@ -88,10 +83,10 @@ import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.TransactionCallbackNoReturn;
-import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallbackNoReturn;
+import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.net.MacAddress;
 
@@ -538,5 +533,13 @@ public class NetworkUsageManagerImpl extends ManagerBase implements NetworkUsage
         return new DeleteHostAnswer(false);
 
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if(host.getType() != Host.Type.TrafficMonitor){
+            return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented for TrafficMonitor");
+	}
 
 }

@@ -53,6 +53,7 @@ import com.cloud.storage.VMTemplateVO;
 import com.cloud.storage.VMTemplateZoneVO;
 import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.storage.dao.VMTemplateZoneDao;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 @Local(value = Discoverer.class)
 public class SimulatorDiscoverer extends DiscovererBase implements Discoverer, Listener, ResourceStateAdapter {
@@ -329,5 +330,10 @@ public class SimulatorDiscoverer extends DiscovererBase implements Discoverer, L
         _resourceMgr.unregisterResourceStateAdapter(this.getClass().getSimpleName());
         return super.stop();
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;		
+	}
 
 }

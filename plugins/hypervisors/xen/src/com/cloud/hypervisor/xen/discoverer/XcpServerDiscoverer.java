@@ -43,6 +43,7 @@ import com.cloud.agent.api.Command;
 import com.cloud.agent.api.PoolEjectCommand;
 import com.cloud.agent.api.SetupAnswer;
 import com.cloud.agent.api.SetupCommand;
+import com.cloud.agent.api.ShutdownCommand;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.agent.api.StartupRoutingCommand;
 import com.cloud.alert.AlertManager;
@@ -785,4 +786,17 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
     	_resourceMgr.unregisterResourceStateAdapter(this.getClass().getSimpleName());
         return super.stop();
     }
+
+    /**
+     * Shut down a specific host.
+     * @see this method is used by a plugin in development, and was not planned to be used in other scope. It does not need to send answer. Thus this plugin ignores any shut down error.
+     * @param HostVO to be shutdown
+     */
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getHypervisorType() == HypervisorType.XenServer && host.getType() == com.cloud.host.Host.Type.Routing){
+			ShutdownCommand shutDown = new ShutdownCommand(ShutdownCommand.Requested, null);
+			_agentMgr.easySend(host.getId(), shutDown);
+		}
+	}
 }

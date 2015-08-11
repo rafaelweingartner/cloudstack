@@ -32,10 +32,9 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.AddBaremetalDhcpCmd;
 import org.apache.cloudstack.api.ListBaremetalDhcpCmd;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -54,6 +53,7 @@ import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
+import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.PhysicalNetworkServiceProvider;
@@ -323,4 +323,10 @@ public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDh
 	    cmds.add(ListBaremetalDhcpCmd.class);
 		return cmds;
 	}
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;
+	}
+	
 }

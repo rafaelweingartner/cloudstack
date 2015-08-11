@@ -30,11 +30,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
-import com.google.gson.Gson;
-
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.admin.cluster.AddClusterCmd;
 import org.apache.cloudstack.api.command.admin.cluster.DeleteClusterCmd;
@@ -51,6 +46,8 @@ import org.apache.cloudstack.region.dao.RegionDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -143,12 +140,12 @@ import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.db.QueryBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionCallbackNoReturn;
-import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.db.SearchCriteria.Func;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
+import com.cloud.utils.db.TransactionCallbackNoReturn;
+import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.net.Ip;
@@ -159,12 +156,15 @@ import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.google.gson.Gson;
 
 @Component
 @Local({ResourceManager.class, ResourceService.class})
 public class ResourceManagerImpl extends ManagerBase implements ResourceManager, ResourceService, Manager {
     private static final Logger s_logger = Logger.getLogger(ResourceManagerImpl.class);
-
+    private String wakeCommand = "/usr/bin/wakeonlan ";
+    private String pingCommand = "/bin/ping ";
+    		
     Gson _gson;
 
     @Inject
@@ -1463,6 +1463,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                         s_logger.debug("Adapter " + adapter.getName() + " says unable to delete host", e);
                         result = new ResourceStateAdapter.DeleteHostAnswer(false, true);
                     }
+                } else if (event == ResourceStateAdapter.Event.SHUT_DOWN_HOST) {
+                	adapter.shutDownHost((HostVO)args[0]);
                 } else {
                     throw new CloudRuntimeException("Unknown resource state event:" + event);
                 }
@@ -2515,6 +2517,74 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         // TODO Auto-generated method stub
         return super.start();
     }
+
     
     
+    protected void doShutdownHost(final long hostId) {
+        // Verify that host exists
+        final HostVO host = _hostDao.findById(hostId);
+        if (host == null) {
+            throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
+        }
+        _accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
+        
+        List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
+        if (vms == null || !vms.isEmpty()) {
+            throw new CloudRuntimeException("Host " + host.getUuid() +
+                    " cannot shut down as a VM is running in this host.");
+        }
+        if (host.getResourceState() != ResourceState.Maintenance) {
+            throw new CloudRuntimeException("Host " + host.getUuid() +
+                                            " cannot shut down as it is not in maintenance mode. Put the host into maintenance.");
+        }
+        dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
+    }    
+    
+	@Override
+	/**
+	 * Propagates ShutDownHost event, call shutdown dispach method (doShutdownHost)
+	 * @param hostId
+	 */
+	public void shutdownHost(long hostId) {
+        try {
+            propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
+        } catch (AgentUnavailableException e) {}
+        doShutdownHost(hostId);
+	}
+
+	/**
+	 * Propagates wake-on-lan event and executes 'wakeonlan' command.
+	 * If cannot get ping response in 100 seconds, it assumes the host will not awake and throws a fail message.
+	 * 
+	 * @see this method is used by a plugin in development, and was not planned to be used in other scope.
+	 * @param
+	 */
+	public void wakeOnLan(HostVO host) {
+		try {
+            propagateResourceEvent(host.getId(), ResourceState.Event.WakeOnLan);
+        } catch (AgentUnavailableException e) {}
+        int exitValuePing = 0;
+        int pingCount = 0;
+        try {
+        	Runtime.getRuntime().exec(wakeCommand + host.getPrivateMacAddress());
+            do{
+            	pingCount ++;
+            	Process processPing = Runtime.getRuntime().exec(pingCommand + host.getPublicIpAddress());
+                while(processPing.isAlive()){
+                	s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
+                    Thread.sleep(2000);
+                }
+            	s_logger.info("Executing ping to " + host.getPublicIpAddress());
+                exitValuePing = processPing.exitValue();
+                s_logger.info("Ping finished! ExitCode="+exitValuePing);
+                
+            } while(exitValuePing != 0 && pingCount < 50);
+            if(exitValuePing != 0) {
+            	throw new CloudRuntimeException("Failed to wakeonlan Host, uuid=" + host.getGuid());
+            }
+            host.setResourceState(ResourceState.Enabled);
+        }
+        catch (Exception e) {}
+	}
+	
 }

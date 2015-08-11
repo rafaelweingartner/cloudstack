@@ -291,4 +291,12 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
         return params;
 	}
 
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.BareMetal) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for BareMetal ");	
+	}
+
 }

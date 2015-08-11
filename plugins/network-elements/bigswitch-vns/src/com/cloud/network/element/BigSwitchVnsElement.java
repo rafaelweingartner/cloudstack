@@ -27,9 +27,9 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
+import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
-import org.apache.cloudstack.network.ExternalNetworkDeviceManager.NetworkDevice;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.CreateVnsPortAnswer;
@@ -84,7 +84,6 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionCallbackNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.NicProfile;
@@ -542,5 +541,13 @@ public class BigSwitchVnsElement extends AdapterBase implements
         cmdList.add(ListBigSwitchVnsDevicesCmd.class);
         return cmdList;
     }
+
+	@Override
+	public void shutDownHost(HostVO host) {
+		if (host.getType() != Host.Type.Routing || host.getType() == Host.Type.L2Networking) {
+			return ;
+		}
+		throw new CloudRuntimeException("Shut down Host not implemented yet for L2Networking ");			
+	}
 
 }

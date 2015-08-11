@@ -563,4 +563,15 @@ public class MockResourceManagerImpl extends ManagerBase implements ResourceMana
         return false;
     }
 
+	@Override
+	public void shutdownHost(long hostId) {
+		// TODO Auto-generated method stub
+	}
+
+	@Override
+	public void wakeOnLan(HostVO host) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

@@ -808,4 +808,12 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
         sendPortForwardingRules(pfRules, zone, externalFirewall.getId());
         return true;
     }
+    
+    @Override
+	public void shutDownHost(HostVO host) {
+    	if (host.getType() != com.cloud.host.Host.Type.ExternalFirewall) {
+            return ;
+        }
+		throw new CloudRuntimeException("Shut down Host not implemented for ExternalFirewall");		
+	}
 }

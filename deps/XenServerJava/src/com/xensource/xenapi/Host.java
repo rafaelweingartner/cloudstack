@@ -31,10 +31,6 @@
 
 package com.xensource.xenapi;
 
-import com.xensource.xenapi.Types.BadServerResponse;
-import com.xensource.xenapi.Types.VersionException;
-import com.xensource.xenapi.Types.XenAPIException;
-
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Date;
@@ -44,6 +40,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.xmlrpc.XmlRpcException;
+
+import com.xensource.xenapi.Types.BadServerResponse;
+import com.xensource.xenapi.Types.XenAPIException;
 
 /**
  * A physical host

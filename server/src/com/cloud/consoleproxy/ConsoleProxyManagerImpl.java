@@ -1717,4 +1717,9 @@ VirtualMachineGuru, SystemVmLoadScanHandler<Long>, ResourceStateAdapter {
         _consoleProxyAllocators = consoleProxyAllocators;
     }
 
+	@Override
+	public void shutDownHost(HostVO host) {
+		return ;
+	}
+
 }

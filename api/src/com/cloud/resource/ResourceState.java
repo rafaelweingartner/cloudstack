@@ -28,7 +28,8 @@ public enum ResourceState {
     PrepareForMaintenance,
     ErrorInMaintenance,
     Maintenance,
-    Error;
+    Error,
+    ShutDown;
 
     public enum Event {
         InternalCreated("Resource is created"),
@@ -41,6 +42,8 @@ public enum ResourceState {
         UnableToMigrate("Management server migrates VM failed"),
         Error("An internal error happened"),
         DeleteHost("Admin delete a host"),
+        ShutDownHost("Admin shut down a host"),
+        WakeOnLan("Admin power on a host with wake on lan command"),
 
         /*
          * Below events don't cause resource state to change, they are merely
@@ -109,6 +112,8 @@ public enum ResourceState {
         s_fsm.addTransition(ResourceState.Maintenance, Event.AdminCancelMaintenance, ResourceState.Enabled);
         s_fsm.addTransition(ResourceState.Maintenance, Event.InternalCreated, ResourceState.Maintenance);
         s_fsm.addTransition(ResourceState.Maintenance, Event.DeleteHost, ResourceState.Disabled);
+        s_fsm.addTransition(ResourceState.Maintenance, Event.ShutDownHost, ResourceState.ShutDown);
+        s_fsm.addTransition(ResourceState.ShutDown, Event.WakeOnLan, ResourceState.Enabled);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.InternalCreated, ResourceState.ErrorInMaintenance);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.Disable, ResourceState.Disabled);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.DeleteHost, ResourceState.Disabled);

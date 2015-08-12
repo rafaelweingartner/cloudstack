@@ -145,5 +145,5 @@ public interface ResourceManager extends ResourceService {
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      * @param HostVO
      */
-    public void wakeOnLan(HostVO host); 
+    public void startHost(HostVO host); 
 }

@@ -611,13 +611,13 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         } else if (clazz == SetMonitorServiceCommand.class) {
             return execute((SetMonitorServiceCommand) cmd);
         } else if (clazz == ShutdownCommand.class) {
-            return shutDown((ShutdownCommand) cmd);
+            return shutDownHost((ShutdownCommand) cmd);
         } else {
             return Answer.createUnsupportedCommandAnswer(cmd);
         }
     }
 
-    private Answer shutDown(ShutdownCommand cmd) {
+    private Answer shutDownHost(ShutdownCommand cmd) {
     	Connection conn = getConnection();
     	try {
 			Host host = Host.getByUuid(conn, _host.uuid);

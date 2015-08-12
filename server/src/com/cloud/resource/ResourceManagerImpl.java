@@ -46,6 +46,7 @@ import org.apache.cloudstack.region.dao.RegionDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -73,6 +74,7 @@ import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterDetailsVO;
 import com.cloud.dc.ClusterVO;
+import com.cloud.dc.ClusterVO.ConsolidationStatus;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.DataCenterIpAddressVO;
 import com.cloud.dc.DataCenterVO;
@@ -162,8 +164,8 @@ import com.google.gson.Gson;
 @Local({ResourceManager.class, ResourceService.class})
 public class ResourceManagerImpl extends ManagerBase implements ResourceManager, ResourceService, Manager {
     private static final Logger s_logger = Logger.getLogger(ResourceManagerImpl.class);
-    private String wakeCommand = "/usr/bin/wakeonlan ";
-    private String pingCommand = "/bin/ping ";
+    private String startHostCommand = "/usr/bin/wakeonlan";
+    private String pingCommand = "/bin/ping";
     		
     Gson _gson;
 
@@ -2521,7 +2523,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     
     
     protected void doShutdownHost(final long hostId) {
-        // Verify that host exists
         final HostVO host = _hostDao.findById(hostId);
         if (host == null) {
             throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
@@ -2529,13 +2530,33 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         _accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
         
         List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
-        if (vms == null || !vms.isEmpty()) {
-            throw new CloudRuntimeException("Host " + host.getUuid() +
-                    " cannot shut down as a VM is running in this host.");
+        if (CollectionUtils.isEmpty(vms)) {
+        	_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.Consolidated);
+            throw new CloudRuntimeException("Host "+host.getUuid()+" cannot shut down as a VM is running in this host.");
         }
-        if (host.getResourceState() != ResourceState.Maintenance) {
-            throw new CloudRuntimeException("Host " + host.getUuid() +
-                                            " cannot shut down as it is not in maintenance mode. Put the host into maintenance.");
+
+        try {
+			maintain(hostId);
+		} catch (AgentUnavailableException e1) {
+			e1.printStackTrace();
+		}
+        
+        int timeOut = 0;
+        while (host.getResourceState() != ResourceState.Maintenance) {
+        	timeOut ++;
+        	try {
+				Thread.sleep(2*1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+        	if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
+        		_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
+        		throw new CloudRuntimeException("Consolidation failed due to error in maintenance of Host " + host.getUuid());
+        	}
+        	if (timeOut > 60) {
+        		_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
+        		throw new CloudRuntimeException("Consolidation failed due to Host "+host.getUuid()+ " maintenance time out");
+        	}
         }
         dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
     }    
@@ -2548,7 +2569,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 	public void shutdownHost(long hostId) {
         try {
             propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
-        } catch (AgentUnavailableException e) {}
+        } catch (AgentUnavailableException e) {
+        	HostVO host = _hostDao.findById(hostId);
+        	_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
+        	e.printStackTrace();
+        }
         doShutdownHost(hostId);
 	}
 
@@ -2559,32 +2584,50 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 	 * @see this method is used by a plugin in development, and was not planned to be used in other scope.
 	 * @param
 	 */
-	public void wakeOnLan(HostVO host) {
-		try {
-            propagateResourceEvent(host.getId(), ResourceState.Event.WakeOnLan);
-        } catch (AgentUnavailableException e) {}
+	public void startHost(HostVO host) {
+        try {
+			propagateResourceEvent(host.getId(), ResourceState.Event.StartHost);
+		} catch (AgentUnavailableException e) {
+			e.printStackTrace();
+		}		
         int exitValuePing = 0;
         int pingCount = 0;
         try {
-        	Runtime.getRuntime().exec(wakeCommand + host.getPrivateMacAddress());
+        	Runtime.getRuntime().exec(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
             do{
             	pingCount ++;
-            	Process processPing = Runtime.getRuntime().exec(pingCommand + host.getPublicIpAddress());
-                while(processPing.isAlive()){
+            	Process processPing = Runtime.getRuntime().exec(String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim()));
+                while(processPing.isAlive()) {
                 	s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
                     Thread.sleep(2000);
                 }
             	s_logger.info("Executing ping to " + host.getPublicIpAddress());
                 exitValuePing = processPing.exitValue();
                 s_logger.info("Ping finished! ExitCode="+exitValuePing);
-                
-            } while(exitValuePing != 0 && pingCount < 50);
-            if(exitValuePing != 0) {
-            	throw new CloudRuntimeException("Failed to wakeonlan Host, uuid=" + host.getGuid());
+            } while(exitValuePing != 0 && pingCount < 45);
+            
+//            ReconnectHostCmd reconnectHostCmd = new ReconnectHostCmd(); //host.getId()
+//            reconnectHost(reconnectHostCmd);
+//            _agentMgr.reconnect(host.getId());
+            
+            cancelMaintenance(host.getId());            
+            while (host.getResourceState() != ResourceState.Enabled) {
+            	try {
+    				Thread.sleep(2*1000);
+    			} catch (InterruptedException e) {
+    				e.printStackTrace();
+    			}
+            	if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
+            		throw new CloudRuntimeException("Error in maintenance of Host " + host.getUuid());
+            	}
             }
-            host.setResourceState(ResourceState.Enabled);
+            CancelMaintenanceCmd cancelMaintenanceCmd = new CancelMaintenanceCmd();
+            cancelMaintenance(cancelMaintenanceCmd);
+            
         }
-        catch (Exception e) {}
+        catch (Exception e) {
+        	e.printStackTrace();
+        }
 	}
 	
 }

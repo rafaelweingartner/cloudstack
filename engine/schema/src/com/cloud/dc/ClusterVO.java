@@ -226,6 +226,7 @@ public class ClusterVO implements Cluster {
 	 * */
 	public static enum ConsolidationStatus {
 		Consolidating,
+		ConsolidationFailed,
 		Consolidated;
 		
 		public static boolean isConsolidating(ConsolidationStatus consolidationStatus){

@@ -43,7 +43,7 @@ public enum ResourceState {
         Error("An internal error happened"),
         DeleteHost("Admin delete a host"),
         ShutDownHost("Admin shut down a host"),
-        WakeOnLan("Admin power on a host with wake on lan command"),
+        StartHost("Admin start a host"),
 
         /*
          * Below events don't cause resource state to change, they are merely
@@ -113,7 +113,7 @@ public enum ResourceState {
         s_fsm.addTransition(ResourceState.Maintenance, Event.InternalCreated, ResourceState.Maintenance);
         s_fsm.addTransition(ResourceState.Maintenance, Event.DeleteHost, ResourceState.Disabled);
         s_fsm.addTransition(ResourceState.Maintenance, Event.ShutDownHost, ResourceState.ShutDown);
-        s_fsm.addTransition(ResourceState.ShutDown, Event.WakeOnLan, ResourceState.Enabled);
+        s_fsm.addTransition(ResourceState.ShutDown, Event.StartHost, ResourceState.Enabled);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.InternalCreated, ResourceState.ErrorInMaintenance);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.Disable, ResourceState.Disabled);
         s_fsm.addTransition(ResourceState.ErrorInMaintenance, Event.DeleteHost, ResourceState.Disabled);

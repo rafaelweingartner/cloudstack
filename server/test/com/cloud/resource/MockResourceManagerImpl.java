@@ -569,7 +569,7 @@ public class MockResourceManagerImpl extends ManagerBase implements ResourceMana
 	}
 
 	@Override
-	public void wakeOnLan(HostVO host) {
+	public void startHost(HostVO host) {
 		// TODO Auto-generated method stub
 		
 	}

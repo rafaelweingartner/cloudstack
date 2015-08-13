@@ -535,11 +535,6 @@ public class NetworkUsageManagerImpl extends ManagerBase implements NetworkUsage
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		if(host.getType() != Host.Type.TrafficMonitor){
-            return ;
-		}
-		throw new CloudRuntimeException("Shut down Host not implemented for TrafficMonitor");
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

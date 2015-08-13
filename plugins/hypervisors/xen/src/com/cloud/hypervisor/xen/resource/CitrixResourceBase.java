@@ -623,12 +623,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 			Host host = Host.getByUuid(conn, _host.uuid);
 			host.disable(conn);
 			host.shutdown(conn);
-    	} catch (BadServerResponse e) {
-			e.printStackTrace();
-		} catch (XenAPIException e) {
-			e.printStackTrace();
-		} catch (XmlRpcException e) {
-			e.printStackTrace();
+    	} catch (Exception e) {
+			throw new CloudRuntimeException("Could not shut down host uuid="+ _host.uuid, e);
 		}   	
 		return null;
 	}

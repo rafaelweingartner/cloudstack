@@ -1718,8 +1718,6 @@ VirtualMachineGuru, SystemVmLoadScanHandler<Long>, ResourceStateAdapter {
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

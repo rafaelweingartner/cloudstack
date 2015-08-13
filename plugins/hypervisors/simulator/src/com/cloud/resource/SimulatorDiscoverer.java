@@ -332,8 +332,6 @@ public class SimulatorDiscoverer extends DiscovererBase implements Discoverer, L
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;		
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

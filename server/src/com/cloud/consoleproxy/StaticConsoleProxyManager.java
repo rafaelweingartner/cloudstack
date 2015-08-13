@@ -133,8 +133,6 @@ public class StaticConsoleProxyManager extends AgentBasedConsoleProxyManager imp
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

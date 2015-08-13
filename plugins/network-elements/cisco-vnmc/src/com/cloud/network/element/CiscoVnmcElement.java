@@ -985,11 +985,6 @@ public class CiscoVnmcElement extends AdapterBase implements SourceNatServicePro
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		if (host.getType() != Host.Type.Routing || host.getType() != Host.Type.ExternalFirewall) {
-			return ;
-		}
-		throw new CloudRuntimeException("Shut down Host not implemented yet for ExternalFirewall ");			
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

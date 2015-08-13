@@ -16,6 +16,7 @@
 // under the License.
 package com.cloud.resource;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
@@ -2531,43 +2532,45 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      */
     protected void doShutdownHost(final long hostId) {
-    	final HostVO host = _hostDao.findById(hostId); 
+    	HostVO host = _hostDao.findById(hostId); 
     	if (host == null) {
-    		throw new InvalidParameterValueException("Host with id " + hostId + " doesn't exist");
+    		throw new CloudRuntimeException("Host with id " + hostId + " doesn't exist");
     	}
     	_accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
-		if(host.getResourceState() == ResourceState.Maintenance || host.getResourceState() == ResourceState.PrepareForMaintenance) {
-			return ;
-		}
-		List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
-  		if (!CollectionUtils.isEmpty(vms)) {
-  			_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
-  			throw new CloudRuntimeException("Cannot shut down host "+host.getName()+" as a VM is running in this host.");
-  		}
+
+    	List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
+        if (CollectionUtils.isNotEmpty(vms)) {
+            s_logger.debug(String.format("Could not shut dow host [hostid=%d], [hostname=%s], there are %d VMs running in this host.", host.getId(), host.getName(), vms.size()));
+            return ;
+        }
 		ResourceManager resourceManager = (ResourceManager) _resourceService;
 		try {
 			resourceManager.maintain(hostId);
 		} catch (AgentUnavailableException e) {
 			e.printStackTrace();
 		}
-		int timeOut = 0;
+		int tries = 0;
 		while (host.getResourceState() != ResourceState.Maintenance) {
-        	timeOut ++;
-        	try {
-				Thread.sleep(3000);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
+        	tries ++;
+        	sleepThread();
+        	
+        	host = _hostDao.findById(hostId);
         	if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
-        		_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
-        		throw new CloudRuntimeException("Error in maintenance on Host " + host.getUuid());
+        		throw new CloudRuntimeException(String.format("Error while sending the maintenance command to [host=%d], [hostname=%s]", host.getId(), host.getName()));
         	}
-        	if (timeOut > 30) {
-        		_clusterDao.findById(host.getClusterId()).setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
-        		throw new CloudRuntimeException("Maintenance time out failed on Host "+host.getUuid());        		
+        	if (tries > 30) {
+        	    throw new CloudRuntimeException(String.format("Timeout error while sending the maintenance command to [host=%d], [hostname=%s]", host.getId(), host.getName()));
         	}
         }
         dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
+    }
+
+    private void sleepThread() {
+        try {
+        	Thread.sleep(3000);
+        } catch (InterruptedException e) {
+        	throw new CloudRuntimeException(e);
+        }
     }    
     
 	@Override
@@ -2580,12 +2583,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         try {
             propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
         } catch (AgentUnavailableException e) {
-        	HostVO host = _hostDao.findById(hostId);
-        	ClusterVO cluster = _clusterDao.findById(host.getClusterId());
-        	_clusterDao.acquireInLockTable(cluster.getDataCenterId());
-        	cluster.setConsolidationStatus(ConsolidationStatus.ConsolidationFailed);
-        	_clusterDao.update(cluster.getDataCenterId(), cluster);
-        	e.printStackTrace();
+        	throw new CloudRuntimeException(e);
         }
         doShutdownHost(hostId);
 	}
@@ -2601,44 +2599,46 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         try {
 			propagateResourceEvent(host.getId(), ResourceState.Event.StartHost);
 		} catch (AgentUnavailableException e) {
-			e.printStackTrace();
-		}		
-        int exitValuePing = 0;
-        int pingCount = 0;
-        try {
-        	Runtime.getRuntime().exec(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
-            do{
-            	pingCount ++;
-            	Process processPing = Runtime.getRuntime().exec(String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim()));
-                while(processPing.isAlive()) {
-                	s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
-                    Thread.sleep(3000);
-                }
-            	s_logger.info("Executing ping to " + host.getPublicIpAddress());
-                exitValuePing = processPing.exitValue();
-                s_logger.info("Ping finished! ExitCode="+exitValuePing);
-            } while(exitValuePing != 0 && pingCount < 30);
-            
-			_agentMgr.reconnect(host.getId()); //TODO verificar (precisa estar no evento shutDownRequested)
-            
-            int timeOut = 0;
-            cancelMaintenance(host.getId());  
-            while (host.getResourceState() != ResourceState.Enabled && timeOut < 30) {
-            	timeOut ++;
-            	try {
-    				Thread.sleep(3000);
-    			} catch (InterruptedException e) {
-    				e.printStackTrace();
-    			}
-            	if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
-            		throw new CloudRuntimeException("Error in maintenance of Host " + host.getUuid());
-            	}
-            	host = _hostDao.findById(host.getId());
-            }
-        }
-        catch (Exception e) {
-        	e.printStackTrace();
-        }
+			throw new CloudRuntimeException(e);
+		}
+        doStartHost(host);
 	}
+
+    private void doStartHost(HostVO host) {
+        executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
+        
+        checkHostAlive(host);        
+		_agentMgr.reconnect(host.getId());
+        
+        cancelMaintenance(host.getId());  
+    }
+
+    private void checkHostAlive(HostVO host) {
+        int pingCount = 0;
+        int exitValuePing = 1;
+        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim());
+        do{
+        	pingCount ++;
+        	Process processPing=executeProgram(pingCommandWithIP);;
+            while(processPing.isAlive()) {
+            	s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
+                sleepThread();
+            }
+            exitValuePing = processPing.exitValue();
+            s_logger.info("Ping finished! ExitCode="+exitValuePing);
+        } while(exitValuePing != 0 && pingCount < 30);
+        
+        if (exitValuePing != 0) {
+            throw new CloudRuntimeException(String.format("Canot start host due to ping timeout [hostId=%d],[hostName=%s], [hostIp=%s]", host.getId(), host.getName(), host.getPublicIpAddress()));
+        }
+    }
+
+    private Process executeProgram(String cmd) {
+        try {
+            return  Runtime.getRuntime().exec(cmd);
+        } catch (IOException e) {
+            throw new CloudRuntimeException(e);
+        }
+    }
 	
 }

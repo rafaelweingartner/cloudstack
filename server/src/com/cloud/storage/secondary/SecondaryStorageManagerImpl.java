@@ -1397,7 +1397,5 @@ public class SecondaryStorageManagerImpl extends ManagerBase implements Secondar
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;		
-	}
+	public void shutDownHost(HostVO host) {}
 }

@@ -1221,10 +1221,5 @@ public abstract class ExternalLoadBalancerDeviceManagerImpl extends AdapterBase 
    }
 
     @Override
-	public void shutDownHost(HostVO host) {
-    	if (host.getType() != com.cloud.host.Host.Type.ExternalLoadBalancer) {
-            return ;
-        }
-		throw new CloudRuntimeException("Shut down Host not implemented for ExternalLoadBalancer");		
-	}
+	public void shutDownHost(HostVO host) {}
 }

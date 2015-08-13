@@ -42,8 +42,8 @@ public enum ResourceState {
         UnableToMigrate("Management server migrates VM failed"),
         Error("An internal error happened"),
         DeleteHost("Admin delete a host"),
-        ShutDownHost("Admin shut down a host"),
-        StartHost("Admin start a host"),
+        ShutDownHost("Admin shuts down a host"),
+        StartHost("Admin starts a host"),
 
         /*
          * Below events don't cause resource state to change, they are merely

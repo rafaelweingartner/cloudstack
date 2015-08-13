@@ -810,10 +810,5 @@ public abstract class ExternalFirewallDeviceManagerImpl extends AdapterBase impl
     }
     
     @Override
-	public void shutDownHost(HostVO host) {
-    	if (host.getType() != com.cloud.host.Host.Type.ExternalFirewall) {
-            return ;
-        }
-		throw new CloudRuntimeException("Shut down Host not implemented for ExternalFirewall");		
-	}
+	public void shutDownHost(HostVO host) {}
 }

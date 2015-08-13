@@ -949,11 +949,6 @@ NiciraNvpElementService, ResourceStateAdapter, IpDeployer {
         return answer.getResult();
     }
 
-	public void shutDownHost(HostVO host) {
-		if (host.getType() != Host.Type.L2Networking) {
-			return ;
-		}
-		throw new CloudRuntimeException("Shut down Host not implemented for L2Networking");
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

@@ -175,7 +175,5 @@ public class SimulatorSecondaryDiscoverer extends SecondaryStorageDiscoverer imp
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;		
-	}
+	public void shutDownHost(HostVO host) {}
 }

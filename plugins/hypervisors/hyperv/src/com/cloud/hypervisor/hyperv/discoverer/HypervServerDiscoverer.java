@@ -471,7 +471,6 @@ public class HypervServerDiscoverer extends DiscovererBase implements
                 .getSimpleName());
         return super.stop();
     }
-    // end of ResourceStateAdapter
 
 	@Override
 	public void shutDownHost(HostVO host) {

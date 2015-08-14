@@ -624,7 +624,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 			host.disable(conn);
 			host.shutdown(conn);
     	} catch (Exception e) {
-			throw new CloudRuntimeException("Could not shut down host uuid="+ _host.uuid, e);
+			throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]", _host.uuid), e);
 		}   	
 		return null;
 	}

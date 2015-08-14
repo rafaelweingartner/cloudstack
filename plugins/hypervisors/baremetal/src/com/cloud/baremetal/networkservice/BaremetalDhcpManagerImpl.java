@@ -325,8 +325,6 @@ public class BaremetalDhcpManagerImpl extends ManagerBase implements BaremetalDh
 	}
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		return ;
-	}
+	public void shutDownHost(HostVO host) {}
 	
 }

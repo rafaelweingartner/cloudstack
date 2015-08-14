@@ -75,7 +75,6 @@ import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterDetailsVO;
 import com.cloud.dc.ClusterVO;
-import com.cloud.dc.ClusterVO.ConsolidationStatus;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.DataCenterIpAddressVO;
 import com.cloud.dc.DataCenterVO;
@@ -215,9 +214,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Inject
     protected StorageService _storageSvr;
     @Inject
-    protected ResourceService _resourceService;
-    @Inject
-    PlannerHostReservationDao _plannerHostReserveDao;
+    protected PlannerHostReservationDao _plannerHostReserveDao;
     @Inject
     protected DedicatedResourceDao _dedicatedDao;
 
@@ -2543,9 +2540,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             s_logger.debug(String.format("Could not shut dow host [hostid=%d], [hostname=%s], there are %d VMs running in this host.", host.getId(), host.getName(), vms.size()));
             return ;
         }
-		ResourceManager resourceManager = (ResourceManager) _resourceService;
 		try {
-			resourceManager.maintain(hostId);
+			maintain(hostId);
 		} catch (AgentUnavailableException e) {
 			e.printStackTrace();
 		}
@@ -2616,7 +2612,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     private void checkHostAlive(HostVO host) {
         int pingCount = 0;
         int exitValuePing = 1;
-        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim());
+        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPrivateIpAddress().trim());
         do{
         	pingCount ++;
         	Process processPing=executeProgram(pingCommandWithIP);;

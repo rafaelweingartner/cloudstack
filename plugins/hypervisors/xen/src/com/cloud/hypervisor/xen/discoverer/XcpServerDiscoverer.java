@@ -795,8 +795,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
 	@Override
 	public void shutDownHost(HostVO host) {
 		if (host.getHypervisorType() == HypervisorType.XenServer && host.getType() == com.cloud.host.Host.Type.Routing){
-			ShutdownCommand shutDown = new ShutdownCommand(ShutdownCommand.Requested, null);
-			_agentMgr.easySend(host.getId(), shutDown);
+			_agentMgr.easySend(host.getId(), new ShutdownCommand(ShutdownCommand.Requested, null));
 		}
 	}
 }

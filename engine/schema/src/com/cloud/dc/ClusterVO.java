@@ -222,7 +222,7 @@ public class ClusterVO implements Cluster {
 	}
 	
 	/**
-	 * Consolidation status of the cluster (Consolidating, ToConsolidate or Unavailable) 
+	 * Consolidation status of the cluster (Consolidating, ConsolidationFailed or Consolidated) 
 	 * */
 	public static enum ConsolidationStatus {
 		Consolidating,

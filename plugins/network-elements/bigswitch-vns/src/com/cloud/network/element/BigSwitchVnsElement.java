@@ -543,11 +543,6 @@ public class BigSwitchVnsElement extends AdapterBase implements
     }
 
 	@Override
-	public void shutDownHost(HostVO host) {
-		if (host.getType() != Host.Type.Routing || host.getType() == Host.Type.L2Networking) {
-			return ;
-		}
-		throw new CloudRuntimeException("Shut down Host not implemented yet for L2Networking ");			
-	}
+	public void shutDownHost(HostVO host) {}
 
 }

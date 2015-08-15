@@ -99,7 +99,7 @@ public class Xenserver625Resource extends XenServerResourceNewBase {
         s_logger.warn(errMsg);
         throw new CloudRuntimeException(errMsg);
     }
-    
+
     @Override
     public String getPatchFilePath() {
         return "scripts/vm/hypervisor/xenserver/xenserver62/patch";

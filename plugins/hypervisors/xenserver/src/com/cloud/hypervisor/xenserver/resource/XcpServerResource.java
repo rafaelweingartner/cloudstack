@@ -99,7 +99,7 @@ public class XcpServerResource extends CitrixResourceBase {
         //For the supported XCPs dmc is default enabled, XCP 1.0.0, 1.1.0, 1.4.x, 1.5 beta, 1.6.x;
         return true;
     }
-    
+
     @Override
     protected String getPatchFilePath() {
         return "scripts/vm/hypervisor/xenserver/xcpserver/patch";

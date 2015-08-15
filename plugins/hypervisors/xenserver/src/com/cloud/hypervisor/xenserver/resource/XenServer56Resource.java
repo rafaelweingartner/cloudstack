@@ -128,7 +128,7 @@ public class XenServer56Resource extends CitrixResourceBase {
         final StartupCommand[] cmds = super.initialize();
         return cmds;
     }
-    
+
     @Override
     public String getPatchFilePath() {
         return "scripts/vm/hypervisor/xenserver/xenserver56/patch";

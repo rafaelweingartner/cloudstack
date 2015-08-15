@@ -43,7 +43,7 @@ public class XenServer56FP1Resource extends XenServer56Resource {
         final Boolean isDmcEnabled = hostParams.get("restrict_dmc").equalsIgnoreCase("false");
         return isDmcEnabled;
     }
-    
+
     @Override
     public String getPatchFilePath() {
         return "scripts/vm/hypervisor/xenserver/xenserver56fp1/patch";

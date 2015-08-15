@@ -2880,7 +2880,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         files.add(file);
         return files;
     }
-    
+
     protected abstract String getPatchFilePath();
 
     public String getPerfMon(final Connection conn, final Map<String, String> params, final int wait) {

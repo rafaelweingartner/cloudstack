@@ -14,9 +14,7 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License.
-
 package com.cloud.hypervisor.xenserver.resource;
-
 
 import javax.ejb.Local;
 
@@ -48,7 +46,7 @@ public class XcpOssResource extends CitrixResourceBase {
     protected void setMemory(final Connection conn, final VM vm, long minMemsize, final long maxMemsize) throws XmlRpcException, XenAPIException {
         vm.setMemoryLimits(conn, mem_32m, maxMemsize, minMemsize, maxMemsize);
     }
-    
+
     @Override
     protected String getPatchFilePath() {
         return "scripts/vm/hypervisor/xenserver/xcposs/patch";

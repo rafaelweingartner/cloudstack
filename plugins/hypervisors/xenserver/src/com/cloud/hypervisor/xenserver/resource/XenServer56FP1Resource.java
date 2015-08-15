@@ -16,9 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.xenserver.resource;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 import javax.ejb.Local;
@@ -26,8 +23,6 @@ import javax.ejb.Local;
 import org.apache.xmlrpc.XmlRpcException;
 
 import com.cloud.resource.ServerResource;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 import com.xensource.xenapi.Connection;
 import com.xensource.xenapi.Host;
 import com.xensource.xenapi.Types.XenAPIException;

@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.xenserver.resource;
 
-
 import javax.ejb.Local;
 
 import org.apache.log4j.Logger;

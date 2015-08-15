@@ -35,19 +35,6 @@ import com.xensource.xenapi.Types.XenAPIException;
 @Local(value = ServerResource.class)
 public class XenServer56FP1Resource extends XenServer56Resource {
 
-    @Override
-    protected List<File> getPatchFiles() {
-        final List<File> files = new ArrayList<File>();
-        final String patch = "scripts/vm/hypervisor/xenserver/xenserver56fp1/patch";
-        final String patchfilePath = Script.findScript("", patch);
-        if (patchfilePath == null) {
-            throw new CloudRuntimeException("Unable to find patch file " + patch);
-        }
-        final File file = new File(patchfilePath);
-        files.add(file);
-        return files;
-    }
-
     /**
      * When Dynamic Memory Control (DMC) is enabled -
      * xenserver allows scaling the guest memory while the guest is running
@@ -60,5 +47,10 @@ public class XenServer56FP1Resource extends XenServer56Resource {
         final Map<String, String> hostParams = host.getLicenseParams(conn);
         final Boolean isDmcEnabled = hostParams.get("restrict_dmc").equalsIgnoreCase("false");
         return isDmcEnabled;
+    }
+    
+    @Override
+    public String getPatchFilePath() {
+        return "scripts/vm/hypervisor/xenserver/xenserver56fp1/patch";
     }
 }

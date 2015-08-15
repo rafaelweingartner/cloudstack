@@ -39,19 +39,6 @@ public class XcpServerResource extends CitrixResourceBase {
     private final static Logger s_logger = Logger.getLogger(XcpServerResource.class);
     private final static long mem_32m = 33554432L;
 
-    @Override
-    protected List<File> getPatchFiles() {
-        final List<File> files = new ArrayList<File>();
-        final String patch = "scripts/vm/hypervisor/xenserver/xcpserver/patch";
-        final String patchfilePath = Script.findScript("", patch);
-        if (patchfilePath == null) {
-            throw new CloudRuntimeException("Unable to find patch file " + patch);
-        }
-        final File file = new File(patchfilePath);
-        files.add(file);
-        return files;
-    }
-
     /**
      XCP provides four memory configuration fields through which
      administrators can control this behaviour:
@@ -116,5 +103,10 @@ public class XcpServerResource extends CitrixResourceBase {
         //Dynamic Memory Control (DMC) is a technology provided by Xen Cloud Platform (XCP), starting from the 0.5 release
         //For the supported XCPs dmc is default enabled, XCP 1.0.0, 1.1.0, 1.4.x, 1.5 beta, 1.6.x;
         return true;
+    }
+    
+    @Override
+    protected String getPatchFilePath() {
+        return "scripts/vm/hypervisor/xenserver/xcpserver/patch";
     }
 }

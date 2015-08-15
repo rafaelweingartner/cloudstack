@@ -38,20 +38,6 @@ public class XcpOssResource extends CitrixResourceBase {
     private static final long mem_32m = 33554432L;
 
     @Override
-    protected List<File> getPatchFiles() {
-        final List<File> files = new ArrayList<File>();
-        final String patch = "scripts/vm/hypervisor/xenserver/xcposs/patch";
-        final String patchfilePath = Script.findScript("", patch);
-        if (patchfilePath == null) {
-            throw new CloudRuntimeException("Unable to find patch file "
-                    + patch);
-        }
-        final File file = new File(patchfilePath);
-        files.add(file);
-        return files;
-    }
-
-    @Override
     protected String getGuestOsType(final String stdType,
             final String platformEmulator, final boolean bootFromCD) {
         if (stdType.equalsIgnoreCase("Debian GNU/Linux 6(64-bit)")) {
@@ -66,5 +52,10 @@ public class XcpOssResource extends CitrixResourceBase {
     @Override
     protected void setMemory(final Connection conn, final VM vm, long minMemsize, final long maxMemsize) throws XmlRpcException, XenAPIException {
         vm.setMemoryLimits(conn, mem_32m, maxMemsize, minMemsize, maxMemsize);
+    }
+    
+    @Override
+    protected String getPatchFilePath() {
+        return "scripts/vm/hypervisor/xenserver/xcposs/patch";
     }
 }

@@ -16,9 +16,6 @@
 // under the License.
 package com.cloud.hypervisor.xenserver.resource;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.ejb.Local;
 
@@ -34,26 +31,11 @@ import com.xensource.xenapi.VLAN;
 import com.cloud.agent.api.StartupCommand;
 import com.cloud.resource.ServerResource;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SSHCmdHelper;
 
 @Local(value = ServerResource.class)
 public class XenServer56Resource extends CitrixResourceBase {
     private final static Logger s_logger = Logger.getLogger(XenServer56Resource.class);
-
-    @Override
-    protected List<File> getPatchFiles() {
-        final List<File> files = new ArrayList<File>();
-        final String patch = "scripts/vm/hypervisor/xenserver/xenserver56/patch";
-        final String patchfilePath = Script.findScript("", patch);
-        if (patchfilePath == null) {
-            throw new CloudRuntimeException("Unable to find patch file " + patch);
-        }
-        final File file = new File(patchfilePath);
-        files.add(file);
-
-        return files;
-    }
 
     @Override
     public void disableVlanNetwork(final Connection conn, final Network network) {
@@ -146,5 +128,10 @@ public class XenServer56Resource extends CitrixResourceBase {
         pingXAPI();
         final StartupCommand[] cmds = super.initialize();
         return cmds;
+    }
+    
+    @Override
+    public String getPatchFilePath() {
+        return "scripts/vm/hypervisor/xenserver/xenserver56/patch";
     }
 }

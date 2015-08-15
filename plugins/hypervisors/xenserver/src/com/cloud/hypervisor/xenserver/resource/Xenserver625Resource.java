@@ -18,10 +18,6 @@
  */
 package com.cloud.hypervisor.xenserver.resource;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.ejb.Local;
 
 import org.apache.cloudstack.hypervisor.xenserver.XenServerResourceNewBase;
@@ -32,7 +28,6 @@ import com.cloud.resource.ServerResource;
 import com.cloud.storage.resource.StorageSubsystemCommandHandler;
 import com.cloud.storage.resource.StorageSubsystemCommandHandlerBase;
 import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.script.Script;
 import com.cloud.utils.ssh.SSHCmdHelper;
 import com.xensource.xenapi.Connection;
 import com.xensource.xenapi.Host;
@@ -43,19 +38,6 @@ import com.xensource.xenapi.VM;
 public class Xenserver625Resource extends XenServerResourceNewBase {
 
     private static final Logger s_logger = Logger.getLogger(Xenserver625Resource.class);
-
-    @Override
-    protected List<File> getPatchFiles() {
-        final List<File> files = new ArrayList<File>();
-        final String patch = "scripts/vm/hypervisor/xenserver/xenserver62/patch";
-        final String patchfilePath = Script.findScript("", patch);
-        if (patchfilePath == null) {
-            throw new CloudRuntimeException("Unable to find patch file " + patch);
-        }
-        final File file = new File(patchfilePath);
-        files.add(file);
-        return files;
-    }
 
     @Override
     protected StorageSubsystemCommandHandler buildStorageHandler() {
@@ -116,6 +98,11 @@ public class Xenserver625Resource extends XenServerResourceNewBase {
         }
         s_logger.warn(errMsg);
         throw new CloudRuntimeException(errMsg);
+    }
+    
+    @Override
+    public String getPatchFilePath() {
+        return "scripts/vm/hypervisor/xenserver/xenserver62/patch";
     }
 
 }

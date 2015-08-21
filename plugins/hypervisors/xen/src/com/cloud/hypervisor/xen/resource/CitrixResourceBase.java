@@ -617,10 +617,21 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         }
     }
 
+    /**
+     * Shuts down a selected host (command from com.cloud.resource.ResourceManagerImpl.startHost(HostVO)).
+     * If this host is the master of his pool, then it designates a new master if possible or does not shuts down the host.
+     * @param cmd
+     * @return
+     */
     private Answer shutDownHost(ShutdownCommand cmd) {
     	Connection conn = getConnection();
     	try {
-			Host host = Host.getByUuid(conn, _host.uuid);
+    	    Host master = getMasterHost(conn);
+    	    if (_host.uuid.equals(master.getUuid(conn))) {
+    	        changePoolMasterHost(conn);
+    	        waitChangePoolMasterHost(master, conn);
+    	    }
+    	    Host host = Host.getByUuid(conn, _host.uuid);
 			host.disable(conn);
 			host.shutdown(conn);
     	} catch (Exception e) {
@@ -628,6 +639,67 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 		}   	
 		return null;
 	}
+
+    /**
+     * changes current pool master to another host (if exists). The new master will be selected with no specific criteria.
+     * Not working if pool is HA enabled.
+     * @param conn
+     * @throws BadServerResponse
+     * @throws XenAPIException
+     * @throws XmlRpcException
+     */
+    private  void changePoolMasterHost(Connection conn) throws BadServerResponse, XenAPIException, XmlRpcException {
+        for (Host h : Host.getAll(conn)) {
+            if (!_host.uuid.equals(h.getUuid(conn))) {
+                Pool.designateNewMaster(conn, h);
+                break;
+            }
+        }
+    }
+    
+    private void sleepThread(int secs) {
+        try {
+            Thread.sleep(secs*1000);
+        } catch (InterruptedException e) {
+            throw new CloudRuntimeException(e);
+        }
+    }    
+    
+    /**
+     * Waits until Host master of pool be changed.
+     * @param master
+     * @param conn
+     * @throws BadServerResponse
+     * @throws XenAPIException
+     * @throws XmlRpcException
+     */
+    private void waitChangePoolMasterHost(Host master, Connection conn) throws BadServerResponse, XenAPIException, XmlRpcException {
+        int timer = 0;
+        while (_host.uuid.equals(master.getUuid(conn))) {
+            sleepThread(3);
+            timer ++;
+            if (timer > 90) {
+                throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s] as couldnt change it from master of pool", _host.uuid));
+            }
+        }
+    }
+    
+    /**
+     * Returns the Host that is the current master of this pool.
+     * This only works if a host can be of one (and only one) pool. 
+     * @param conn
+     * @return
+     * @throws BadServerResponse
+     * @throws XenAPIException
+     * @throws XmlRpcException
+     */
+    private Host getMasterHost(Connection conn) throws BadServerResponse,XenAPIException, XmlRpcException {
+        Iterator<Pool> poolIterator = Pool.getAll(conn).iterator();
+        if (poolIterator.hasNext()) {
+            return poolIterator.next().getMaster(conn);
+        }
+        return null;
+    }
 
 	protected void scaleVM(Connection conn, VM vm, VirtualMachineTO vmSpec, Host host) throws XenAPIException, XmlRpcException {
 

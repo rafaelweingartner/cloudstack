@@ -79,10 +79,9 @@ import org.apache.cloudstack.framework.jobs.AsyncJobManager;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.apache.cloudstack.test.utils.SpringUtils.CloudStackTestConfiguration;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
-import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
@@ -186,6 +185,7 @@ import com.cloud.org.Grouping;
 import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.projects.ProjectManager;
 import com.cloud.resource.ResourceManager;
+import com.cloud.resource.ResourceService;
 import com.cloud.resource.ResourceState;
 import com.cloud.server.ConfigurationServer;
 import com.cloud.server.Criteria;
@@ -447,6 +447,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     VolumeDataFactory volFactory;
     @Inject
     UserVmDetailsDao _uservmDetailsDao;
+    
+    @Inject
+    protected ResourceService resourceService;
+   
 
     protected ScheduledExecutorService _executor = null;
     protected int _expungeInterval;
@@ -3440,26 +3444,20 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     @Override
-    public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(
-            long vmId, Long hostId,
-            Map<VirtualMachineProfile.Param, Object> additionalParams)
-                    throws ConcurrentOperationException, ResourceUnavailableException,
-                    InsufficientCapacityException {
+    public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams) 
+            throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
         // Input validation
         Account callerAccount = CallContext.current().getCallingAccount();
-        UserVO callerUser = _userDao.findById(CallContext.current()
-                .getCallingUserId());
+        UserVO callerUser = _userDao.findById(CallContext.current().getCallingUserId());
 
         // if account is removed, return error
         if (callerAccount != null && callerAccount.getRemoved() != null) {
-            throw new InvalidParameterValueException("The account "
-                    + callerAccount.getId() + " is removed");
+            throw new InvalidParameterValueException("The account "+ callerAccount.getId() + " is removed");
         }
 
         UserVmVO vm = _vmDao.findById(vmId);
         if (vm == null) {
-            throw new InvalidParameterValueException(
-                    "unable to find a virtual machine with id " + vmId);
+            throw new InvalidParameterValueException("unable to find a virtual machine with id " + vmId);
         }
 
         _accountMgr.checkAccess(callerAccount, null, true, vm);
@@ -3467,27 +3465,22 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         Account owner = _accountDao.findById(vm.getAccountId());
 
         if (owner == null) {
-            throw new InvalidParameterValueException("The owner of " + vm
-                    + " does not exist: " + vm.getAccountId());
+            throw new InvalidParameterValueException("The owner of " + vm + " does not exist: " + vm.getAccountId());
         }
 
         if (owner.getState() == Account.State.disabled) {
-            throw new PermissionDeniedException("The owner of " + vm
-                    + " is disabled: " + vm.getAccountId());
+            throw new PermissionDeniedException("The owner of " + vm + " is disabled: " + vm.getAccountId());
         }
 
         Host destinationHost = null;
         if (hostId != null) {
             Account account = CallContext.current().getCallingAccount();
             if (!_accountService.isRootAdmin(account.getType())) {
-                throw new PermissionDeniedException(
-                        "Parameter hostid can only be specified by a Root Admin, permission denied");
+                throw new PermissionDeniedException("Parameter hostid can only be specified by a Root Admin, permission denied");
             }
             destinationHost = _hostDao.findById(hostId);
             if (destinationHost == null) {
-                throw new InvalidParameterValueException(
-                        "Unable to find the host to deploy the VM, host id="
-                                + hostId);
+                throw new InvalidParameterValueException("Unable to find the host to deploy the VM, host id=" + hostId);
             }
         }
 
@@ -3495,13 +3488,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (_securityGroupMgr.isVmSecurityGroupEnabled(vmId) && _securityGroupMgr.getSecurityGroupsForVm(vmId).isEmpty() && !_securityGroupMgr.isVmMappedToDefaultSecurityGroup(vmId) && _networkModel.canAddDefaultSecurityGroup()) {
             // if vm is not mapped to security group, create a mapping
             if (s_logger.isDebugEnabled()) {
-                s_logger.debug("Vm "
-                        + vm
-                        + " is security group enabled, but not mapped to default security group; creating the mapping automatically");
+                s_logger.debug("Vm "+ vm + " is security group enabled, but not mapped to default security group; creating the mapping automatically");
             }
 
-            SecurityGroup defaultSecurityGroup = _securityGroupMgr
-                    .getDefaultSecurityGroup(vm.getAccountId());
+            SecurityGroup defaultSecurityGroup = _securityGroupMgr.getDefaultSecurityGroup(vm.getAccountId());
             if (defaultSecurityGroup != null) {
                 List<Long> groupList = new ArrayList<Long>();
                 groupList.add(defaultSecurityGroup.getId());
@@ -3523,8 +3513,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         if (vm.isUpdateParameters()) {
             _vmDao.loadDetails(vm);
             // Check that the password was passed in and is valid
-            template = _templateDao
-                    .findByIdIncludingRemoved(vm.getTemplateId());
+            template = _templateDao.findByIdIncludingRemoved(vm.getTemplateId());
 
             String password = "saved_password";
             if (template.getEnablePassword()) {
@@ -3532,8 +3521,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
 
             if (!validPassword(password)) {
-                throw new InvalidParameterValueException(
-                        "A valid password for this virtual machine was not provided.");
+                throw new InvalidParameterValueException("A valid password for this virtual machine was not provided.");
             }
 
             // Check if an SSH key pair was selected for the instance and if so
@@ -3559,10 +3547,11 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 plannerName = _configDao.getValue(Config.VmDeploymentPlanner.key());
             }
         }
-
-        String reservationId = vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
+        
+        String reservationId = reserveHost(callerUser, plan, vmEntity, plannerName);
+        
         vmEntity.deploy(reservationId, Long.toString(callerUser.getId()), params);
-
+        
         Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> vmParamPair = new Pair(vm, params);
         if (vm != null && vm.isUpdateParameters()) {
             // this value is not being sent to the backend; need only for api
@@ -3573,10 +3562,56 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 _vmDao.update(vm.getId(), vm);
             }
         }
-
         return vmParamPair;
     }
 
+    /**
+     * This method encapsulates "reserve" method. 
+     * If "reserve" throws insufficient capacity exception, "reserveHost" get other host to start and tries to reserve again.
+     * In case of no host available to start, then reserveHost throws insufficient capacity exception as "reserve".
+     * @param callerUser
+     * @param plan
+     * @param vmEntity
+     * @param plannerName
+     * @return
+     * @throws ResourceUnavailableException
+     * @throws InsufficientCapacityException
+     */
+    private String reserveHost(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
+            throws ResourceUnavailableException, InsufficientCapacityException {
+        try {
+            return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
+        } catch (InsufficientCapacityException e) {
+            List<HostVO> hostsToStart = getHostToStart();
+            if (hostsToStart.isEmpty()) {
+                throw e;
+            }
+            ResourceManager resourceManager = (ResourceManager) resourceService;
+            try {
+                resourceManager.startHost(_hostDao.findById(hostsToStart.get(0).getId()));
+            } catch (CloudRuntimeException failToStartHost) {
+                s_logger.warn(String.format("Fail to start host due to ping timeout [hostId=%d],[hostName=%s], [hostIp=%s]", hostsToStart.get(0).getId(), hostsToStart.get(0).getName(), hostsToStart.get(0).getPublicIpAddress()));
+                hostsToStart.remove(0);
+            }
+            return reserveHost(callerUser, plan, vmEntity, plannerName);
+        }
+    }
+    
+    private List<HostVO> getHostToStart() {
+        List<DataCenterVO> dataCentersVO = _dcDao.listEnabledZones();
+        List<HostVO> hostsToStart = new ArrayList<HostVO>();
+        for (DataCenterVO dcVO : dataCentersVO) {
+            List<Long> hostsId = _hostDao.listAllHosts(dcVO.getId());
+            for (Long hId : hostsId) {
+                HostVO host = _hostDao.findById(hId);
+                if (host.getType() == Host.Type.Routing && host.getHostConsolidationStatus() == HostVO.HostConsolidationStatus.ShutDownToConsolidate) {
+                    hostsToStart.add(host);
+                }
+            }
+        }
+        return hostsToStart;
+    }
+    
     @Override
     public UserVm destroyVm(long vmId) throws ResourceUnavailableException,
     ConcurrentOperationException {

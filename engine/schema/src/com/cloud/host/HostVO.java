@@ -37,6 +37,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import com.cloud.dc.ClusterVO.ConsolidationStatus;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.ResourceState;
 import com.cloud.storage.Storage.StoragePoolType;
@@ -66,6 +67,12 @@ public class HostVO implements Host {
     @Column(name="status", nullable=false)
     private Status status = null;
 
+    /**
+     * Stores host consolidation status. This column allows to select hosts easily, temporally used by a plugin. This host status will be placed in 'status' column. 
+     */
+    @Column(name="consolidation_status", nullable=false)
+    private HostConsolidationStatus hostConsolidationStatus = null;
+    
     @Column(name="type", updatable = true, nullable=false)
     @Enumerated(value=EnumType.STRING)
     private Type type;
@@ -590,6 +597,28 @@ public class HostVO implements Host {
     @Override
     public Status getStatus() {
         return status;
+    }
+    
+    public HostConsolidationStatus getHostConsolidationStatus() {
+        return hostConsolidationStatus;   
+    }
+    
+    public void setHostConsolidationStatus(HostConsolidationStatus status) {
+        hostConsolidationStatus = status;
+    }
+    
+    /**
+     * Consolidation status of the cluster (Consolidating, ConsolidationFailed or Consolidated) 
+     * */
+    public static enum HostConsolidationStatus {
+        FailedToShutDown,
+        ShutDownToConsolidate,
+        FailedToStart,
+        Up;
+        public static boolean isShutDownToConsolidate(HostConsolidationStatus hostConsolidationStatus){
+            return ShutDownToConsolidate == hostConsolidationStatus;
+        }
+        
     }
 
     @Override

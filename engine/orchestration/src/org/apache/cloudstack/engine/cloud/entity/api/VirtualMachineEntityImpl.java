@@ -191,8 +191,8 @@ public class VirtualMachineEntityImpl implements VirtualMachineEntity {
 	}
 
 	@Override
-	public String reserve(String plannerToUse, DeploymentPlan plan,
-			ExcludeList exclude, String caller) throws InsufficientCapacityException, ResourceUnavailableException {
+	public String reserve(String plannerToUse, DeploymentPlan plan, ExcludeList exclude, String caller)
+	        throws InsufficientCapacityException, ResourceUnavailableException {
 		return manager.reserveVirtualMachine(this.vmEntityVO, plannerToUse, plan, exclude);
 	}
 

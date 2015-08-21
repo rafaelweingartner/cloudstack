@@ -2548,7 +2548,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 		int tries = 0;
 		while (host.getResourceState() != ResourceState.Maintenance) {
         	tries ++;
-        	sleepThread();
+        	sleepThread(3);
         	
         	host = _hostDao.findById(hostId);
         	if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
@@ -2559,11 +2559,13 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         	}
         }
         dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
+        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.ShutDownToConsolidate);
+        _hostDao.update(host.getId(), host);
     }
 
-    private void sleepThread() {
+    private void sleepThread(int seconds) {
         try {
-        	Thread.sleep(3000);
+        	Thread.sleep(seconds * 1000);
         } catch (InterruptedException e) {
         	throw new CloudRuntimeException(e);
         }
@@ -2603,29 +2605,38 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     private void doStartHost(HostVO host) {
         executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
         
-        checkHostAlive(host);        
-		_agentMgr.reconnect(host.getId());
-        
-        cancelMaintenance(host.getId());  
+        if (checkHostAlive(host)) {
+            _agentMgr.reconnect(host.getId());
+            
+            cancelMaintenance(host.getId());
+            
+            host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.Up);
+            _hostDao.update(host.getId(), host);
+        } else {
+            host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.FailedToStart);
+            _hostDao.update(host.getId(), host);
+        }
     }
 
-    private void checkHostAlive(HostVO host) {
+    private boolean checkHostAlive(HostVO host) {
         int pingCount = 0;
         int exitValuePing = 1;
-        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPrivateIpAddress().trim());
+        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim());
         do{
-        	pingCount ++;
-        	Process processPing=executeProgram(pingCommandWithIP);;
+            pingCount ++;
+            Process processPing=executeProgram(pingCommandWithIP);
             while(processPing.isAlive()) {
-            	s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
-                sleepThread();
+                s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
+                sleepThread(3);
             }
             exitValuePing = processPing.exitValue();
             s_logger.info("Ping finished! ExitCode="+exitValuePing);
         } while(exitValuePing != 0 && pingCount < 30);
         
-        if (exitValuePing != 0) {
-            throw new CloudRuntimeException(String.format("Canot start host due to ping timeout [hostId=%d],[hostName=%s], [hostIp=%s]", host.getId(), host.getName(), host.getPublicIpAddress()));
+        if (exitValuePing == 0) {
+            return true;
+        } else {
+            return false;
         }
     }
 

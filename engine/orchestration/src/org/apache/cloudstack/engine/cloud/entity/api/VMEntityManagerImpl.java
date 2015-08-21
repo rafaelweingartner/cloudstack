@@ -22,9 +22,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.affinity.dao.AffinityGroupVMMapDao;
 import org.apache.cloudstack.engine.cloud.entity.api.db.VMEntityVO;
 import org.apache.cloudstack.engine.cloud.entity.api.db.VMReservationVO;
@@ -32,6 +29,8 @@ import org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMEntityDao;
 import org.apache.cloudstack.engine.cloud.entity.api.db.dao.VMReservationDao;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.deploy.DataCenterDeployment;
@@ -114,8 +113,7 @@ public class VMEntityManagerImpl implements VMEntityManager {
 
     @Inject
     protected AffinityGroupVMMapDao _affinityGroupVMMapDao;
-
-
+    
 	@Override
 	public VMEntityVO loadVirtualMachine(String vmId) {
 		// TODO Auto-generated method stub
@@ -212,7 +210,7 @@ public class VMEntityManagerImpl implements VMEntityManager {
             }
         }
     }
-
+    
     @Override
     public void deployVirtualMachine(String reservationId, VMEntityVO vmEntityVO, String caller, Map<VirtualMachineProfile.Param, Object> params) throws InsufficientCapacityException, ResourceUnavailableException{
         //grab the VM Id and destination using the reservationId.

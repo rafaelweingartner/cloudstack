@@ -43,6 +43,7 @@ public class ConsoleProxyManagerTest {
     public void setup() throws Exception {
         MockitoAnnotations.initMocks(this);
         ReflectionTestUtils.setField(cpvmManager, "_allocProxyLock", globalLock);
+        ReflectionTestUtils.setField(cpvmManager, "logger", Logger.getLogger(ConsoleProxyManagerImpl.class));
         Mockito.doCallRealMethod().when(cpvmManager).expandPool(Mockito.anyLong(), Mockito.anyObject());
     }
 
@@ -58,7 +59,6 @@ public class ConsoleProxyManagerTest {
         Mockito.when(cpvmManager.startNew(Mockito.anyLong())).thenReturn(proxyVO);
         // Start CPVM
         Mockito.when(cpvmManager.startProxy(Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(proxyVO);
-
         cpvmManager.expandPool(new Long(1), new Object());
     }
 

@@ -28,6 +28,9 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.cloudstack.lb.ApplicationLoadBalancerRuleVO;
+import org.apache.cloudstack.network.element.InternalLoadBalancerElement;
+import org.apache.cloudstack.network.lb.InternalLoadBalancerVMManager;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,10 +38,6 @@ import org.mockito.Matchers;
 import org.mockito.Mockito;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import org.apache.cloudstack.lb.ApplicationLoadBalancerRuleVO;
-import org.apache.cloudstack.network.element.InternalLoadBalancerElement;
-import org.apache.cloudstack.network.lb.InternalLoadBalancerVMManager;
 
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.configuration.ConfigurationManager;

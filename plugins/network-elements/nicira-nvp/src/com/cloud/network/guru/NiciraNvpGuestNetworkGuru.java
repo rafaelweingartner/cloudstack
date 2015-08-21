@@ -26,7 +26,6 @@ import java.util.List;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.CreateLogicalSwitchAnswer;
@@ -71,7 +70,6 @@ import com.cloud.vm.VirtualMachineProfile;
 public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
     private static final int MAX_NAME_LENGTH = 40;
 
-    private static final Logger s_logger = Logger.getLogger(NiciraNvpGuestNetworkGuru.class);
 
     @Inject
     protected NetworkModel networkModel;
@@ -108,7 +106,7 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
             isMyIsolationMethod(physicalNetwork) && ntwkOfferingSrvcDao.areServicesSupportedByNetworkOffering(offering.getId(), Service.Connectivity)) {
             return true;
         } else {
-            s_logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
+            logger.trace("We only take care of Guest networks of type   " + GuestType.Isolated + " in zone of type " + NetworkType.Advanced);
             return false;
         }
     }
@@ -119,18 +117,18 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
         PhysicalNetworkVO physnet = physicalNetworkDao.findById(plan.getPhysicalNetworkId());
         DataCenter dc = _dcDao.findById(plan.getDataCenterId());
         if (!canHandle(offering, dc.getNetworkType(), physnet)) {
-            s_logger.debug("Refusing to design this network");
+            logger.debug("Refusing to design this network");
             return null;
         }
 
         List<NiciraNvpDeviceVO> devices = niciraNvpDao.listByPhysicalNetwork(physnet.getId());
         if (devices.isEmpty()) {
-            s_logger.error("No NiciraNvp Controller on physical network " + physnet.getName());
+            logger.error("No NiciraNvp Controller on physical network " + physnet.getName());
             return null;
         }
-        s_logger.debug("Nicira Nvp " + devices.get(0).getUuid() + " found on physical network " + physnet.getId());
+        logger.debug("Nicira Nvp " + devices.get(0).getUuid() + " found on physical network " + physnet.getId());
 
-        s_logger.debug("Physical isolation type is supported, asking GuestNetworkGuru to design this network");
+        logger.debug("Physical isolation type is supported, asking GuestNetworkGuru to design this network");
         NetworkVO networkObject = (NetworkVO)super.design(offering, plan, userSpecified, owner);
         if (networkObject == null) {
             return null;
@@ -179,7 +177,7 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
 
         List<NiciraNvpDeviceVO> devices = niciraNvpDao.listByPhysicalNetwork(physicalNetworkId);
         if (devices.isEmpty()) {
-            s_logger.error("No NiciraNvp Controller on physical network " + physicalNetworkId);
+            logger.error("No NiciraNvp Controller on physical network " + physicalNetworkId);
             return null;
         }
         NiciraNvpDeviceVO niciraNvpDevice = devices.get(0);
@@ -193,16 +191,16 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
         CreateLogicalSwitchAnswer answer = (CreateLogicalSwitchAnswer)agentMgr.easySend(niciraNvpHost.getId(), cmd);
 
         if (answer == null || !answer.getResult()) {
-            s_logger.error("CreateLogicalSwitchCommand failed");
+            logger.error("CreateLogicalSwitchCommand failed");
             return null;
         }
 
         try {
             implemented.setBroadcastUri(new URI("lswitch", answer.getLogicalSwitchUuid(), null));
             implemented.setBroadcastDomainType(BroadcastDomainType.Lswitch);
-            s_logger.info("Implemented OK, network linked to  = " + implemented.getBroadcastUri().toString());
+            logger.info("Implemented OK, network linked to  = " + implemented.getBroadcastUri().toString());
         } catch (URISyntaxException e) {
-            s_logger.error("Unable to store logical switch id in broadcast uri, uuid = " + implemented.getUuid(), e);
+            logger.error("Unable to store logical switch id in broadcast uri, uuid = " + implemented.getUuid(), e);
             return null;
         }
 
@@ -226,13 +224,13 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
     public void shutdown(final NetworkProfile profile, final NetworkOffering offering) {
         NetworkVO networkObject = networkDao.findById(profile.getId());
         if (networkObject.getBroadcastDomainType() != BroadcastDomainType.Lswitch || networkObject.getBroadcastUri() == null) {
-            s_logger.warn("BroadcastUri is empty or incorrect for guestnetwork " + networkObject.getDisplayText());
+            logger.warn("BroadcastUri is empty or incorrect for guestnetwork " + networkObject.getDisplayText());
             return;
         }
 
         List<NiciraNvpDeviceVO> devices = niciraNvpDao.listByPhysicalNetwork(networkObject.getPhysicalNetworkId());
         if (devices.isEmpty()) {
-            s_logger.error("No NiciraNvp Controller on physical network " + networkObject.getPhysicalNetworkId());
+            logger.error("No NiciraNvp Controller on physical network " + networkObject.getPhysicalNetworkId());
             return;
         }
         NiciraNvpDeviceVO niciraNvpDevice = devices.get(0);
@@ -242,7 +240,7 @@ public class NiciraNvpGuestNetworkGuru extends GuestNetworkGuru {
         DeleteLogicalSwitchAnswer answer = (DeleteLogicalSwitchAnswer)agentMgr.easySend(niciraNvpHost.getId(), cmd);
 
         if (answer == null || !answer.getResult()) {
-            s_logger.error("DeleteLogicalSwitchCommand failed");
+            logger.error("DeleteLogicalSwitchCommand failed");
         }
 
         super.shutdown(profile, offering);

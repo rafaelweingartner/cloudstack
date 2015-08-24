@@ -141,6 +141,7 @@ import com.cloud.exception.VirtualMachineMigrationException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
+import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.hypervisor.HypervisorCapabilitiesVO;
@@ -3446,6 +3447,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     @Override
     public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams) 
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
+        
+        long paramVmId = vmId;
+        Map<VirtualMachineProfile.Param, Object> paramAdditionalParams = additionalParams;
+        
         // Input validation
         Account callerAccount = CallContext.current().getCallingAccount();
         UserVO callerUser = _userDao.findById(CallContext.current().getCallingUserId());
@@ -3549,7 +3554,6 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         
         String reservationId = reserveHost(callerUser, plan, vmEntity, plannerName);
-        
         vmEntity.deploy(reservationId, Long.toString(callerUser.getId()), params);
         
         Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> vmParamPair = new Pair(vm, params);
@@ -3587,11 +3591,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 throw e;
             }
             ResourceManager resourceManager = (ResourceManager) resourceService;
+            HostVO hostVO = hostsToStart.get(0);
             try {
-                resourceManager.startHost(_hostDao.findById(hostsToStart.get(0).getId()));
+                resourceManager.startHost(hostVO);
+                for (int tries = 0; tries < 50; tries++) {
+                    hostVO = _hostDao.findById(hostVO.getId());
+                    if (hostVO.getStatus() == Status.Up) {
+                        break;
+                    }
+                    sleepThread(10);
+                }
             } catch (CloudRuntimeException failToStartHost) {
-                s_logger.warn(String.format("Fail to start host due to ping timeout [hostId=%d],[hostName=%s], [hostIp=%s]", hostsToStart.get(0).getId(), hostsToStart.get(0).getName(), hostsToStart.get(0).getPublicIpAddress()));
-                hostsToStart.remove(0);
+                s_logger.warn(String.format("Failed to start host due to ping timeout [hostId=%d],[hostName=%s], [hostIp=%s]", hostVO.getId(), hostVO.getName(), hostVO.getPublicIpAddress()));
             }
             return reserveHost(callerUser, plan, vmEntity, plannerName);
         }
@@ -3611,6 +3622,18 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
         return hostsToStart;
     }
+    
+    /**
+     * Thread sleeps seconds.
+     * @param seconds
+     */
+    private void sleepThread(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            throw new CloudRuntimeException(e);
+        }
+    }    
     
     @Override
     public UserVm destroyVm(long vmId) throws ResourceUnavailableException,

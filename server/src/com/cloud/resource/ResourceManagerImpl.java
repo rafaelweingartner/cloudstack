@@ -17,11 +17,13 @@
 package com.cloud.resource;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -75,6 +77,7 @@ import com.cloud.configuration.ConfigurationManager;
 import com.cloud.dc.ClusterDetailsDao;
 import com.cloud.dc.ClusterDetailsVO;
 import com.cloud.dc.ClusterVO;
+import com.cloud.dc.ClusterVO.ConsolidationStatus;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.DataCenterIpAddressVO;
 import com.cloud.dc.DataCenterVO;
@@ -2602,13 +2605,29 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         doStartHost(host);
 	}
 
+	/**
+	 * Executes start command (wake on lan).
+	 * As the cluster of this host needs more resource it is marked as Consolidated.
+	 * Thus consolidation manager will not try to shut down any host until the time between consolidation has elapsed.
+	 * @See Method implemented for a plugin in development. It is not recommended to use it if not by the respective plugin..  
+	 * @param host
+	 */
     private void doStartHost(HostVO host) {
         executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
         
-        if (checkHostAlive(host)) {
-            _agentMgr.reconnect(host.getId());
-            
+        boolean hostIsReachable = false;
+        int tries = 0;
+        while (!hostIsReachable && tries < 50) {
+            tries++;
+            hostIsReachable = hostIsReachable(host);            
+        }
+        if (hostIsReachable) {
             cancelMaintenance(host.getId());
+            
+            ClusterVO cluster = _clusterDao.findById(host.getClusterId());
+            cluster.setLastConsolidated(new Date());
+            cluster.setConsolidationStatus(ConsolidationStatus.Consolidated);
+            _clusterDao.update(cluster.getId(), cluster);
             
             host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.Up);
             _hostDao.update(host.getId(), host);
@@ -2618,25 +2637,16 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    private boolean checkHostAlive(HostVO host) {
-        int pingCount = 0;
-        int exitValuePing = 1;
-        String pingCommandWithIP = String.format("%s %s", pingCommand.trim(), host.getPublicIpAddress().trim());
-        do{
-            pingCount ++;
-            Process processPing=executeProgram(pingCommandWithIP);
-            while(processPing.isAlive()) {
-                s_logger.info("Waiting ping to "+ host.getPublicIpAddress() +" finish");
-                sleepThread(3);
-            }
-            exitValuePing = processPing.exitValue();
-            s_logger.info("Ping finished! ExitCode="+exitValuePing);
-        } while(exitValuePing != 0 && pingCount < 30);
-        
-        if (exitValuePing == 0) {
-            return true;
-        } else {
-            return false;
+    /**
+     * Checks if host is reachable
+     * @param host
+     * @return
+     */
+    private boolean hostIsReachable(HostVO host) {
+        try {
+            return InetAddress.getByName(host.getPrivateIpAddress()).isReachable(5000);
+        } catch (Exception e) {
+            throw new CloudRuntimeException(e);
         }
     }
 

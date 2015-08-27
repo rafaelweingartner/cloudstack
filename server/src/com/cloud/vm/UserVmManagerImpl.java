@@ -3373,22 +3373,26 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             for (int tries = 0; tries < 50; tries++) {
                 hostVO = _hostDao.findById(hostVO.getId());
                 if (hostVO.getStatus() == Status.Up) {
-                    break;
+                    return;
                 }
                 sleepThread(10);
             }
         } catch (CloudRuntimeException failToStartHost) {
-            s_logger.warn(String.format("Failed to start host timeout to check the host up status [hostId=%d],[hostName=%s], [hostIp=%s]", hostVO.getId(), hostVO.getName(),
-                    hostVO.getPublicIpAddress()));
+            s_logger.warn(String.format("Failed to start host [hostId=%d],[hostName=%s], [hostIp=%s]", hostVO.getId(), hostVO.getName(), hostVO.getPublicIpAddress()));
         }
+        s_logger.warn(String.format("Failed to start host [hostId=%d],[hostName=%s], [hostIp=%s]. It seems that the host status is not up in database.", hostVO.getId(),
+                hostVO.getName(), hostVO.getPublicIpAddress()));
     }
 
     private List<HostVO> getHostToStart(VirtualMachineEntity vmEntity) {
         List<HostVO> hostsThatMightBeUsedrrayList = new ArrayList<HostVO>();
+        VMInstanceVO vm = _vmDao.findByUuid(vmEntity.getUuid());
         List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(vmEntity.getTemplate().getHypervisorType().name());
         for (ClusterVO c : clusters) {
-            List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
-            hostsThatMightBeUsedrrayList.addAll(allHosts);
+            if (vm.getDataCenterId() == c.getDataCenterId()) {
+                List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
+                hostsThatMightBeUsedrrayList.addAll(allHosts);
+            }
         }
         List<HostVO> hostTostart = new ArrayList<HostVO>();
         for (HostVO h : hostsThatMightBeUsedrrayList) {

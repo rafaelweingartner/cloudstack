@@ -674,12 +674,12 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      * @throws XmlRpcException
      */
     private void waitChangePoolMasterHost(Host master, Connection conn) throws BadServerResponse, XenAPIException, XmlRpcException {
-        int timer = 0;
+        int count = 0;
         while (_host.uuid.equals(master.getUuid(conn))) {
             sleepThread(3);
-            timer ++;
-            if (timer > 90) {
-                throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s] as couldnt change it from master of pool", _host.uuid));
+            count ++;
+            if (count > 90) {
+                throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]; It was not possible to assign a new master to its pool", _host.uuid));
             }
         }
     }

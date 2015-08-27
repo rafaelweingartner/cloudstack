@@ -104,6 +104,7 @@ import com.cloud.capacity.CapacityManager;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.Resource.ResourceType;
+import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
 import com.cloud.dc.DataCenterVO;
@@ -139,7 +140,9 @@ import com.cloud.exception.StorageUnavailableException;
 import com.cloud.exception.VirtualMachineMigrationException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.Host;
+import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
+import com.cloud.host.HostVO.HostConsolidationStatus;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -3353,7 +3356,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
         } catch (InsufficientCapacityException e) {
-            List<HostVO> hostsToStart = getHostToStart(plan);
+            List<HostVO> hostsToStart = getHostToStart(plan, vmEntity);
             if (hostsToStart.isEmpty()) {
                 throw e;
             }
@@ -3380,21 +3383,23 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
     }
 
-    private List<HostVO> getHostToStart(DataCenterDeployment plan) {
-        List<HostVO> hostsToStart = new ArrayList<HostVO>();
-        //TODO analisar como escolher somente hosts que são do hypervisor do template a ser iniciado
-        List<Long> hostsId = _hostDao.listAllHosts(plan.getDataCenterId());
-        for (Long hId : hostsId) {
-            HostVO host = _hostDao.findById(hId);
-            if (host.getType() == Host.Type.Routing && host.getHostConsolidationStatus() == HostVO.HostConsolidationStatus.ShutDownToConsolidate) {
-                hostsToStart.add(host);
+    private List<HostVO> getHostToStart(DataCenterDeployment plan, VirtualMachineEntity vmEntity) {
+        List<HostVO> hostsThatMightBeUsedrrayList = new ArrayList<HostVO>();
+        List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(vmEntity.getTemplate().getHypervisorType().name());
+        for (ClusterVO c : clusters) {
+            List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
+            hostsThatMightBeUsedrrayList.addAll(allHosts);
+        }
+        List<HostVO> hostTostart = new ArrayList<HostVO>();
+        for(HostVO h: hostsThatMightBeUsedrrayList){
+            if (h.getHostConsolidationStatus() == HostConsolidationStatus.ShutDownToConsolidate) {
+                hostTostart.add(h);
             }
         }
-        return hostsToStart;
+        return hostTostart;
     }
 
     /**
-     * Thread sleeps seconds.
      * @param seconds
      */
     private void sleepThread(int seconds) {

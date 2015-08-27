@@ -3356,7 +3356,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
         } catch (InsufficientCapacityException e) {
-            List<HostVO> hostsToStart = getHostToStart(plan, vmEntity);
+            List<HostVO> hostsToStart = getHostToStart(vmEntity);
             if (hostsToStart.isEmpty()) {
                 throw e;
             }
@@ -3383,18 +3383,15 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         }
     }
 
-    private List<HostVO> getHostToStart(DataCenterDeployment plan, VirtualMachineEntity vmEntity) {
-        List<HostVO> hostsThatMightBeUsed = new ArrayList<HostVO>();
+    private List<HostVO> getHostToStart(VirtualMachineEntity vmEntity) {
+        List<HostVO> hostsThatMightBeUsedrrayList = new ArrayList<HostVO>();
         List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(vmEntity.getTemplate().getHypervisorType().name());
         for (ClusterVO c : clusters) {
-            if (c.getDataCenterId() != plan.getDataCenterId()) {
-                continue;
-            }
             List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
-            hostsThatMightBeUsed.addAll(allHosts);
+            hostsThatMightBeUsedrrayList.addAll(allHosts);
         }
         List<HostVO> hostTostart = new ArrayList<HostVO>();
-        for(HostVO h: hostsThatMightBeUsed){
+        for (HostVO h : hostsThatMightBeUsedrrayList) {
             if (h.getHostConsolidationStatus() == HostConsolidationStatus.ShutDownToConsolidate) {
                 hostTostart.add(h);
             }

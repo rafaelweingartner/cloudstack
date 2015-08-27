@@ -3384,14 +3384,17 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     private List<HostVO> getHostToStart(DataCenterDeployment plan, VirtualMachineEntity vmEntity) {
-        List<HostVO> hostsThatMightBeUsedrrayList = new ArrayList<HostVO>();
+        List<HostVO> hostsThatMightBeUsed = new ArrayList<HostVO>();
         List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(vmEntity.getTemplate().getHypervisorType().name());
         for (ClusterVO c : clusters) {
+            if (c.getDataCenterId() != plan.getDataCenterId()) {
+                continue;
+            }
             List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
-            hostsThatMightBeUsedrrayList.addAll(allHosts);
+            hostsThatMightBeUsed.addAll(allHosts);
         }
         List<HostVO> hostTostart = new ArrayList<HostVO>();
-        for(HostVO h: hostsThatMightBeUsedrrayList){
+        for(HostVO h: hostsThatMightBeUsed){
             if (h.getHostConsolidationStatus() == HostConsolidationStatus.ShutDownToConsolidate) {
                 hostTostart.add(h);
             }

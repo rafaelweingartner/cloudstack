@@ -17,7 +17,10 @@
 
 package com.cloud.storage.listener;
 
-import javax.inject.Inject;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.cloudstack.framework.events.EventBus;
 import org.apache.cloudstack.framework.events.EventBusException;
@@ -27,17 +30,11 @@ import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import com.cloud.event.EventCategory;
 import com.cloud.server.ManagementServer;
 import com.cloud.storage.Snapshot;
-import com.cloud.storage.Snapshot.State;
 import com.cloud.storage.Snapshot.Event;
 import com.cloud.storage.Snapshot.State;
 import com.cloud.storage.SnapshotVO;
-import com.cloud.utils.fsm.StateListener;
 import com.cloud.utils.component.ComponentContext;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import com.cloud.utils.fsm.StateListener;
 
 public class SnapshotStateListener implements StateListener<State, Event, SnapshotVO> {
 

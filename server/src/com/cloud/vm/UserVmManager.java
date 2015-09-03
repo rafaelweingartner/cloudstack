@@ -20,8 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.cloud.offering.ServiceOffering;
-import com.cloud.service.ServiceOfferingVO;
 import org.apache.cloudstack.api.BaseCmd.HTTPMethod;
 import org.apache.cloudstack.framework.config.ConfigKey;
 
@@ -33,8 +31,10 @@ import com.cloud.exception.InsufficientCapacityException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.exception.VirtualMachineMigrationException;
+import com.cloud.offering.ServiceOffering;
 import com.cloud.projects.Project.ListProjectResourcesCriteria;
 import com.cloud.server.Criteria;
+import com.cloud.service.ServiceOfferingVO;
 import com.cloud.user.Account;
 import com.cloud.uservm.UserVm;
 import com.cloud.utils.Pair;

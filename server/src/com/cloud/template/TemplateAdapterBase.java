@@ -16,13 +16,11 @@
 // under the License.
 package com.cloud.template;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 import javax.inject.Inject;
-
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.user.iso.DeleteIsoCmd;
@@ -35,6 +33,7 @@ import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.configuration.Config;

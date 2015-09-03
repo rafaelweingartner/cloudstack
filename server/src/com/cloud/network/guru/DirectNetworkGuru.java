@@ -21,8 +21,8 @@ import java.util.List;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.log4j.Logger;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DataCenter.NetworkType;
@@ -57,7 +57,6 @@ import com.cloud.utils.component.AdapterBase;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallbackNoReturn;
-import com.cloud.utils.db.TransactionCallbackWithException;
 import com.cloud.utils.db.TransactionCallbackWithExceptionNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.ExceptionUtil;

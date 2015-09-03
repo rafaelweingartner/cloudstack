@@ -27,9 +27,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.api.command.user.vmsnapshot.ListVMSnapshotCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.StorageStrategyFactory;
@@ -47,6 +44,8 @@ import org.apache.cloudstack.framework.jobs.impl.OutcomeImpl;
 import org.apache.cloudstack.framework.jobs.impl.VmWorkJobVO;
 import org.apache.cloudstack.jobs.JobInfo;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;

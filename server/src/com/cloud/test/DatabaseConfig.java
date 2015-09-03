@@ -57,8 +57,6 @@ import com.cloud.utils.PropertiesUtil;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.Transaction;
-import com.cloud.utils.db.TransactionCallbackNoReturn;
-import com.cloud.utils.db.TransactionCallbackWithException;
 import com.cloud.utils.db.TransactionCallbackWithExceptionNoReturn;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.db.TransactionStatus;

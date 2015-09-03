@@ -20,10 +20,9 @@ import java.util.List;
 
 import javax.ejb.Local;
 
+import org.apache.cloudstack.api.response.DiskOfferingResponse;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
-
-import org.apache.cloudstack.api.response.DiskOfferingResponse;
 
 import com.cloud.api.query.vo.DiskOfferingJoinVO;
 import com.cloud.offering.DiskOffering;

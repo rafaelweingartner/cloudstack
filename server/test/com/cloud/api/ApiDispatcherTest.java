@@ -19,7 +19,6 @@
 package com.cloud.api;
 
 import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.Parameter;

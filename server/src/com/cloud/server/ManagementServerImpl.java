@@ -42,9 +42,6 @@ import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.affinity.AffinityGroupProcessor;
@@ -450,6 +447,8 @@ import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.GetVncPortAnswer;

@@ -24,11 +24,11 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import com.cloud.event.dao.UsageEventDao;
-import com.cloud.event.dao.UsageEventDetailsDao;
-import com.cloud.vm.dao.UserVmDetailsDao;
 import junit.framework.TestCase;
 
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,11 +37,9 @@ import org.mockito.Mockito;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
-
 import com.cloud.configuration.ConfigurationManager;
+import com.cloud.event.dao.UsageEventDao;
+import com.cloud.event.dao.UsageEventDetailsDao;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.network.Network;
 import com.cloud.network.Network.Provider;
@@ -57,6 +55,7 @@ import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
 import com.cloud.user.UserVO;
 import com.cloud.utils.component.ComponentContext;
+import com.cloud.vm.dao.UserVmDetailsDao;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations="classpath:/createNetworkOffering.xml")

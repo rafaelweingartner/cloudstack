@@ -31,14 +31,13 @@ import javax.inject.Inject;
 
 import junit.framework.Assert;
 
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.log4j.Logger;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 
 import com.cloud.exception.ResourceUnavailableException;
 import com.cloud.network.IpAddressManager;

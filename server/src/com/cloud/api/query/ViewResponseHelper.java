@@ -22,8 +22,6 @@ import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.affinity.AffinityGroupResponse;
 import org.apache.cloudstack.api.ApiConstants.HostDetails;
 import org.apache.cloudstack.api.ApiConstants.VMDetails;
@@ -49,6 +47,7 @@ import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.vo.AccountJoinVO;

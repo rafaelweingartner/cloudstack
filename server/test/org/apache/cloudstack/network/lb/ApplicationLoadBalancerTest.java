@@ -25,7 +25,11 @@ import javax.inject.Inject;
 
 import junit.framework.TestCase;
 
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.lb.ApplicationLoadBalancerRuleVO;
+import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
+import org.apache.cloudstack.test.utils.SpringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,13 +46,6 @@ import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
-
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
-import org.apache.cloudstack.network.lb.ApplicationLoadBalancerManagerImpl;
-import org.apache.cloudstack.network.lb.ApplicationLoadBalancerRule;
-import org.apache.cloudstack.test.utils.SpringUtils;
 
 import com.cloud.event.dao.UsageEventDao;
 import com.cloud.exception.InsufficientAddressCapacityException;

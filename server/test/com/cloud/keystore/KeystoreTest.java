@@ -18,13 +18,13 @@ package com.cloud.keystore;
 
 import junit.framework.TestCase;
 
+import org.apache.cloudstack.api.response.AlertResponse;
+import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 
 import com.cloud.api.ApiSerializerHelper;
-import org.apache.cloudstack.api.response.AlertResponse;
-import org.apache.cloudstack.api.response.UserVmResponse;
 
 public class KeystoreTest extends TestCase {
     private final static Logger s_logger = Logger.getLogger(KeystoreTest.class);

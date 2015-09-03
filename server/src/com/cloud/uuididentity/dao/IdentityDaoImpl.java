@@ -32,7 +32,6 @@ import com.cloud.server.ResourceTag.ResourceObjectType;
 import com.cloud.utils.Pair;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDaoBase;
-import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionLegacy;
 
 @Component

@@ -64,6 +64,7 @@ import org.apache.cloudstack.api.command.user.vmgroup.DeleteVMGroupCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.cloud.entity.api.VirtualMachineEntity;
 import org.apache.cloudstack.engine.cloud.entity.api.VirtualMachineEntityImpl;
+import org.apache.cloudstack.engine.cloud.entity.api.db.VMEntityVO;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.engine.service.api.OrchestrationService;
@@ -3426,8 +3427,9 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
 
     private List<ClusterVO> getClustersByHypervisorType(VirtualMachineEntity vmEntity) {
         VirtualMachineEntityImpl virtualMachineEntityImpl = (VirtualMachineEntityImpl) vmEntity;
-        List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(virtualMachineEntityImpl.getVMEntityVO().getHypervisorType().name());
-        return clusters;
+        VMEntityVO vmEntityVO = virtualMachineEntityImpl.getVMEntityVO();
+        String hypervisorType = vmEntityVO.getHypervisorType().name();
+        return _clusterDao.listByDcHyType(vmEntityVO.getDataCenterId(), hypervisorType);
     }
 
     private List<ClusterResources> getClusterResourcesToStart(List<ClusterVO> clusters) {

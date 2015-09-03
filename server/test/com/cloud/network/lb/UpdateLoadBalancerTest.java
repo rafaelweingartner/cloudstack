@@ -16,8 +16,8 @@
 // under the License.
 package com.cloud.network.lb;
 
-import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 

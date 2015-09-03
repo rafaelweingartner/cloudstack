@@ -25,11 +25,6 @@ import java.util.Map;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.BaseListAccountResourcesCmd;
@@ -49,6 +44,7 @@ import org.apache.cloudstack.api.command.user.autoscale.UpdateAutoScaleVmProfile
 import org.apache.cloudstack.api.command.user.vm.DeployVMCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.ApiDispatcher;
@@ -95,11 +91,13 @@ import com.cloud.utils.db.GenericDao;
 import com.cloud.utils.db.JoinBuilder;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.net.NetUtils;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 @Local(value = { AutoScaleService.class, AutoScaleManager.class })
 public class AutoScaleManagerImpl<Type> extends ManagerBase implements AutoScaleManager, AutoScaleService {

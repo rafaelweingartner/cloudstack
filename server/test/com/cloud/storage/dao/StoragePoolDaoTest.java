@@ -18,13 +18,13 @@ package com.cloud.storage.dao;
 
 import javax.inject.Inject;
 
+import junit.framework.TestCase;
+
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDaoImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-
-import junit.framework.TestCase;
 
 import com.cloud.storage.StoragePoolStatus;
 

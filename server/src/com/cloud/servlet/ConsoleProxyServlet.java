@@ -35,15 +35,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.apache.cloudstack.api.IdentityService;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import org.apache.cloudstack.api.IdentityService;
 
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.host.HostVO;
@@ -61,6 +57,8 @@ import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineManager;
 import com.cloud.vm.dao.UserVmDetailsDao;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 /**
  * Thumbnail access : /console?cmd=thumbnail&vm=xxx&w=xxx&h=xxx
  * Console access : /conosole?cmd=access&vm=xxx

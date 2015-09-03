@@ -28,10 +28,9 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 
 import org.apache.cloudstack.api.ApiConstants.HostDetails;
-import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.api.response.HostForMigrationResponse;
+import org.apache.cloudstack.api.response.HostResponse;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 

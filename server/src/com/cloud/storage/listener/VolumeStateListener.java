@@ -17,6 +17,16 @@
 
 package com.cloud.storage.listener;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.cloudstack.framework.events.EventBus;
+import org.apache.cloudstack.framework.events.EventBusException;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+
 import com.cloud.event.EventCategory;
 import com.cloud.server.ManagementServer;
 import com.cloud.storage.Volume;
@@ -24,15 +34,6 @@ import com.cloud.storage.Volume.Event;
 import com.cloud.storage.Volume.State;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.fsm.StateListener;
-import org.apache.cloudstack.framework.events.EventBus;
-import org.apache.cloudstack.framework.events.EventBusException;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 public class VolumeStateListener implements StateListener<State, Event, Volume> {
 

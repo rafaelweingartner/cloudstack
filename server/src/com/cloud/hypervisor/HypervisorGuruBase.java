@@ -38,8 +38,8 @@ import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.NicSecondaryIpDao;
-import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.dao.UserVmDetailsDao;
+import com.cloud.vm.dao.VMInstanceDao;
 
 public abstract class HypervisorGuruBase extends AdapterBase implements HypervisorGuru {
 

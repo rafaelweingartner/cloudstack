@@ -16,19 +16,14 @@
 // under the License.
 package com.cloud.network.guru;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import com.cloud.network.dao.*;
-import com.cloud.network.rules.FirewallRule;
-import com.cloud.network.rules.FirewallRuleVO;
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
 import com.cloud.dc.DataCenter;
@@ -48,6 +43,15 @@ import com.cloud.network.Network.State;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.PhysicalNetwork;
 import com.cloud.network.PhysicalNetwork.IsolationMethod;
+import com.cloud.network.dao.FirewallRulesCidrsDao;
+import com.cloud.network.dao.FirewallRulesCidrsVO;
+import com.cloud.network.dao.FirewallRulesDao;
+import com.cloud.network.dao.IPAddressDao;
+import com.cloud.network.dao.IPAddressVO;
+import com.cloud.network.dao.NetworkDao;
+import com.cloud.network.dao.NetworkVO;
+import com.cloud.network.rules.FirewallRule;
+import com.cloud.network.rules.FirewallRuleVO;
 import com.cloud.network.rules.PortForwardingRuleVO;
 import com.cloud.network.rules.dao.PortForwardingRulesDao;
 import com.cloud.offering.NetworkOffering;

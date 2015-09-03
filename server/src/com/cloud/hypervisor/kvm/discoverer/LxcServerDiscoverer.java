@@ -16,16 +16,16 @@
 // under the License.
 package com.cloud.hypervisor.kvm.discoverer;
 
+import javax.ejb.Local;
+
+import org.apache.log4j.Logger;
+
 import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.Discoverer;
 import com.cloud.utils.exception.CloudRuntimeException;
-
-import org.apache.log4j.Logger;
-
-import javax.ejb.Local;
 
 @Local(value=Discoverer.class)
 public class LxcServerDiscoverer extends LibvirtServerDiscoverer {

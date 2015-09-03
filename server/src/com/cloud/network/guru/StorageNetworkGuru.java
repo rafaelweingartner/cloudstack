@@ -39,11 +39,10 @@ import com.cloud.network.dao.NetworkVO;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.user.Account;
 import com.cloud.utils.net.NetUtils;
+import com.cloud.vm.Nic.ReservationStrategy;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
-import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
-import com.cloud.vm.Nic.ReservationStrategy;
 
 @Local(value = NetworkGuru.class)
 public class StorageNetworkGuru extends PodBasedNetworkGuru implements NetworkGuru {

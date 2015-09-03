@@ -34,16 +34,16 @@ import java.util.UUID;
 
 import junit.framework.Assert;
 
+import org.apache.cloudstack.api.command.admin.vlan.DedicatePublicIpRangeCmd;
+import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.apache.cloudstack.api.command.admin.vlan.DedicatePublicIpRangeCmd;
-import org.apache.cloudstack.api.command.admin.vlan.ReleasePublicIpRangeCmd;
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 
 import com.cloud.configuration.Resource.ResourceType;
 import com.cloud.dc.AccountVlanMapVO;
@@ -67,7 +67,6 @@ import com.cloud.user.AccountVO;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.user.UserVO;
 import com.cloud.user.dao.AccountDao;
-import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.net.Ip;
 

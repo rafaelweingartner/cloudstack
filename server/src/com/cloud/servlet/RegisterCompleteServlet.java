@@ -26,12 +26,11 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.cloudstack.config.Configuration;
+import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
-
-import org.apache.cloudstack.config.Configuration;
-import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;

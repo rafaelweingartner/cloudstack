@@ -27,9 +27,8 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.manager.allocator.PodAllocator;
 import com.cloud.capacity.CapacityVO;

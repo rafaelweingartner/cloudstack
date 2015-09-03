@@ -23,9 +23,6 @@ import java.util.Set;
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-import javax.naming.NamingException;
-
-import org.springframework.stereotype.Component;
 
 import org.apache.cloudstack.api.command.admin.config.UpdateCfgCmd;
 import org.apache.cloudstack.api.command.admin.network.CreateNetworkOfferingCmd;
@@ -53,6 +50,7 @@ import org.apache.cloudstack.api.command.user.network.ListNetworkOfferingsCmd;
 import org.apache.cloudstack.config.Configuration;
 import org.apache.cloudstack.region.PortableIp;
 import org.apache.cloudstack.region.PortableIpRange;
+import org.springframework.stereotype.Component;
 
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.configuration.ConfigurationService;
@@ -80,11 +78,8 @@ import com.cloud.offering.ServiceOffering;
 import com.cloud.offerings.NetworkOfferingVO;
 import com.cloud.offerings.dao.NetworkOfferingDaoImpl;
 import com.cloud.org.Grouping.AllocationState;
-import com.cloud.service.ServiceOfferingVO;
-import com.cloud.storage.DiskOfferingVO;
 import com.cloud.user.Account;
 import com.cloud.utils.component.ManagerBase;
-import com.cloud.vm.VirtualMachine.Type;
 
 @Component
 @Local(value = { ConfigurationManager.class, ConfigurationService.class })

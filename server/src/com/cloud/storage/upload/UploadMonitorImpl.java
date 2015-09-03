@@ -32,9 +32,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
 import org.apache.cloudstack.engine.subsystem.api.storage.EndPoint;
@@ -45,6 +42,8 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;

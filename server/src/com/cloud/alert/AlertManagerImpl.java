@@ -40,7 +40,6 @@ import javax.mail.URLName;
 import javax.mail.internet.InternetAddress;
 import javax.naming.ConfigurationException;
 
-import org.apache.cloudstack.alert.AlertService.AlertType;
 import org.apache.cloudstack.framework.config.ConfigDepot;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;

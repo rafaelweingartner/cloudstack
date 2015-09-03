@@ -30,9 +30,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.ObjectInDataStoreStateMachine;
@@ -42,6 +39,8 @@ import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.configuration.Config;

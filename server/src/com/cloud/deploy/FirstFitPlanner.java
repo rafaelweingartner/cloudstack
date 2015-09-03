@@ -17,58 +17,38 @@
 package com.cloud.deploy;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
-import org.apache.cloudstack.engine.subsystem.api.storage.StoragePoolAllocator;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
-
 import org.apache.log4j.Logger;
 
-import com.cloud.agent.manager.allocator.HostAllocator;
 import com.cloud.capacity.Capacity;
 import com.cloud.capacity.CapacityManager;
 import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
 import com.cloud.configuration.Config;
 import com.cloud.dc.ClusterDetailsDao;
-import com.cloud.dc.ClusterDetailsVO;
 import com.cloud.dc.ClusterVO;
 import com.cloud.dc.DataCenter;
-import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.HostPodVO;
-import com.cloud.dc.Pod;
 import com.cloud.dc.dao.ClusterDao;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.dc.dao.HostPodDao;
-import com.cloud.deploy.DeploymentPlanner.ExcludeList;
 import com.cloud.exception.InsufficientServerCapacityException;
-import com.cloud.host.Host;
-import com.cloud.host.HostVO;
-import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.offering.ServiceOffering;
-import com.cloud.org.Cluster;
-import com.cloud.org.Grouping;
-import com.cloud.resource.ResourceState;
-import com.cloud.storage.DiskOfferingVO;
 import com.cloud.storage.StorageManager;
-import com.cloud.storage.StoragePool;
-import com.cloud.storage.StoragePoolHostVO;
-import com.cloud.storage.Volume;
-import com.cloud.storage.VolumeVO;
 import com.cloud.storage.dao.DiskOfferingDao;
 import com.cloud.storage.dao.GuestOSCategoryDao;
 import com.cloud.storage.dao.GuestOSDao;
@@ -77,7 +57,6 @@ import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.AccountManager;
 import com.cloud.utils.NumbersUtil;
 import com.cloud.utils.Pair;
-import com.cloud.vm.DiskProfile;
 import com.cloud.vm.ReservationContext;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;

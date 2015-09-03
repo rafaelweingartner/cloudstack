@@ -25,11 +25,11 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.events.EventBus;
 import org.apache.cloudstack.framework.events.EventBusException;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 
 import com.cloud.event.dao.EventDao;
 import com.cloud.server.ManagementServer;

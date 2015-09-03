@@ -21,10 +21,9 @@ import java.util.List;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
-
-import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 
 import com.cloud.host.Host;
 import com.cloud.storage.VolumeVO;

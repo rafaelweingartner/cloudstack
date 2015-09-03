@@ -26,9 +26,6 @@ import java.util.Timer;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -49,6 +46,8 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.storage.DownloadAnswer;

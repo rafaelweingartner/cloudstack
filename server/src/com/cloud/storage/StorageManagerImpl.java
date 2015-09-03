@@ -41,9 +41,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.api.command.admin.storage.CancelPrimaryStorageMaintenanceCmd;
 import org.apache.cloudstack.api.command.admin.storage.CreateSecondaryStagingStoreCmd;
 import org.apache.cloudstack.api.command.admin.storage.CreateStoragePoolCmd;
@@ -88,6 +85,8 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;

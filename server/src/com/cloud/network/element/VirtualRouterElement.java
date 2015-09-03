@@ -25,14 +25,11 @@ import java.util.Set;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
-import com.google.gson.Gson;
-
 import org.apache.cloudstack.api.command.admin.router.ConfigureVirtualRouterElementCmd;
 import org.apache.cloudstack.api.command.admin.router.CreateVirtualRouterElementCmd;
 import org.apache.cloudstack.api.command.admin.router.ListVirtualRouterElementsCmd;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.configuration.ConfigurationManager;
@@ -95,6 +92,7 @@ import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VirtualMachineProfile;
 import com.cloud.vm.dao.DomainRouterDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.google.gson.Gson;
 
 @Local(value = {NetworkElement.class, FirewallServiceProvider.class,
 		        DhcpServiceProvider.class, UserDataServiceProvider.class,

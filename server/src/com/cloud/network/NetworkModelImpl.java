@@ -32,11 +32,10 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.ApiDBUtils;
 import com.cloud.configuration.Config;

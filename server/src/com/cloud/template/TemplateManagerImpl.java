@@ -31,8 +31,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.BaseListTemplateOrIsoPermissionsCmd;
 import org.apache.cloudstack.api.BaseUpdateTemplateOrIsoCmd;
@@ -84,6 +82,7 @@ import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;

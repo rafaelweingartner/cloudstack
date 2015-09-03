@@ -32,8 +32,6 @@ import javax.ejb.Local;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.api.command.user.vpc.ListPrivateGatewaysCmd;
 import org.apache.cloudstack.api.command.user.vpc.ListStaticRoutesCmd;
@@ -42,6 +40,7 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.ConfigDepot;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
+import org.apache.log4j.Logger;
 
 import com.cloud.configuration.Config;
 import com.cloud.configuration.ConfigurationManager;

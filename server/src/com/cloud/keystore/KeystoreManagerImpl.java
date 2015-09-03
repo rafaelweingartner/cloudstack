@@ -24,13 +24,11 @@ import java.security.cert.CertificateException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.ejb.Local;
 import javax.inject.Inject;
-import javax.naming.ConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;

@@ -28,7 +28,6 @@ import com.cloud.network.RemoteAccessVpn;
 import com.cloud.network.Site2SiteVpnConnection;
 import com.cloud.network.VpcVirtualNetworkApplianceService;
 import com.cloud.network.VpnUser;
-import com.cloud.network.vpc.*;
 import com.cloud.network.vpc.NetworkACLItem;
 import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.network.vpc.StaticRouteProfile;

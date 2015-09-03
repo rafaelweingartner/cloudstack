@@ -33,8 +33,6 @@ import java.util.regex.Matcher;
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.InfrastructureEntity;
 import org.apache.cloudstack.acl.RoleType;
@@ -59,6 +57,7 @@ import org.apache.cloudstack.api.command.user.event.ListEventsCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.jobs.AsyncJob;
 import org.apache.cloudstack.framework.jobs.AsyncJobManager;
+import org.apache.log4j.Logger;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.user.Account;

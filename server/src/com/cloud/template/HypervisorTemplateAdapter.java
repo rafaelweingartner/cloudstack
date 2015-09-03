@@ -27,8 +27,6 @@ import java.util.concurrent.ExecutionException;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.command.user.iso.DeleteIsoCmd;
 import org.apache.cloudstack.api.command.user.iso.RegisterIsoCmd;
 import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
@@ -48,6 +46,7 @@ import org.apache.cloudstack.framework.async.AsyncCompletionCallback;
 import org.apache.cloudstack.framework.async.AsyncRpcContext;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.alert.AlertManager;

@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -39,28 +38,20 @@ import org.apache.cloudstack.engine.subsystem.api.storage.EndPointSelector;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
-import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.usage.UsageUtils;
-
-import com.cloud.resource.ResourceManager;
-
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.Command.OnError;
-import com.cloud.agent.api.GetFileStatsCommand;
 import com.cloud.agent.api.GetStorageStatsCommand;
 import com.cloud.agent.api.HostStatsEntry;
 import com.cloud.agent.api.VmDiskStatsEntry;
 import com.cloud.agent.api.VmStatsEntry;
-import com.cloud.agent.manager.Commands;
 import com.cloud.cluster.ManagementServerHostVO;
 import com.cloud.cluster.dao.ManagementServerHostDao;
-import com.cloud.exception.AgentUnavailableException;
 import com.cloud.exception.StorageUnavailableException;
 import com.cloud.host.Host;
 import com.cloud.host.HostStats;
@@ -68,9 +59,9 @@ import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.dao.HostDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.resource.ResourceManager;
 import com.cloud.resource.ResourceState;
 import com.cloud.storage.StorageManager;
-import com.cloud.storage.StoragePoolHostVO;
 import com.cloud.storage.StorageStats;
 import com.cloud.storage.VolumeStats;
 import com.cloud.storage.VolumeVO;
@@ -91,8 +82,8 @@ import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.net.MacAddress;
 import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmVO;
-import com.cloud.vm.VmStats;
 import com.cloud.vm.VirtualMachine;
+import com.cloud.vm.VmStats;
 import com.cloud.vm.dao.UserVmDao;
 
 /**

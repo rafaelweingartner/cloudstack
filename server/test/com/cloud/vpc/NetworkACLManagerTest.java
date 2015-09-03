@@ -22,9 +22,11 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.cloud.network.vpc.*;
 import junit.framework.TestCase;
 
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.cloudstack.test.utils.SpringUtils;
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
@@ -42,16 +44,20 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
-import org.apache.cloudstack.test.utils.SpringUtils;
-
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.network.Network;
 import com.cloud.network.NetworkModel;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.network.element.NetworkACLServiceProvider;
+import com.cloud.network.vpc.NetworkACLItem;
+import com.cloud.network.vpc.NetworkACLItemDao;
+import com.cloud.network.vpc.NetworkACLItemVO;
+import com.cloud.network.vpc.NetworkACLManager;
+import com.cloud.network.vpc.NetworkACLManagerImpl;
+import com.cloud.network.vpc.NetworkACLVO;
+import com.cloud.network.vpc.VpcManager;
+import com.cloud.network.vpc.VpcService;
 import com.cloud.network.vpc.dao.NetworkACLDao;
 import com.cloud.network.vpc.dao.VpcGatewayDao;
 import com.cloud.tags.dao.ResourceTagDao;

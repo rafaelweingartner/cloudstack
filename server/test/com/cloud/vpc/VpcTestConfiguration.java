@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.cloudstack.framework.config.dao.ConfigurationDaoImpl;
 import org.apache.cloudstack.test.utils.SpringUtils;
-
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -40,10 +39,10 @@ import com.cloud.dao.EntityManagerImpl;
 import com.cloud.dc.dao.AccountVlanMapDaoImpl;
 import com.cloud.dc.dao.ClusterDaoImpl;
 import com.cloud.dc.dao.DataCenterDaoImpl;
+import com.cloud.dc.dao.DataCenterDetailsDaoImpl;
 import com.cloud.dc.dao.DataCenterIpAddressDaoImpl;
 import com.cloud.dc.dao.DataCenterLinkLocalIpAddressDaoImpl;
 import com.cloud.dc.dao.DataCenterVnetDaoImpl;
-import com.cloud.dc.dao.DataCenterDetailsDaoImpl;
 import com.cloud.dc.dao.HostPodDaoImpl;
 import com.cloud.dc.dao.PodVlanDaoImpl;
 import com.cloud.dc.dao.PodVlanMapDaoImpl;
@@ -73,7 +72,6 @@ import com.cloud.network.rules.RulesManager;
 import com.cloud.network.vpc.VpcManagerImpl;
 import com.cloud.network.vpc.dao.PrivateIpDaoImpl;
 import com.cloud.network.vpc.dao.StaticRouteDaoImpl;
-import com.cloud.network.vpc.dao.VpcDao;
 import com.cloud.network.vpc.dao.VpcGatewayDaoImpl;
 import com.cloud.network.vpc.dao.VpcOfferingDao;
 import com.cloud.network.vpc.dao.VpcServiceMapDaoImpl;

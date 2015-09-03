@@ -22,8 +22,8 @@ import java.util.List;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
+import org.apache.log4j.Logger;
 
 import com.cloud.configuration.ZoneConfig;
 import com.cloud.dc.DataCenter;

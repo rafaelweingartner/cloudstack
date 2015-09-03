@@ -21,12 +21,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -40,6 +37,8 @@ import org.apache.cloudstack.storage.command.DownloadCommand;
 import org.apache.cloudstack.storage.command.DownloadCommand.ResourceType;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand;
 import org.apache.cloudstack.storage.command.DownloadProgressCommand.RequestType;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;

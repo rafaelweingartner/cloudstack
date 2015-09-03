@@ -19,12 +19,11 @@ package com.cloud.acl;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker;
 import org.apache.cloudstack.affinity.AffinityGroup;
 import org.apache.cloudstack.api.BaseCmd;
+import org.springframework.stereotype.Component;
 
 import com.cloud.dc.DataCenter;
 import com.cloud.dc.DedicatedResourceVO;

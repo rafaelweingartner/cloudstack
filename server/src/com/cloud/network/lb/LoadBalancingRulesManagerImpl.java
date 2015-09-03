@@ -30,11 +30,6 @@ import java.util.Set;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
-
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.api.command.user.loadbalancer.CreateLBHealthCheckPolicyCmd;
 import org.apache.cloudstack.api.command.user.loadbalancer.CreateLBStickinessPolicyCmd;
@@ -49,6 +44,7 @@ import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationSe
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.lb.ApplicationLoadBalancerRuleVO;
 import org.apache.cloudstack.lb.dao.ApplicationLoadBalancerRuleDao;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.to.LoadBalancerTO;
 import com.cloud.configuration.Config;
@@ -100,6 +96,8 @@ import com.cloud.network.dao.IPAddressVO;
 import com.cloud.network.dao.LBHealthCheckPolicyDao;
 import com.cloud.network.dao.LBStickinessPolicyDao;
 import com.cloud.network.dao.LBStickinessPolicyVO;
+import com.cloud.network.dao.LoadBalancerCertMapDao;
+import com.cloud.network.dao.LoadBalancerCertMapVO;
 import com.cloud.network.dao.LoadBalancerDao;
 import com.cloud.network.dao.LoadBalancerVMMapDao;
 import com.cloud.network.dao.LoadBalancerVMMapVO;
@@ -107,8 +105,6 @@ import com.cloud.network.dao.LoadBalancerVO;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkServiceMapDao;
 import com.cloud.network.dao.NetworkVO;
-import com.cloud.network.dao.LoadBalancerCertMapDao;
-import com.cloud.network.dao.LoadBalancerCertMapVO;
 import com.cloud.network.dao.SslCertVO;
 import com.cloud.network.element.LoadBalancingServiceProvider;
 import com.cloud.network.lb.LoadBalancingRule.LbAutoScalePolicy;
@@ -117,8 +113,8 @@ import com.cloud.network.lb.LoadBalancingRule.LbAutoScaleVmProfile;
 import com.cloud.network.lb.LoadBalancingRule.LbCondition;
 import com.cloud.network.lb.LoadBalancingRule.LbDestination;
 import com.cloud.network.lb.LoadBalancingRule.LbHealthCheckPolicy;
-import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.lb.LoadBalancingRule.LbSslCert;
+import com.cloud.network.lb.LoadBalancingRule.LbStickinessPolicy;
 import com.cloud.network.rules.FirewallManager;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.FirewallRule.FirewallRuleType;
@@ -168,6 +164,8 @@ import com.cloud.vm.UserVmVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.NicDao;
 import com.cloud.vm.dao.UserVmDao;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 @Local(value = { LoadBalancingRulesManager.class, LoadBalancingRulesService.class })
 public class LoadBalancingRulesManagerImpl<Type> extends ManagerBase implements LoadBalancingRulesManager,

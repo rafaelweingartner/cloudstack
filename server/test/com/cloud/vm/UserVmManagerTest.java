@@ -36,14 +36,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import com.cloud.vm.snapshot.VMSnapshotVO;
-import com.cloud.vm.snapshot.dao.VMSnapshotDao;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.api.ServerApiException;
@@ -53,6 +45,11 @@ import org.apache.cloudstack.api.command.user.vm.ScaleVMCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import com.cloud.capacity.CapacityManager;
 import com.cloud.configuration.ConfigurationManager;
@@ -85,6 +82,8 @@ import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
+import com.cloud.vm.snapshot.VMSnapshotVO;
+import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
 public class UserVmManagerTest {
 

@@ -25,9 +25,6 @@ import javax.naming.ConfigurationException;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
-import com.cloud.alert.AlertAdapter;
-import com.cloud.alert.AlertManager;
-import com.cloud.consoleproxy.ConsoleProxyManager;
 import com.cloud.dc.DataCenterVO;
 import com.cloud.dc.dao.DataCenterDao;
 import com.cloud.storage.secondary.SecStorageVmAlertEventArgs;

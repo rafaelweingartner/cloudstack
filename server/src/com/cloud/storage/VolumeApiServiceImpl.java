@@ -26,8 +26,6 @@ import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.api.command.user.volume.AttachVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.DetachVolumeCmd;
@@ -75,6 +73,7 @@ import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreVO;
 import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;

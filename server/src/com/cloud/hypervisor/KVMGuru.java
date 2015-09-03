@@ -19,6 +19,8 @@ package com.cloud.hypervisor;
 import javax.ejb.Local;
 import javax.inject.Inject;
 
+import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
+
 import com.cloud.agent.api.Command;
 import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
@@ -26,7 +28,6 @@ import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.dao.GuestOSDao;
 import com.cloud.utils.Pair;
 import com.cloud.vm.VirtualMachineProfile;
-import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 
 @Local(value=HypervisorGuru.class)
 public class KVMGuru extends HypervisorGuruBase implements HypervisorGuru {

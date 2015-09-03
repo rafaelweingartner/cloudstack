@@ -23,8 +23,8 @@ import java.util.Map;
 import javax.ejb.Local;
 import javax.naming.ConfigurationException;
 
-import com.cloud.network.vpc.NetworkACLItem;
-import org.apache.cloudstack.api.command.admin.router.*;
+import org.apache.cloudstack.api.command.admin.router.UpgradeRouterCmd;
+import org.apache.cloudstack.api.command.admin.router.UpgradeRouterTemplateCmd;
 import org.springframework.stereotype.Component;
 
 import com.cloud.deploy.DeployDestination;
@@ -42,12 +42,12 @@ import com.cloud.network.router.VirtualRouter;
 import com.cloud.network.router.VpcVirtualNetworkApplianceManager;
 import com.cloud.network.rules.FirewallRule;
 import com.cloud.network.rules.StaticNat;
+import com.cloud.network.vpc.NetworkACLItem;
 import com.cloud.network.vpc.PrivateGateway;
 import com.cloud.network.vpc.StaticRouteProfile;
 import com.cloud.network.vpc.Vpc;
 import com.cloud.user.Account;
 import com.cloud.user.User;
-import com.cloud.uservm.UserVm;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.vm.DomainRouterVO;
 import com.cloud.vm.NicProfile;

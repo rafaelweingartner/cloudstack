@@ -35,7 +35,6 @@ import org.apache.cloudstack.api.response.NicSecondaryIpResponse;
 import org.apache.cloudstack.api.response.SecurityGroupResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +51,8 @@ import com.cloud.vm.UserVmDetailVO;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.VmDetailConstants;
 import com.cloud.vm.VmStats;
-import com.cloud.vm.dao.UserVmDetailsDao;
 import com.cloud.vm.dao.NicSecondaryIpVO;
+import com.cloud.vm.dao.UserVmDetailsDao;
 
 @Component
 @Local(value={UserVmJoinDao.class})

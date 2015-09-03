@@ -35,8 +35,8 @@ import com.cloud.network.Networks.AddressFormat;
 import com.cloud.network.Networks.BroadcastDomainType;
 import com.cloud.network.Networks.Mode;
 import com.cloud.network.Networks.TrafficType;
-import com.cloud.network.dao.NetworkVO;
 import com.cloud.network.StorageNetworkManager;
+import com.cloud.network.dao.NetworkVO;
 import com.cloud.offering.NetworkOffering;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
@@ -46,7 +46,6 @@ import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.Nic.ReservationStrategy;
 import com.cloud.vm.NicProfile;
 import com.cloud.vm.ReservationContext;
-import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachineProfile;
 
 @Local(value={NetworkGuru.class})

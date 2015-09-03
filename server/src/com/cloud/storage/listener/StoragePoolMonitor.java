@@ -36,8 +36,8 @@ import com.cloud.host.Host;
 import com.cloud.host.Status;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.storage.OCFS2Manager;
-import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.ScopeType;
+import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.StorageManagerImpl;
 import com.cloud.storage.StoragePoolStatus;
 

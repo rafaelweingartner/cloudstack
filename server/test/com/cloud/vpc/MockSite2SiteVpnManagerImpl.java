@@ -44,7 +44,6 @@ import com.cloud.network.dao.Site2SiteVpnConnectionVO;
 import com.cloud.network.vpn.Site2SiteVpnManager;
 import com.cloud.network.vpn.Site2SiteVpnService;
 import com.cloud.utils.Pair;
-import com.cloud.utils.component.Manager;
 import com.cloud.utils.component.ManagerBase;
 import com.cloud.vm.DomainRouterVO;
 

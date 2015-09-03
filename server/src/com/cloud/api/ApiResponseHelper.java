@@ -31,8 +31,6 @@ import java.util.TimeZone;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.affinity.AffinityGroup;
@@ -148,6 +146,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.usage.UsageService;
 import org.apache.cloudstack.usage.UsageTypes;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.query.ViewResponseHelper;
 import com.cloud.api.query.vo.AccountJoinVO;

@@ -31,15 +31,14 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.apache.log4j.Logger;
-import org.springframework.stereotype.Component;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
-
 import org.apache.cloudstack.api.ApiErrorCode;
 import org.apache.cloudstack.api.BaseCmd;
 import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.managed.context.ManagedContext;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 
 import com.cloud.exception.CloudAuthenticationException;
 import com.cloud.user.Account;

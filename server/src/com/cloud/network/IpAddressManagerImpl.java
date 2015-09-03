@@ -28,7 +28,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import org.apache.log4j.Logger;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
 import org.apache.cloudstack.context.CallContext;
@@ -40,6 +39,7 @@ import org.apache.cloudstack.region.PortableIp;
 import org.apache.cloudstack.region.PortableIpDao;
 import org.apache.cloudstack.region.PortableIpVO;
 import org.apache.cloudstack.region.Region;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.AgentManager;
 import com.cloud.alert.AlertManager;
@@ -138,14 +138,14 @@ import com.cloud.utils.db.DB;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.Filter;
 import com.cloud.utils.db.GlobalLock;
-import com.cloud.utils.db.TransactionCallback;
-import com.cloud.utils.db.TransactionCallbackNoReturn;
-import com.cloud.utils.db.TransactionCallbackWithException;
 import com.cloud.utils.db.JoinBuilder.JoinType;
 import com.cloud.utils.db.SearchBuilder;
 import com.cloud.utils.db.SearchCriteria;
 import com.cloud.utils.db.SearchCriteria.Op;
 import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionCallback;
+import com.cloud.utils.db.TransactionCallbackNoReturn;
+import com.cloud.utils.db.TransactionCallbackWithException;
 import com.cloud.utils.db.TransactionCallbackWithExceptionNoReturn;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;

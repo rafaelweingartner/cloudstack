@@ -21,14 +21,14 @@ import java.util.Map;
 import org.apache.cloudstack.api.command.user.iso.DeleteIsoCmd;
 import org.apache.cloudstack.api.command.user.iso.RegisterIsoCmd;
 import org.apache.cloudstack.api.command.user.template.DeleteTemplateCmd;
-import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
 import org.apache.cloudstack.api.command.user.template.ExtractTemplateCmd;
+import org.apache.cloudstack.api.command.user.template.RegisterTemplateCmd;
 
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.storage.Storage.TemplateType;
 import com.cloud.storage.TemplateProfile;
 import com.cloud.storage.VMTemplateVO;
-import com.cloud.storage.Storage.TemplateType;
 import com.cloud.user.Account;
 import com.cloud.utils.component.Adapter;
 

@@ -25,7 +25,6 @@ import javax.inject.Inject;
 import org.apache.cloudstack.api.response.SecurityGroupResponse;
 import org.apache.cloudstack.api.response.SecurityGroupRuleResponse;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 

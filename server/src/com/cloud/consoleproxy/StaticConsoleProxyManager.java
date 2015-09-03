@@ -41,7 +41,6 @@ import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
 import com.cloud.utils.NumbersUtil;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.vm.VMInstanceVO;
 import com.cloud.vm.dao.ConsoleProxyDao;
 import com.cloud.vm.dao.VMInstanceDao;

@@ -41,11 +41,6 @@ import java.util.TreeMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.apache.log4j.Logger;
-
-import com.google.gson.annotations.SerializedName;
-import com.thoughtworks.xstream.XStream;
-
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.BaseAsyncCmd;
 import org.apache.cloudstack.api.BaseAsyncCreateCmd;
@@ -61,11 +56,14 @@ import org.apache.cloudstack.api.response.StoragePoolResponse;
 import org.apache.cloudstack.api.response.TemplateResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
+import org.apache.log4j.Logger;
 
 import com.cloud.alert.AlertManager;
 import com.cloud.serializer.Param;
 import com.cloud.utils.IteratorUtil;
 import com.cloud.utils.ReflectUtil;
+import com.google.gson.annotations.SerializedName;
+import com.thoughtworks.xstream.XStream;
 
 public class ApiXmlDocWriter {
     public static final Logger s_logger = Logger.getLogger(ApiXmlDocWriter.class.getName());

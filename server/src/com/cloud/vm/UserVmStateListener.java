@@ -16,12 +16,23 @@
 // under the License.
 package com.cloud.vm;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.inject.Inject;
+
+import org.apache.cloudstack.framework.events.EventBus;
+import org.apache.log4j.Logger;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+
 import com.cloud.event.EventCategory;
 import com.cloud.event.EventTypes;
 import com.cloud.event.UsageEventUtils;
 import com.cloud.event.UsageEventVO;
 import com.cloud.event.dao.UsageEventDao;
-import com.cloud.network.Network;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
 import com.cloud.server.ManagementServer;
@@ -32,17 +43,6 @@ import com.cloud.utils.fsm.StateListener;
 import com.cloud.vm.VirtualMachine.Event;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.NicDao;
-import com.cloud.vm.dao.UserVmDetailsDao;
-import org.apache.cloudstack.framework.events.EventBus;
-import org.apache.log4j.Logger;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-
-import javax.inject.Inject;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class UserVmStateListener implements StateListener<State, VirtualMachine.Event, VirtualMachine> {
 

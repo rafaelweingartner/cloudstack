@@ -135,7 +135,17 @@
       <artifactId>cloud-engine-components-api</artifactId>
       <version>${project.version}</version>
     </dependency>
-  </dependencies>
+    <dependency>
+    	<groupId>br.ufsc.lrg.cloudstack</groupId>
+      <artifactId>cloudstack-autonomic-allocation-algorithms</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.apache.cloudstack</groupId>
+    	<artifactId>cloud-engine-orchestration</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>  
   <build>
     <resources>
       <resource>

@@ -82,6 +82,11 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
+
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVmDiskStatsAnswer;
@@ -140,7 +145,6 @@ import com.cloud.exception.StorageUnavailableException;
 import com.cloud.exception.VirtualMachineMigrationException;
 import com.cloud.ha.HighAvailabilityManager;
 import com.cloud.host.Host;
-import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
 import com.cloud.host.HostVO.HostConsolidationStatus;
 import com.cloud.host.Status;
@@ -3222,6 +3226,17 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     public Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams)
             throws ConcurrentOperationException, ResourceUnavailableException, InsufficientCapacityException {
 
+        Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> startVmPair = doStartVirtualMachine(vmId, hostId, additionalParams);
+        // TODO check if is needed to start another host
+        return startVmPair;
+    }
+
+    public ScoredClustersAllocationAlgorithm getAllocationAlgorithm() {
+        return new ScoredClustersAllocationAlgorithm();
+    }
+
+    private Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> doStartVirtualMachine(long vmId, Long hostId,
+            Map<VirtualMachineProfile.Param, Object> additionalParams) throws ResourceUnavailableException, InsufficientCapacityException {
         // Input validation
         Account callerAccount = CallContext.current().getCallingAccount();
         UserVO callerUser = _userDao.findById(CallContext.current().getCallingUserId());
@@ -3356,12 +3371,19 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
         } catch (InsufficientCapacityException e) {
-            List<HostVO> hostsToStart = getHostToStart(vmEntity);
+            List<HostResources> hostsToStart = getHostToStart(vmEntity);
+
             if (hostsToStart.isEmpty()) {
                 throw e;
             }
-            HostVO hostVO = hostsToStart.get(0);
-            startHost(hostVO);
+
+            for (HostResources hostResource : hostsToStart) {
+                HostVO hostVO = hostResource.getHost();
+                startHost(hostVO);
+                if (isHostStatusUpInDataBase(hostVO)) {
+                    break;
+                }
+            }
             return reserveHost(callerUser, plan, vmEntity, plannerName);
         }
     }
@@ -3371,8 +3393,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             resourceManager.startHost(hostVO);
             for (int tries = 0; tries < 50; tries++) {
-                hostVO = _hostDao.findById(hostVO.getId());
-                if (hostVO.getStatus() == Status.Up) {
+                if (isHostStatusUpInDataBase(hostVO)) {
                     return;
                 }
                 sleepThread(10);
@@ -3384,23 +3405,52 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 hostVO.getName(), hostVO.getPublicIpAddress()));
     }
 
-    private List<HostVO> getHostToStart(VirtualMachineEntity vmEntity) {
-        List<HostVO> hostsThatMightBeUsedrrayList = new ArrayList<HostVO>();
-        VMInstanceVO vm = _vmDao.findByUuid(vmEntity.getUuid());
+    private boolean isHostStatusUpInDataBase (HostVO hostVO) {
+        hostVO = _hostDao.findById(hostVO.getId());
+        return hostVO.getStatus() == Status.Up;
+    }
+
+    private List<HostResources> getHostToStart(VirtualMachineEntity vmEntity) {
         List<ClusterVO> clusters = _clusterDao.listByHyTypeWithoutGuid(vmEntity.getTemplate().getHypervisorType().name());
-        for (ClusterVO c : clusters) {
-            if (vm.getDataCenterId() == c.getDataCenterId()) {
-                List<HostVO> allHosts = _hostDao.listAllUpAndEnabledNonHAHosts(Type.Routing, c.getId(), c.getPodId(), c.getDataCenterId(), null);
-                hostsThatMightBeUsedrrayList.addAll(allHosts);
+        List<ClusterResources> clustersResources = getClusterResourcesToStart(clusters);
+        if (clustersResources.isEmpty()) {
+            return new ArrayList<HostResources>();
+        }
+
+        AllocationAlgorithm allocationAlgorithm = getAllocationAlgorithm();
+        List<ClusterResources> clustersRanked = allocationAlgorithm.rankClustersToAllocation(clustersResources);
+
+        return allocationAlgorithm.rankHostsToStart(clustersRanked.get(0).getHostsToStart());
+    }
+
+    private List<ClusterResources> getClusterResourcesToStart(List<ClusterVO> clusters) {
+        List<ClusterResources> clustersResources = new ArrayList<ClusterResources>();
+        for (ClusterVO currentCluster : clusters) {
+            List<HostVO> hosts = _hostDao.findByClusterId(currentCluster.getId());
+            List<HostResources> hostsToStart = new ArrayList<HostResources>();
+            for (HostVO hostVo : hosts) {
+                if (hostVo.getHostConsolidationStatus() == HostConsolidationStatus.ShutDownToConsolidate) {
+                    hostsToStart.add(new HostResources(hostVo));
+                }
+            }
+            if (!hostsToStart.isEmpty()) {
+                clustersResources.add(getClusterDownResources(currentCluster, hostsToStart));
             }
         }
-        List<HostVO> hostTostart = new ArrayList<HostVO>();
-        for (HostVO h : hostsThatMightBeUsedrrayList) {
-            if (h.getHostConsolidationStatus() == HostConsolidationStatus.ShutDownToConsolidate) {
-                hostTostart.add(h);
-            }
+        return clustersResources;
+    }
+
+    public ClusterResources getClusterDownResources(ClusterVO clusterVO, List<HostResources> hostsToStart) {
+        long clusterUsedCpu = 0, clusterCpuSpeed = 0, clusterMemory = 0, clusterUsedMemory = 0;
+        int clusterCpus = 0;
+        for (HostResources currentHost : hostsToStart) {
+            clusterMemory += currentHost.getHost().getTotalMemory();
+            clusterCpuSpeed += currentHost.getHost().getSpeed();
+            clusterCpus += currentHost.getHost().getCpus();
         }
-        return hostTostart;
+        ClusterResources clusterResources = new ClusterResources(clusterVO, clusterUsedMemory, clusterMemory, clusterUsedCpu, clusterCpuSpeed, clusterCpus);
+        clusterResources.setHostsToStart(hostsToStart);
+        return clusterResources;
     }
 
     /**

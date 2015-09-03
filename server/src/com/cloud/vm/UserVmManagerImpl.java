@@ -84,11 +84,6 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
-
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVmDiskStatsAnswer;
@@ -277,6 +272,11 @@ import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.snapshot.VMSnapshotManager;
 import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
+
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
 
 @Local(value = {UserVmManager.class, UserVmService.class})
 public class UserVmManagerImpl extends ManagerBase implements UserVmManager, VirtualMachineGuru, UserVmService, Configurable {
@@ -3237,8 +3237,8 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return new ScoredClustersAllocationAlgorithm();
     }
 
-    private Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> doStartVirtualMachine(long vmId, Long hostId,
-            Map<VirtualMachineProfile.Param, Object> additionalParams) throws ResourceUnavailableException, InsufficientCapacityException {
+    private Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> doStartVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams)
+            throws ResourceUnavailableException, InsufficientCapacityException {
         // Input validation
         Account callerAccount = CallContext.current().getCallingAccount();
         UserVO callerUser = _userDao.findById(CallContext.current().getCallingUserId());
@@ -3373,12 +3373,20 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
         } catch (InsufficientCapacityException e) {
+            return internalReserveHost(callerUser, plan, vmEntity, plannerName);
+        }
+    }
+
+    private synchronized String internalReserveHost(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
+            throws InsufficientCapacityException, ResourceUnavailableException {
+        try {
+            return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
+        } catch (InsufficientCapacityException e) {
             List<HostResources> hostsToStart = getHostToStart(vmEntity);
 
             if (hostsToStart.isEmpty()) {
                 throw e;
             }
-
             for (HostResources hostResource : hostsToStart) {
                 HostVO hostVO = hostResource.getHost();
                 startHost(hostVO);
@@ -3388,6 +3396,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
             return reserveHost(callerUser, plan, vmEntity, plannerName);
         }
+
     }
 
     private void startHost(HostVO hostVO) {
@@ -3407,7 +3416,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 hostVO.getName(), hostVO.getPublicIpAddress()));
     }
 
-    private boolean isHostStatusUpInDataBase (HostVO hostVO) {
+    private boolean isHostStatusUpInDataBase(HostVO hostVO) {
         hostVO = _hostDao.findById(hostVO.getId());
         return hostVO.getStatus() == Status.Up;
     }
@@ -3426,7 +3435,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     private List<ClusterVO> getClustersByHypervisorType(VirtualMachineEntity vmEntity) {
-        VirtualMachineEntityImpl virtualMachineEntityImpl = (VirtualMachineEntityImpl) vmEntity;
+        VirtualMachineEntityImpl virtualMachineEntityImpl = (VirtualMachineEntityImpl)vmEntity;
         VMEntityVO vmEntityVO = virtualMachineEntityImpl.getVMEntityVO();
         String hypervisorType = vmEntityVO.getHypervisorType().name();
         return _clusterDao.listByDcHyType(vmEntityVO.getDataCenterId(), hypervisorType);

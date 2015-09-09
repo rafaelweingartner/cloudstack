@@ -84,6 +84,11 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
+
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVmDiskStatsAnswer;
@@ -272,11 +277,6 @@ import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.snapshot.VMSnapshotManager;
 import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
-
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
 
 @Local(value = {UserVmManager.class, UserVmService.class})
 public class UserVmManagerImpl extends ManagerBase implements UserVmManager, VirtualMachineGuru, UserVmService, Configurable {
@@ -3373,11 +3373,16 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
         } catch (InsufficientCapacityException e) {
-            return internalReserveHost(callerUser, plan, vmEntity, plannerName);
+            return synchronizedStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
         }
     }
 
-    private synchronized String internalReserveHost(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
+    private synchronized String synchronizedStartHostAndReserveResources(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName) throws InsufficientCapacityException,
+    ResourceUnavailableException {
+        return internalStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
+    }
+
+    private String internalStartHostAndReserveResources(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
             throws InsufficientCapacityException, ResourceUnavailableException {
         try {
             return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
@@ -3394,7 +3399,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     break;
                 }
             }
-            return reserveHost(callerUser, plan, vmEntity, plannerName);
+            return internalStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
         }
 
     }

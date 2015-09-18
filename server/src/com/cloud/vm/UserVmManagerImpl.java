@@ -84,11 +84,6 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
-import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
-import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
-
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.api.Answer;
 import com.cloud.agent.api.GetVmDiskStatsAnswer;
@@ -277,6 +272,11 @@ import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.snapshot.VMSnapshotManager;
 import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
+
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
+import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
 
 @Local(value = {UserVmManager.class, UserVmService.class})
 public class UserVmManagerImpl extends ManagerBase implements UserVmManager, VirtualMachineGuru, UserVmService, Configurable {
@@ -3408,8 +3408,10 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         ResourceManager resourceManager = (ResourceManager)resourceService;
         try {
             resourceManager.startHost(hostVO);
+            s_logger.debug(String.format("Starting to check host[%d] status up in database.", hostVO.getId()));
             for (int tries = 0; tries < 50; tries++) {
                 if (isHostStatusUpInDataBase(hostVO)) {
+                    s_logger.debug(String.format("Host[%d] status is up in database.", hostVO.getId()));
                     return;
                 }
                 sleepThread(10);

@@ -2563,6 +2563,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         _hostDao.update(host.getId(), host);
         try {
             resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, host.getManagementServerId());
+            _agentMgr.agentStatusTransitTo(host, Status.Event.ShutdownRequested, _nodeId);
         } catch (NoTransitionException e) {
             e.printStackTrace();
         }
@@ -2623,17 +2624,17 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             _hostDao.update(host.getId(), host);
             return;
         }
-        AgentManagerImpl agentManagerImpl = (AgentManagerImpl) _agentMgr;
-        agentManagerImpl.loadDirectlyConnectedHost(host, false);
         _agentMgr.pullAgentOutMaintenance(host.getId());
-
-        host = _hostDao.findById(host.getId());
 
         host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.Up);
         _hostDao.update(host.getId(), host);
-        s_logger.debug(String.format("Host[%d] is reachable.", host.getId()));
         try {
-            resourceStateTransitTo(host, ResourceState.Event.StartHost, host.getManagementServerId());
+            s_logger.debug(String.format("Transiting Host[%d] resource_stated to Enabled with Start event.", host.getId()));
+            resourceStateTransitTo(host, ResourceState.Event.StartHost, _nodeId);
+            s_logger.debug(String.format("Host[%d] status changed resource_state to Enabled .", host.getId()));
+            sleepThread(15);
+            AgentManagerImpl agentManagerImpl = (AgentManagerImpl)_agentMgr;
+            agentManagerImpl.loadDirectlyConnectedHost(host, true);
         } catch (NoTransitionException e) {
             e.printStackTrace();
         }

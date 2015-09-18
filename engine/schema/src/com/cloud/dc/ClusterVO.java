@@ -79,70 +79,77 @@ public class ClusterVO implements Cluster {
     @Column(name="uuid")
     String uuid;
 
-    /** 
+    /**
      * Attributes used by the consolidation agent to optimize the clusters of the cloud environment.
      * */
     @Column(name="last_consolidated")
     @Temporal(value=TemporalType.TIMESTAMP)
     private Date lastConsolidated;
-    
+
     /**
      * Consolidation status (Consolidated, Consolidating)
      * */
-    @Column(name="consolidation_Status")
+    @Column(name = "consolidation_status")
     @Enumerated(value=EnumType.STRING)
     private ConsolidationStatus consolidationStatus;
-    
-    public ClusterVO() {
-    	clusterType = Cluster.ClusterType.CloudManaged;
-    	allocationState = Grouping.AllocationState.Enabled;
 
-    	this.uuid = UUID.randomUUID().toString();
+    public ClusterVO() {
+        clusterType = Cluster.ClusterType.CloudManaged;
+        allocationState = Grouping.AllocationState.Enabled;
+
+        this.uuid = UUID.randomUUID().toString();
     }
 
     public ClusterVO(long dataCenterId, long podId, String name) {
         this.dataCenterId = dataCenterId;
         this.podId = podId;
         this.name = name;
-    	this.clusterType = Cluster.ClusterType.CloudManaged;
-    	this.allocationState = Grouping.AllocationState.Enabled;
-    	this.managedState = ManagedState.Managed;
-    	this.uuid = UUID.randomUUID().toString();
-    	this.consolidationStatus = ConsolidationStatus.Consolidated;
+        this.clusterType = Cluster.ClusterType.CloudManaged;
+        this.allocationState = Grouping.AllocationState.Enabled;
+        this.managedState = ManagedState.Managed;
+        this.uuid = UUID.randomUUID().toString();
+        this.consolidationStatus = ConsolidationStatus.Consolidated;
     }
 
+    @Override
     public long getId() {
         return id;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public long getDataCenterId() {
         return dataCenterId;
     }
 
+    @Override
     public long getPodId() {
         return podId;
     }
 
+    @Override
     public Cluster.ClusterType getClusterType() {
-    	return clusterType;
+        return clusterType;
     }
 
     public void setClusterType(Cluster.ClusterType clusterType) {
-    	this.clusterType = clusterType;
+        this.clusterType = clusterType;
     }
 
+    @Override
     public AllocationState getAllocationState() {
-    	return allocationState;
+        return allocationState;
     }
 
     public void setAllocationState(AllocationState allocationState) {
-		this.allocationState = allocationState;
+        this.allocationState = allocationState;
     }
 
+    @Override
     public ManagedState getManagedState() {
         return managedState;
     }
@@ -169,12 +176,13 @@ public class ClusterVO implements Cluster {
         return this.id == that.id;
     }
 
+    @Override
     public HypervisorType getHypervisorType() {
-    	return HypervisorType.getType(hypervisorType);
+        return HypervisorType.getType(hypervisorType);
     }
 
-	public void setHypervisorType(String hy) {
-    	hypervisorType = hy;
+    public void setHypervisorType(String hy) {
+        hypervisorType = hy;
     }
 
     public String getGuid() {
@@ -195,44 +203,44 @@ public class ClusterVO implements Cluster {
 
     @Override
     public String getUuid() {
-    	return this.uuid;
+        return this.uuid;
     }
 
     public void setUuid(String uuid) {
-    	this.uuid = uuid;
+        this.uuid = uuid;
     }
 
-	public Date getLastConsolidated() {
-		return lastConsolidated;
-	}
+    public Date getLastConsolidated() {
+        return lastConsolidated;
+    }
 
-	public void setLastConsolidated(Date lastConsolidated) {
-		this.lastConsolidated = lastConsolidated;
-	}
-	
-	/**
-	 * @return consolidationStatus can be Consolidating, ToConsolidate or Unavailable 
-	 * */
-	public ConsolidationStatus getConsolidationStatus() {
-		return consolidationStatus;
-	}
+    public void setLastConsolidated(Date lastConsolidated) {
+        this.lastConsolidated = lastConsolidated;
+    }
 
-	public void setConsolidationStatus(ConsolidationStatus consolidationStatus) {
-		this.consolidationStatus = consolidationStatus;
-	}
-	
-	/**
-	 * Consolidation status of the cluster (Consolidating, ConsolidationFailed or Consolidated) 
-	 * */
-	public static enum ConsolidationStatus {
-		Consolidating,
-		ConsolidationFailed,
-		Consolidated;
-		
-		public static boolean isConsolidating(ConsolidationStatus consolidationStatus){
-			return Consolidating == consolidationStatus;
-		}
-		
-	}
-	
+    /**
+     * @return consolidationStatus can be Consolidating, ToConsolidate or Unavailable
+     * */
+    public ConsolidationStatus getConsolidationStatus() {
+        return consolidationStatus;
+    }
+
+    public void setConsolidationStatus(ConsolidationStatus consolidationStatus) {
+        this.consolidationStatus = consolidationStatus;
+    }
+
+    /**
+     * Consolidation status of the cluster (Consolidating, ConsolidationFailed or Consolidated)
+     * */
+    public static enum ConsolidationStatus {
+        Consolidating,
+        ConsolidationFailed,
+        Consolidated;
+
+        public static boolean isConsolidating(ConsolidationStatus consolidationStatus){
+            return Consolidating == consolidationStatus;
+        }
+
+    }
+
 }

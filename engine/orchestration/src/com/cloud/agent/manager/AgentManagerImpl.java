@@ -97,9 +97,8 @@ import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.EntityManager;
 import com.cloud.utils.db.QueryBuilder;
-import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.db.SearchCriteria.Op;
-import com.cloud.utils.db.Transaction;
+import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.exception.HypervisorVersionChangedException;
 import com.cloud.utils.fsm.NoTransitionException;
@@ -638,7 +637,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     public void rescan() {
     }
 
-    protected boolean loadDirectlyConnectedHost(HostVO host, boolean forRebalance) {
+    public boolean loadDirectlyConnectedHost(HostVO host, boolean forRebalance) {
         boolean initialized = false;
         ServerResource resource = null;
         try {
@@ -679,9 +678,9 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
     protected AgentAttache createAttacheForDirectConnect(Host host, ServerResource resource)
             throws ConnectionException {
-//        if (resource instanceof DummySecondaryStorageResource || resource instanceof KvmDummyResourceBase) {
-//            return new DummyAttache(this, host.getId(), false);
-//        }
+        //        if (resource instanceof DummySecondaryStorageResource || resource instanceof KvmDummyResourceBase) {
+        //            return new DummyAttache(this, host.getId(), false);
+        //        }
 
         s_logger.debug("create DirectAgentAttache for " + host.getId());
         DirectAgentAttache attache = new DirectAgentAttache(this, host.getId(), host.getName(), resource, host.isInMaintenanceStates(), this);
@@ -821,7 +820,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
                         String hostDesc = "name: " + host.getName() + " (id:" + host.getId() + "), availability zone: " + dcVO.getName() + ", pod: " + podVO.getName();
                         if ((host.getType() != Host.Type.SecondaryStorage) && (host.getType() != Host.Type.ConsoleProxy)) {
                             _alertMgr.sendAlert(AlertManager.AlertType.ALERT_TYPE_HOST, host.getDataCenterId(), host.getPodId(), "Host disconnected, " + hostDesc,
-                                "If the agent for host [" + hostDesc + "] is not restarted within " + AlertWait + " seconds, HA will begin on the VMs");
+                                    "If the agent for host [" + hostDesc + "] is not restarted within " + AlertWait + " seconds, HA will begin on the VMs");
                         }
                         event = Status.Event.AgentDisconnected;
                     }
@@ -1072,6 +1071,7 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
             _request = request;
         }
 
+        @Override
         protected void runInContext() {
             _request.logD("Processing the first command ");
             StartupCommand[] startups = new StartupCommand[_cmds.length];

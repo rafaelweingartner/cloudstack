@@ -247,7 +247,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     protected HashMap<Integer, List<ResourceListener>> _lifeCycleListeners = new HashMap<Integer, List<ResourceListener>>();
     private HypervisorType _defaultSystemVMHypervisor;
 
-    private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION = 30; // seconds
+    private static final int ACQUIRE_GLOBAL_LOCK_TIMEOUT_FOR_COOPERATION = 30;// seconds
 
     private GenericSearchBuilder<HostVO, String> _hypervisorsInDC;
 
@@ -609,8 +609,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             }
             // check if pod belongs to the zone
             if (!Long.valueOf(pod.getDataCenterId()).equals(dcId)) {
-                InvalidParameterValueException ex = new InvalidParameterValueException("Pod with specified podId" + podId + " doesn't belong to the zone with specified zoneId" +
-                        dcId);
+                InvalidParameterValueException ex = new InvalidParameterValueException(
+                        "Pod with specified podId" + podId + " doesn't belong to the zone with specified zoneId" + dcId);
                 ex.addProxyObject(pod.getUuid(), "podId");
                 ex.addProxyObject(zone.getUuid(), "dcId");
                 throw ex;
@@ -642,10 +642,10 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 // neccessary information here
                 Map<String, String> clusterDetails = _clusterDetailsDao.findDetails(clusterId);
                 username = clusterDetails.get("username");
-                assert (username != null);
+                assert(username != null);
 
                 password = clusterDetails.get("password");
-                assert (password != null);
+                assert(password != null);
 
                 try {
                     uri = new URI(UriUtils.encodeURIComponent(url));
@@ -669,8 +669,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             } catch (Exception e) {
                 cluster = _clusterDao.findBy(clusterName, podId);
                 if (cluster == null) {
-                    CloudRuntimeException ex = new CloudRuntimeException("Unable to create cluster " + clusterName +
-                            " in pod with specified podId and data center with specified dcID", e);
+                    CloudRuntimeException ex = new CloudRuntimeException(
+                            "Unable to create cluster " + clusterName + " in pod with specified podId and data center with specified dcID", e);
                     ex.addProxyObject(pod.getUuid(), "podId");
                     ex.addProxyObject(zone.getUuid(), "dcId");
                     throw ex;
@@ -698,8 +698,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 // Don't validate against a URI encoded URI.
                 URI cifsUri = new URI(url);
                 String warnMsg = UriUtils.getCifsUriParametersProblems(cifsUri);
-                if (warnMsg != null)
-                {
+                if (warnMsg != null) {
                     throw new InvalidParameterValueException(warnMsg);
                 }
             }
@@ -798,8 +797,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         _accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
 
         if (!isForced && host.getResourceState() != ResourceState.Maintenance) {
-            throw new CloudRuntimeException("Host " + host.getUuid() +
-                    " cannot be deleted as it is not in maintenance mode. Either put the host into maintenance or perform a forced deletion.");
+            throw new CloudRuntimeException(
+                    "Host " + host.getUuid() + " cannot be deleted as it is not in maintenance mode. Either put the host into maintenance or perform a forced deletion.");
         }
         // Get storage pool host mappings here because they can be removed as a
         // part of handleDisconnect later
@@ -810,8 +809,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 new Boolean(isForced), new Boolean(isForceDeleteStorage));
 
         if (answer == null) {
-            throw new CloudRuntimeException("No resource adapter respond to DELETE_HOST event for " + host.getName() + " id = " + hostId + ", hypervisorType is " +
-                    host.getHypervisorType() + ", host type is " + host.getType());
+            throw new CloudRuntimeException("No resource adapter respond to DELETE_HOST event for " + host.getName() + " id = " + hostId + ", hypervisorType is "
+                    + host.getHypervisorType() + ", host type is " + host.getType());
         }
 
         if (answer.getIsException()) {
@@ -1051,8 +1050,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                     _clusterDao.update(cluster.getId(), cluster);
                     List<HostVO> hosts = listAllUpAndEnabledHosts(Host.Type.Routing, cluster.getId(), cluster.getPodId(), cluster.getDataCenterId());
                     for (HostVO host : hosts) {
-                        if (host.getType().equals(Host.Type.Routing) && !host.getStatus().equals(Status.Down) && !host.getStatus().equals(Status.Disconnected) &&
-                                !host.getStatus().equals(Status.Up) && !host.getStatus().equals(Status.Alert)) {
+                        if (host.getType().equals(Host.Type.Routing) && !host.getStatus().equals(Status.Down) && !host.getStatus().equals(Status.Disconnected)
+                                && !host.getStatus().equals(Status.Up) && !host.getStatus().equals(Status.Alert)) {
                             String msg = "host " + host.getPrivateIpAddress() + " should not be in " + host.getStatus().toString() + " status";
                             throw new CloudRuntimeException("PrepareUnmanaged Failed due to " + msg);
                         }
@@ -1491,8 +1490,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         String serverSubnet = NetUtils.getSubNet(serverPrivateIP, serverPrivateNetmask);
         if (!cidrSubnet.equals(serverSubnet)) {
             s_logger.warn("The private ip address of the server (" + serverPrivateIP + ") is not compatible with the CIDR of pod: " + pod.getName() + " and zone: " + dc.getName());
-            throw new IllegalArgumentException("The private ip address of the server (" + serverPrivateIP + ") is not compatible with the CIDR of pod: " + pod.getName() +
-                    " and zone: " + dc.getName());
+            throw new IllegalArgumentException(
+                    "The private ip address of the server (" + serverPrivateIP + ") is not compatible with the CIDR of pod: " + pod.getName() + " and zone: " + dc.getName());
         }
 
         // If the server's private netmask is less inclusive than the pod's CIDR
@@ -1501,8 +1500,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         long cidrNetmaskNumeric = NetUtils.ip2Long(cidrNetmask);
         long serverNetmaskNumeric = NetUtils.ip2Long(serverPrivateNetmask);
         if (serverNetmaskNumeric > cidrNetmaskNumeric) {
-            throw new IllegalArgumentException("The private ip address of the server (" + serverPrivateIP + ") is not compatible with the CIDR of pod: " + pod.getName() +
-                    " and zone: " + dc.getName());
+            throw new IllegalArgumentException(
+                    "The private ip address of the server (" + serverPrivateIP + ") is not compatible with the CIDR of pod: " + pod.getName() + " and zone: " + dc.getName());
         }
 
     }
@@ -1680,7 +1679,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     }
 
     private void markHostAsDisconnected(HostVO host, StartupCommand[] cmds) {
-        if (host == null) { // in case host is null due to some errors, try
+        if (host == null) {// in case host is null due to some errors, try
             // reloading the host from db
             if (cmds != null) {
                 StartupCommand firstCmd = cmds[0];
@@ -1730,9 +1729,9 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 if (host == null) {
                     host = findHostByGuid(firstCmd.getGuidWithoutResource());
                 }
-                if (host != null && host.getRemoved() == null) { // host already added, no need to add again
+                if (host != null && host.getRemoved() == null) {// host already added, no need to add again
                     s_logger.debug("Found the host " + host.getId() + " by guid: " + firstCmd.getGuid() + ", old host reconnected as new");
-                    hostExists = true; // ensures that host status is left unchanged in case of adding same one again
+                    hostExists = true;// ensures that host status is left unchanged in case of adding same one again
                     return null;
                 }
             }
@@ -1796,12 +1795,12 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 if (host == null) {
                     host = findHostByGuid(firstCmd.getGuidWithoutResource());
                 }
-                if (host != null && host.getRemoved() == null) { // host already
+                if (host != null && host.getRemoved() == null) {// host already
                     // added, no
                     // need to add
                     // again
                     s_logger.debug("Found the host " + host.getId() + " by guid: " + firstCmd.getGuid() + ", old host reconnected as new");
-                    hostExists = true; // ensures that host status is left
+                    hostExists = true;// ensures that host status is left
                     // unchanged in case of adding same one
                     // again
                     return null;
@@ -1828,17 +1827,17 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             }
 
             if (host != null) {
-                if (!deferAgentCreation) { // if first host in cluster then
+                if (!deferAgentCreation) {// if first host in cluster then
                     created = _agentMgr.handleDirectConnectAgent(host, cmds, resource, forRebalance);
-                    host = _hostDao.findById(host.getId()); // reload
+                    host = _hostDao.findById(host.getId());// reload
                 } else {
-                    host = _hostDao.findById(host.getId()); // reload
+                    host = _hostDao.findById(host.getId());// reload
                     // force host status to 'Alert' so that it is loaded for
                     // connection during next scan task
                     _agentMgr.agentStatusTransitTo(host, Status.Event.AgentDisconnected, _nodeId);
 
-                    host = _hostDao.findById(host.getId()); // reload
-                    host.setLastPinged(0); // so that scan task can pick it up
+                    host = _hostDao.findById(host.getId());// reload
+                    host.setLastPinged(0);// so that scan task can pick it up
                     _hostDao.update(host.getId(), host);
 
                 }
@@ -1905,14 +1904,14 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
                 assert existingPrivateIPs.size() <= 1 : " How can we get more than one ip address with " + serverPrivateIP;
                 if (existingPrivateIPs.size() > 1) {
-                    throw new IllegalArgumentException("The private ip address of the server (" + serverPrivateIP + ") is already in use in pod: " + pod.getName() + " and zone: " +
-                            dc.getName());
+                    throw new IllegalArgumentException(
+                            "The private ip address of the server (" + serverPrivateIP + ") is already in use in pod: " + pod.getName() + " and zone: " + dc.getName());
                 }
                 if (existingPrivateIPs.size() == 1) {
                     DataCenterIpAddressVO vo = existingPrivateIPs.get(0);
                     if (vo.getInstanceId() != null) {
-                        throw new IllegalArgumentException("The private ip address of the server (" + serverPrivateIP + ") is already in use in pod: " + pod.getName() +
-                                " and zone: " + dc.getName());
+                        throw new IllegalArgumentException(
+                                "The private ip address of the server (" + serverPrivateIP + ") is already in use in pod: " + pod.getName() + " and zone: " + dc.getName());
                     }
                 }
             }
@@ -1937,8 +1936,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
         ClusterVO clusterVO = _clusterDao.findById(host.getClusterId());
         if (clusterVO.getHypervisorType() != hyType) {
-            throw new IllegalArgumentException("Can't add host whose hypervisor type is: " + hyType + " into cluster: " + clusterVO.getId() + " whose hypervisor type is: " +
-                    clusterVO.getHypervisorType());
+            throw new IllegalArgumentException(
+                    "Can't add host whose hypervisor type is: " + hyType + " into cluster: " + clusterVO.getId() + " whose hypervisor type is: " + clusterVO.getHypervisorType());
         }
 
         final Map<String, String> hostDetails = ssCmd.getHostDetails();
@@ -2028,8 +2027,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                         }
                     }
                 } else {
-                    throw new UnableDeleteHostException("Unable to delete the host as there are vms in " + vms.get(0).getState() +
-                            " state using this host and isForced=false specified");
+                    throw new UnableDeleteHostException(
+                            "Unable to delete the host as there are vms in " + vms.get(0).getState() + " state using this host and isForced=false specified");
                 }
             }
         }
@@ -2047,8 +2046,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
          * TODO: think twice about returning true or throwing out exception, I
          * really prefer to exception that always exposes bugs
          */
-        if (host.getResourceState() != ResourceState.PrepareForMaintenance && host.getResourceState() != ResourceState.Maintenance &&
-                host.getResourceState() != ResourceState.ErrorInMaintenance) {
+        if (host.getResourceState() != ResourceState.PrepareForMaintenance && host.getResourceState() != ResourceState.Maintenance
+                && host.getResourceState() != ResourceState.ErrorInMaintenance) {
             throw new CloudRuntimeException("Cannot perform cancelMaintenance when resource state is " + host.getResourceState() + ", hostId = " + hostId);
         }
 
@@ -2265,8 +2264,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             try {
                 return resourceStateTransitTo(host, ResourceState.Event.UnableToMigrate, _nodeId);
             } catch (NoTransitionException e) {
-                s_logger.debug("No next resource state for host " + host.getId() + " while current state is " + host.getResourceState() + " with event " +
-                        ResourceState.Event.UnableToMigrate, e);
+                s_logger.debug("No next resource state for host " + host.getId() + " while current state is " + host.getResourceState() + " with event "
+                        + ResourceState.Event.UnableToMigrate, e);
                 return false;
             }
         }
@@ -2285,17 +2284,17 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     public List<HostVO> listAllUpAndEnabledHosts(Type type, Long clusterId, Long podId, long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
         if (type != null) {
-            sc.and(sc.entity().getType(), Op.EQ,type);
+            sc.and(sc.entity().getType(), Op.EQ, type);
         }
         if (clusterId != null) {
-            sc.and(sc.entity().getClusterId(), Op.EQ,clusterId);
+            sc.and(sc.entity().getClusterId(), Op.EQ, clusterId);
         }
         if (podId != null) {
-            sc.and(sc.entity().getPodId(), Op.EQ,podId);
+            sc.and(sc.entity().getPodId(), Op.EQ, podId);
         }
-        sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
-        sc.and(sc.entity().getStatus(), Op.EQ,Status.Up);
-        sc.and(sc.entity().getResourceState(), Op.EQ,ResourceState.Enabled);
+        sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
+        sc.and(sc.entity().getStatus(), Op.EQ, Status.Up);
+        sc.and(sc.entity().getResourceState(), Op.EQ, ResourceState.Enabled);
         return sc.list();
     }
 
@@ -2308,33 +2307,33 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Override
     public List<HostVO> findHostByGuid(long dcId, String guid) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
-        sc.and(sc.entity().getGuid(), Op.EQ,guid);
+        sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
+        sc.and(sc.entity().getGuid(), Op.EQ, guid);
         return sc.list();
     }
 
     @Override
     public List<HostVO> listAllHostsInCluster(long clusterId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getClusterId(), Op.EQ,clusterId);
+        sc.and(sc.entity().getClusterId(), Op.EQ, clusterId);
         return sc.list();
     }
 
     @Override
     public List<HostVO> listHostsInClusterByStatus(long clusterId, Status status) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getClusterId(), Op.EQ,clusterId);
-        sc.and(sc.entity().getStatus(), Op.EQ,status);
+        sc.and(sc.entity().getClusterId(), Op.EQ, clusterId);
+        sc.and(sc.entity().getStatus(), Op.EQ, status);
         return sc.list();
     }
 
     @Override
     public List<HostVO> listAllUpAndEnabledHostsInOneZoneByType(Type type, long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getType(), Op.EQ,type);
-        sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
-        sc.and(sc.entity().getStatus(), Op.EQ,Status.Up);
-        sc.and(sc.entity().getResourceState(), Op.EQ,ResourceState.Enabled);
+        sc.and(sc.entity().getType(), Op.EQ, type);
+        sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
+        sc.and(sc.entity().getStatus(), Op.EQ, Status.Up);
+        sc.and(sc.entity().getResourceState(), Op.EQ, ResourceState.Enabled);
         return sc.list();
     }
 
@@ -2342,9 +2341,9 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     public List<HostVO> listAllNotInMaintenanceHostsInOneZone(Type type, Long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
         if (dcId != null) {
-            sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
+            sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
         }
-        sc.and(sc.entity().getType(), Op.EQ,type);
+        sc.and(sc.entity().getType(), Op.EQ, type);
         sc.and(sc.entity().getResourceState(), Op.NIN, ResourceState.Maintenance, ResourceState.ErrorInMaintenance, ResourceState.PrepareForMaintenance, ResourceState.Error);
         return sc.list();
     }
@@ -2352,15 +2351,15 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Override
     public List<HostVO> listAllHostsInOneZoneByType(Type type, long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getType(), Op.EQ,type);
-        sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
+        sc.and(sc.entity().getType(), Op.EQ, type);
+        sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
         return sc.list();
     }
 
     @Override
     public List<HostVO> listAllHostsInAllZonesByType(Type type) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getType(), Op.EQ,type);
+        sc.and(sc.entity().getType(), Op.EQ, type);
         return sc.list();
     }
 
@@ -2390,14 +2389,14 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Override
     public HostVO findHostByGuid(String guid) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getGuid(), Op.EQ,guid);
+        sc.and(sc.entity().getGuid(), Op.EQ, guid);
         return sc.find();
     }
 
     @Override
     public HostVO findHostByName(String name) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getName(), Op.EQ,name);
+        sc.and(sc.entity().getName(), Op.EQ, name);
         return sc.find();
     }
 
@@ -2469,10 +2468,10 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     @Override
     public List<HostVO> listAllUpAndEnabledHostsInOneZoneByHypervisor(HypervisorType type, long dcId) {
         QueryBuilder<HostVO> sc = QueryBuilder.create(HostVO.class);
-        sc.and(sc.entity().getHypervisorType(), Op.EQ,type);
-        sc.and(sc.entity().getDataCenterId(), Op.EQ,dcId);
-        sc.and(sc.entity().getStatus(), Op.EQ,Status.Up);
-        sc.and(sc.entity().getResourceState(), Op.EQ,ResourceState.Enabled);
+        sc.and(sc.entity().getHypervisorType(), Op.EQ, type);
+        sc.and(sc.entity().getDataCenterId(), Op.EQ, dcId);
+        sc.and(sc.entity().getStatus(), Op.EQ, Status.Up);
+        sc.and(sc.entity().getResourceState(), Op.EQ, ResourceState.Enabled);
         return sc.list();
     }
 
@@ -2538,7 +2537,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
         if (CollectionUtils.isNotEmpty(vms)) {
             s_logger.debug(String.format("Could not shut dow host [hostid=%d], [hostname=%s], there are %d VMs running in this host.", host.getId(), host.getName(), vms.size()));
-            return ;
+            return;
         }
         try {
             maintain(hostId);
@@ -2547,7 +2546,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
         int tries = 0;
         while (host.getResourceState() != ResourceState.Maintenance) {
-            tries ++;
+            tries++;
             sleepThread(3);
 
             host = _hostDao.findById(hostId);
@@ -2562,7 +2561,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.ShutDownToConsolidate);
         _hostDao.update(host.getId(), host);
         try {
-            resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, host.getManagementServerId());
+            resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, _nodeId);
             _agentMgr.agentStatusTransitTo(host, Status.Event.ShutdownRequested, _nodeId);
         } catch (NoTransitionException e) {
             e.printStackTrace();
@@ -2579,16 +2578,15 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     @Override
     /**
-     * Propagates ShutDownHost event, call shutdown dispach method (doShutdownHost)
      * @param hostId
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      */
     public void shutdownHost(long hostId) {
-        try {
-            propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
-        } catch (AgentUnavailableException e) {
-            throw new CloudRuntimeException(e);
-        }
+//        try {
+//            propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
+//        } catch (AgentUnavailableException e) {
+//            throw new CloudRuntimeException(e);
+//        }
         doShutdownHost(hostId);
     }
 
@@ -2601,11 +2599,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      */
     @Override
     public void startHost(HostVO host) {
-        try {
-            propagateResourceEvent(host.getId(), ResourceState.Event.StartHost);
-        } catch (AgentUnavailableException e) {
-            throw new CloudRuntimeException(e);
-        }
+//        try {
+//            propagateResourceEvent(host.getId(), ResourceState.Event.StartHost);
+//        } catch (AgentUnavailableException e) {
+//            throw new CloudRuntimeException(e);
+//        }
         doStartHost(host);
     }
 
@@ -2667,7 +2665,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
     private Process executeProgram(String cmd) {
         try {
-            return  Runtime.getRuntime().exec(cmd);
+            return Runtime.getRuntime().exec(cmd);
         } catch (IOException e) {
             throw new CloudRuntimeException(e);
         }

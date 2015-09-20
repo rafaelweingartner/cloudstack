@@ -79,7 +79,6 @@ import com.cloud.storage.dao.VMTemplateDao;
 import com.cloud.user.Account;
 import com.cloud.utils.Pair;
 import com.cloud.utils.UriUtils;
-import com.cloud.utils.exception.CloudRuntimeException;
 import com.vmware.vim25.ClusterDasConfigInfo;
 import com.vmware.vim25.ManagedObjectReference;
 
@@ -131,20 +130,23 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
     public Map<? extends ServerResource, Map<String, String>> find(long dcId, Long podId, Long clusterId, URI url,
     	String username, String password, List<String> hostTags) throws DiscoveryException {
 
-    	if(s_logger.isInfoEnabled())
-    		s_logger.info("Discover host. dc: " + dcId + ", pod: " + podId + ", cluster: " + clusterId + ", uri host: " + url.getHost());
+    	if(s_logger.isInfoEnabled()) {
+            s_logger.info("Discover host. dc: " + dcId + ", pod: " + podId + ", cluster: " + clusterId + ", uri host: " + url.getHost());
+        }
 
     	if(podId == null) {
-        	if(s_logger.isInfoEnabled())
-				s_logger.info("No pod is assigned, assuming that it is not for vmware and skip it to next discoverer");
+        	if(s_logger.isInfoEnabled()) {
+                s_logger.info("No pod is assigned, assuming that it is not for vmware and skip it to next discoverer");
+            }
 			return null;
 		}
         boolean failureInClusterDiscovery = true;
         String vsmIp = "";
 		ClusterVO cluster = _clusterDao.findById(clusterId);
         if(cluster == null || cluster.getHypervisorType() != HypervisorType.VMware) {
-        	if(s_logger.isInfoEnabled())
-				s_logger.info("invalid cluster id or cluster is not for VMware hypervisors");
+        	if(s_logger.isInfoEnabled()) {
+                s_logger.info("invalid cluster id or cluster is not for VMware hypervisors");
+            }
 			return null;
 		}
 
@@ -333,9 +335,10 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 		try {
 			context = VmwareContextFactory.create(url.getHost(), username,
 					password);
-			if (privateTrafficLabel != null)
-				context.registerStockObject("privateTrafficLabel",
+			if (privateTrafficLabel != null) {
+                context.registerStockObject("privateTrafficLabel",
 						privateTrafficLabel);
+            }
 
             if (nexusDVS) {
 				if (vsmCredentials != null) {
@@ -347,10 +350,12 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 			List<ManagedObjectReference> morHosts = _vmwareMgr
 					.addHostToPodCluster(context, dcId, podId, clusterId,
 							URLDecoder.decode(url.getPath()));
-			if (morHosts == null)
-				s_logger.info("Found 0 hosts.");
-			if (privateTrafficLabel != null)
-				context.uregisterStockObject("privateTrafficLabel");
+			if (morHosts == null) {
+                s_logger.info("Found 0 hosts.");
+            }
+			if (privateTrafficLabel != null) {
+                context.uregisterStockObject("privateTrafficLabel");
+            }
 
 			if (morHosts == null) {
 				s_logger.error("Unable to find host or cluster based on url: "
@@ -384,10 +389,11 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 			}
 
 			if (!validateDiscoveredHosts(context, morCluster, morHosts)) {
-				if (morCluster == null)
-					s_logger.warn("The discovered host is not standalone host, can not be added to a standalone cluster");
-				else
-					s_logger.warn("The discovered host does not belong to the cluster");
+				if (morCluster == null) {
+                    s_logger.warn("The discovered host is not standalone host, can not be added to a standalone cluster");
+                } else {
+                    s_logger.warn("The discovered host does not belong to the cluster");
+                }
 				return null;
 			}
 
@@ -446,8 +452,9 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 					+ url.getHost());
 			return null;
 		} finally {
-			if (context != null)
-				context.close();
+			if (context != null) {
+                context.close();
+            }
             if (failureInClusterDiscovery && vsmInfo.first()) {
                 try {
                     s_logger.debug("Deleting Nexus 1000v VSM " + vsmIp + " because cluster discovery and addition to zone has failed.");
@@ -460,8 +467,9 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 	
 	protected CiscoNexusVSMElement getCiscoNexusVSMElement() {
 	    for ( NetworkElement networkElement : networkElements ) {
-	        if ( networkElement instanceof CiscoNexusVSMElement )
-	            return (CiscoNexusVSMElement)networkElement;
+	        if ( networkElement instanceof CiscoNexusVSMElement ) {
+                return (CiscoNexusVSMElement)networkElement;
+            }
 	    }
 	    
 	    throw new IllegalStateException("Failed to CiscoNexusVSMElement");
@@ -540,19 +548,22 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 				ManagedObjectReference morParent = (ManagedObjectReference) context
 						.getVimClient().getDynamicProperty(morHost, "parent");
 				if (morParent.getType().equalsIgnoreCase(
-						"ClusterComputeResource"))
-					return false;
+						"ClusterComputeResource")) {
+                    return false;
+                }
 			}
 		} else {
 			for (ManagedObjectReference morHost : morHosts) {
 				ManagedObjectReference morParent = (ManagedObjectReference) context
 						.getVimClient().getDynamicProperty(morHost, "parent");
 				if (!morParent.getType().equalsIgnoreCase(
-						"ClusterComputeResource"))
-					return false;
+						"ClusterComputeResource")) {
+                    return false;
+                }
 
-				if (!morParent.getValue().equals(morCluster.getValue()))
-					return false;
+				if (!morParent.getValue().equals(morCluster.getValue())) {
+                    return false;
+                }
 			}
 		}
 
@@ -566,8 +577,9 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 
 	@Override
 	public boolean matchHypervisor(String hypervisor) {
-		if (hypervisor == null)
-			return true;
+		if (hypervisor == null) {
+            return true;
+        }
 
 		return Hypervisor.HypervisorType.VMware.toString().equalsIgnoreCase(
 				hypervisor);
@@ -581,9 +593,10 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 	@Override
 	public boolean configure(String name, Map<String, Object> params)
 			throws ConfigurationException {
-		if (s_logger.isInfoEnabled())
-			s_logger.info("Configure VmwareServerDiscoverer, discover name: "
+		if (s_logger.isInfoEnabled()) {
+            s_logger.info("Configure VmwareServerDiscoverer, discover name: "
 					+ name);
+        }
 
 		super.configure(name, params);
 
@@ -658,8 +671,9 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 
     @Override
     public boolean start() {
-        if ( ! super.start() )
+        if ( ! super.start() ) {
             return false;
+        }
         
         _nexusElement = getCiscoNexusVSMElement();
         
@@ -771,12 +785,13 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
     }
 
     private VirtualSwitchType getDefaultVirtualSwitchType() {
-        if (nexusDVS)
+        if (nexusDVS) {
             return VirtualSwitchType.NexusDistributedVirtualSwitch;
-        else if(useDVS)
+        } else if(useDVS) {
             return VirtualSwitchType.VMwareDistributedVirtualSwitch;
-        else
+        } else {
             return VirtualSwitchType.StandardVirtualSwitch;
+        }
     }
 
     @Override
@@ -832,7 +847,6 @@ public class VmwareServerDiscoverer extends DiscovererBase implements
 		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.VMware) {
 			return ;
 		}
-		throw new CloudRuntimeException("Shut down Host not implemented yet for VMware ");		
 	}
 
 }

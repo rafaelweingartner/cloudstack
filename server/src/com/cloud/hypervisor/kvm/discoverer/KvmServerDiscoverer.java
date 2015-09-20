@@ -25,16 +25,17 @@ import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.Discoverer;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 @Local(value=Discoverer.class)
 public class KvmServerDiscoverer extends LibvirtServerDiscoverer {
     private static final Logger s_logger = Logger.getLogger(KvmServerDiscoverer.class);
 
+    @Override
     public Hypervisor.HypervisorType getHypervisorType() {
         return Hypervisor.HypervisorType.KVM;
     }
 
+    @Override
     protected String getPatchPath() {
         return "scripts/vm/hypervisor/kvm/";
     }
@@ -44,6 +45,5 @@ public class KvmServerDiscoverer extends LibvirtServerDiscoverer {
 		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.KVM) {
             return ;
         }
-		throw new CloudRuntimeException("Shut down Host not implemented for KVM");
 	}
 }

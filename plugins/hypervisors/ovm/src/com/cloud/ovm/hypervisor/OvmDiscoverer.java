@@ -117,8 +117,9 @@ public class OvmDiscoverer extends DiscovererBase implements Discoverer, Resourc
 
         ClusterVO cluster = _clusterDao.findById(clusterId);
         if (cluster == null || (cluster.getHypervisorType() != HypervisorType.Ovm)) {
-            if (s_logger.isInfoEnabled())
+            if (s_logger.isInfoEnabled()) {
                 s_logger.info("invalid cluster id or cluster is not for Ovm hypervisors");
+            }
             return null;
         }
 
@@ -264,7 +265,6 @@ public class OvmDiscoverer extends DiscovererBase implements Discoverer, Resourc
 		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.Ovm) {
 			return ;
 		}
-		throw new CloudRuntimeException("Shut down Host not implemented yet for Ovm ");		
 	}
 
 }

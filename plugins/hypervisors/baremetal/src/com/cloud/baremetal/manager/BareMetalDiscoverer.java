@@ -35,7 +35,6 @@ import javax.naming.ConfigurationException;
 
 import org.apache.cloudstack.api.ApiConstants;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
-
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.StartupCommand;
@@ -121,8 +120,9 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 		
 		ClusterVO cluster = _clusterDao.findById(clusterId);
 		if (cluster == null || (cluster.getHypervisorType() != HypervisorType.BareMetal)) {
-			if (s_logger.isInfoEnabled())
-				s_logger.info("invalid cluster id or cluster is not for Bare Metal hosts");
+			if (s_logger.isInfoEnabled()) {
+                s_logger.info("invalid cluster id or cluster is not for Bare Metal hosts");
+            }
 			return null;
 		}
 		
@@ -293,10 +293,6 @@ public class BareMetalDiscoverer extends DiscovererBase implements Discoverer, R
 
 	@Override
 	public void shutDownHost(HostVO host) {
-		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.BareMetal) {
-			return ;
-		}
-		throw new CloudRuntimeException("Shut down Host not implemented yet for BareMetal ");	
 	}
 
 }

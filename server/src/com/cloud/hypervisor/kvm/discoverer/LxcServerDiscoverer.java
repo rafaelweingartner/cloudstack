@@ -25,12 +25,12 @@ import com.cloud.host.HostVO;
 import com.cloud.hypervisor.Hypervisor;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
 import com.cloud.resource.Discoverer;
-import com.cloud.utils.exception.CloudRuntimeException;
 
 @Local(value=Discoverer.class)
 public class LxcServerDiscoverer extends LibvirtServerDiscoverer {
     private static final Logger s_logger = Logger.getLogger(LxcServerDiscoverer.class);
 
+    @Override
     public Hypervisor.HypervisorType getHypervisorType() {
         return Hypervisor.HypervisorType.LXC;
     }
@@ -40,7 +40,6 @@ public class LxcServerDiscoverer extends LibvirtServerDiscoverer {
 		if (host.getType() != Host.Type.Routing || host.getHypervisorType() != HypervisorType.LXC) {
             return ;
         }
-		throw new CloudRuntimeException("Shut down Host not implemented for LXC");
 	}
 
 }

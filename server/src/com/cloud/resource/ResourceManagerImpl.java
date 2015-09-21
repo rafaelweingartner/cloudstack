@@ -2513,21 +2513,20 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    @Override
-    public boolean start() {
-        // TODO Auto-generated method stub
-        return super.start();
+    private void sleepThread(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            throw new CloudRuntimeException(e);
+        }
     }
 
+    @Override
     /**
-     * If host is not null, account has access and authority, host is not in Maintenance or PrepareForMaintenance state and has no VMs allocated.
-     * Then pull host into maintenance.
-     * As maintenance is an asynchronous command, it is important to guarantee its correct execution before shut down.
-     * Just after in maintenance the shut down command is dispatched to state adapter.
      * @param hostId
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      */
-    protected void doShutdownHost(final long hostId) {
+    public void shutdownHost(long hostId) {
         HostVO host = _hostDao.findById(hostId);
         if (host == null) {
             throw new CloudRuntimeException("Host with id " + hostId + " doesn't exist");
@@ -2568,28 +2567,6 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    private void sleepThread(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000);
-        } catch (InterruptedException e) {
-            throw new CloudRuntimeException(e);
-        }
-    }
-
-    @Override
-    /**
-     * @param hostId
-     * @see this method is used by a plugin in development, and was not planned to be used in other scope.
-     */
-    public void shutdownHost(long hostId) {
-//        try {
-//            propagateResourceEvent(hostId, ResourceState.Event.ShutDownHost);
-//        } catch (AgentUnavailableException e) {
-//            throw new CloudRuntimeException(e);
-//        }
-        doShutdownHost(hostId);
-    }
-
     /**
      * Propagates wake-on-lan event and executes 'wakeonlan' command.
      * If cannot get ping response in 100 seconds, it assumes the host will not awake and throws a fail message.
@@ -2599,28 +2576,29 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      */
     @Override
     public void startHost(HostVO host) {
-//        try {
-//            propagateResourceEvent(host.getId(), ResourceState.Event.StartHost);
-//        } catch (AgentUnavailableException e) {
-//            throw new CloudRuntimeException(e);
-//        }
-        doStartHost(host);
-    }
-
-    /**
-     * Executes start command (wake on lan).
-     * As the cluster of this host needs more resource it is marked as Consolidated.
-     * Thus consolidation manager will not try to shut down any host until the time between consolidation has elapsed.
-     * @See Method implemented for a plugin in development. It is not recommended to use it if not by the respective plugin..
-     * @param host
-     */
-    private void doStartHost(HostVO host) {
         executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
 
         if (!isHostAlive(host)) {
-            host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.FailedToStart);
-            _hostDao.update(host.getId(), host);
+            markHostAsFailedToStart(host);
             return;
+        }
+        sleepThread(30);
+        for (Discoverer d : _discoverers) {
+            if (!d.matchHypervisor(host.getHypervisorType().name())) {
+                continue;
+            }
+            _hostDao.loadDetails(host);
+            String username = host.getDetail("username");
+            String password = host.getDetail("password");
+            URI uri;
+            try {
+                uri = new URI(UriUtils.encodeURIComponent("http://" + host.getPrivateIpAddress()));
+                d.find(host.getDataCenterId(), host.getPodId(), host.getClusterId(), uri, username, password, null);
+            } catch (Exception e) {
+                markHostAsFailedToStart(host);
+                e.printStackTrace();
+                return;
+            }
         }
         _agentMgr.pullAgentOutMaintenance(host.getId());
 
@@ -2636,6 +2614,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         } catch (NoTransitionException e) {
             e.printStackTrace();
         }
+    }
+
+    private void markHostAsFailedToStart(HostVO host) {
+        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.FailedToStart);
+        _hostDao.update(host.getId(), host);
     }
 
     private boolean isHostAlive(HostVO host) {

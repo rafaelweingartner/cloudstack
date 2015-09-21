@@ -69,3 +69,4 @@ router_proxy.sh=../../../../network/domr/,0755,/opt/cloud/bin
 createipAlias.sh=..,0755,/opt/cloud/bin
 deleteipAlias.sh=..,0755,/opt/cloud/bin
 cloudlog=..,0644,/etc/logrotate.d
+xenPoolHostShutdownManager.sh=..,0755,/etc/init.d/

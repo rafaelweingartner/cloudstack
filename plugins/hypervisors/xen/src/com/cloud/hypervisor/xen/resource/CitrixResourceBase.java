@@ -628,18 +628,46 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     	Connection conn = getConnection();
     	try {
     	    Host master = getMasterHost(conn);
+            String masterAddress = master.getAddress(conn);
+
     	    if (_host.uuid.equals(master.getUuid(conn))) {
     	        changePoolMasterHost(conn);
     	        waitChangePoolMasterHost(master, conn);
+
+                master = getMasterHost(conn);
+                masterAddress = master.getAddress(conn);
     	    }
     	    Host host = Host.getByUuid(conn, _host.uuid);
-			host.disable(conn);
+
+            String hostAddress = host.getAddress(conn);
+            executeCommandOnHostViaSsh(hostAddress, "update-rc.d xenPoolHostShutdownManager defaults");
+
+            host.disable(conn);
 			host.shutdown(conn);
+            do {
+                sleepThread(2);
+            } while (isHostReacheable(hostAddress));
+
+            executeCommandOnHostViaSsh(masterAddress, "echo \"yes\" | xe host-forget uuid=" + _host.uuid);
     	} catch (Exception e) {
 			throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]", _host.uuid), e);
 		}
 		return null;
 	}
+
+    private void executeCommandOnHostViaSsh(String hostIp, String command) {
+        com.trilead.ssh2.Connection sshConnectionWithHost = getSshConnectionWithHost(hostIp);
+        try {
+            com.trilead.ssh2.Session sshSession = getSshSession(sshConnectionWithHost);
+            sshSession.execCommand(command);
+            sleepThread(15);
+            sshSession.close();
+        } catch (IOException e) {
+            s_logger.info("Unable to execute command: " + command);
+
+        }
+        sshConnectionWithHost.close();
+    }
 
     private boolean isHostReacheable(String addrees) {
         try {
@@ -5235,28 +5263,23 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             /* push patches to XenServer */
             Host.Record hr = host.getRecord(conn);
 
-            Iterator<String> it = hr.tags.iterator();
+//            Iterator<String> it = hr.tags.iterator();
+//
+//            while (it.hasNext()) {
+//                String tag = it.next();
+//                if (tag.startsWith("vmops-version-")) {
+//                    if (tag.contains(version)) {
+//                        s_logger.info(logX(host, "Host " + hr.address + " is already setup."));
+//                        return false;
+//                    } else {
+//                        it.remove();
+//                    }
+//                }
+//            }
 
-            while (it.hasNext()) {
-                String tag = it.next();
-                if (tag.startsWith("vmops-version-")) {
-                    if (tag.contains(version)) {
-                        s_logger.info(logX(host, "Host " + hr.address + " is already setup."));
-                        return false;
-                    } else {
-                        it.remove();
-                    }
-                }
-            }
-
-            com.trilead.ssh2.Connection sshConnection = new com.trilead.ssh2.Connection(hr.address, 22);
+            com.trilead.ssh2.Connection sshConnection = getSshConnectionWithHost(hr.address);
             try {
-                sshConnection.connect(null, 60000, 60000);
-                if (!sshConnection.authenticateWithPassword(_username, _password.peek())) {
-                    throw new CloudRuntimeException("Unable to authenticate");
-                }
-
-                com.trilead.ssh2.Session session = sshConnection.openSession();
+                com.trilead.ssh2.Session session = getSshSession(sshConnection);
 
                 String cmd = "mkdir -p /opt/cloud/bin /var/log/cloud";
                 if (!SSHCmdHelper.sshExecuteCmd(sshConnection, cmd)) {
@@ -5339,6 +5362,18 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_logger.warn(msg, e);
             throw new CloudRuntimeException("Unable to get host information ", e);
         }
+    }
+
+    private com.trilead.ssh2.Connection getSshConnectionWithHost(String address) {
+        return new com.trilead.ssh2.Connection(address, 22);
+    }
+
+    private com.trilead.ssh2.Session getSshSession(com.trilead.ssh2.Connection sshConnection) throws IOException {
+        sshConnection.connect(null, 60000, 60000);
+        if (!sshConnection.authenticateWithPassword(_username, _password.peek())) {
+            throw new CloudRuntimeException("Unable to authenticate");
+        }
+        return sshConnection.openSession();
     }
 
     protected CheckNetworkAnswer execute(CheckNetworkCommand cmd) {

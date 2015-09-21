@@ -2641,7 +2641,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
     private boolean isHostAlive(HostVO host) {
         s_logger.debug(String.format("Checking if host[%d] is reachable.", host.getId()));
         for (int i = 0; i < 50; i++) {
-            if (hostIsReachable(host)) {
+            if (isHostReacheable(host)) {
                 s_logger.debug(String.format("Host[%d] is reachable.", host.getId()));
                 return true;
             }
@@ -2655,7 +2655,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      * @param host
      * @return
      */
-    private boolean hostIsReachable(HostVO host) {
+    private boolean isHostReacheable(HostVO host) {
         try {
             return InetAddress.getByName(host.getPrivateIpAddress()).isReachable(5000);
         } catch (Exception e) {

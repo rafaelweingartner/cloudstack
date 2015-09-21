@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -284,14 +285,14 @@ import com.xensource.xenapi.XenAPIObject;
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process
  * to perform the required functionalities for CloudStack.
- * 
+ *
  * ==============>  READ THIS  <==============
  * Because the XenServer objects can expire when the session expires, we cannot
  * keep any of the actual XenServer objects in this class.  The only
  * thing that is constant is the UUID of the XenServer objects but not the
  * objects themselves!  This is very important before you do any changes in
  * this code here.
- * 
+ *
  */
 @Local(value = ServerResource.class)
 public abstract class CitrixResourceBase implements ServerResource, HypervisorResource {
@@ -636,9 +637,18 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 			host.shutdown(conn);
     	} catch (Exception e) {
 			throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]", _host.uuid), e);
-		}   	
+		}
 		return null;
 	}
+
+    private boolean isHostReacheable(String addrees) {
+        try {
+            return InetAddress.getByName(addrees).isReachable(5000);
+        } catch (Exception e) {
+            s_logger.warn(String.format("Host[address: %s] is not recheable", addrees));
+        }
+        return false;
+    }
 
     /**
      * changes current pool master to another host (if exists). The new master will be selected with no specific criteria.
@@ -650,21 +660,24 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      */
     private  void changePoolMasterHost(Connection conn) throws BadServerResponse, XenAPIException, XmlRpcException {
         for (Host h : Host.getAll(conn)) {
-            if (!_host.uuid.equals(h.getUuid(conn))) {
+            if (_host.uuid.equals(h.getUuid(conn))) {
+                continue;
+            }
+            if (isHostReacheable(h.getAddress(conn))) {
                 Pool.designateNewMaster(conn, h);
                 break;
             }
         }
     }
-    
+
     private void sleepThread(int secs) {
         try {
             Thread.sleep(secs*1000);
         } catch (InterruptedException e) {
             throw new CloudRuntimeException(e);
         }
-    }    
-    
+    }
+
     /**
      * Waits until Host master of pool be changed.
      * @param master
@@ -683,10 +696,10 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
         }
     }
-    
+
     /**
      * Returns the Host that is the current master of this pool.
-     * This only works if a host can be of one (and only one) pool. 
+     * This only works if a host can be of one (and only one) pool.
      * @param conn
      * @return
      * @throws BadServerResponse
@@ -811,8 +824,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             s_vms.remove(_cluster, _name, vmName);
 
             Set<VM> vmSnapshots = VM.getByNameLabel(conn, cmd.getTarget().getSnapshotName());
-            if(vmSnapshots.size() == 0)
+            if(vmSnapshots.size() == 0) {
                 return new RevertToVMSnapshotAnswer(cmd, false, "Cannot find vmSnapshot with name: " + cmd.getTarget().getSnapshotName());
+            }
 
             VM vmSnapshot = vmSnapshots.iterator().next();
 
@@ -3631,8 +3645,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             Iterator<Console> i = consoles.iterator();
             while(i.hasNext()) {
                 c = i.next();
-                if(c.getProtocol(conn) == ConsoleProtocol.RFB)
+                if(c.getProtocol(conn) == ConsoleProtocol.RFB) {
                     return c.getLocation(conn);
+                }
             }
         } catch (XenAPIException e) {
             String msg = "Unable to get console url due to " + e.toString();
@@ -4164,24 +4179,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
     /*Override by subclass*/
     protected String getVMXenToolsVersion(Map<String, String> platform) {
         return "xenserver56";
-    }
-
-
-    private List<VDI> getVdis(Connection conn, VM vm) {
-        List<VDI> vdis = new ArrayList<VDI>();
-        try {
-            Set<VBD> vbds =vm.getVBDs(conn);
-            for( VBD vbd : vbds ) {
-                vdis.add(vbd.getVDI(conn));
-            }
-        } catch (XenAPIException e) {
-            String msg = "getVdis can not get VPD due to " + e.toString();
-            s_logger.warn(msg, e);
-        } catch (XmlRpcException e) {
-            String msg = "getVdis can not get VPD due to " + e.getMessage();
-            s_logger.warn(msg, e);
-        }
-        return vdis;
     }
 
     protected String connect(Connection conn, final String vmName, final String ipAddress, final int port) {
@@ -6784,10 +6781,11 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     // add size of snapshot vdi node, usually this only contains meta data
                     size = size + vdi.getPhysicalUtilisation(conn);
                     // add size of snapshot vdi parent, this contains data
-                    if (parentVDI != null)
+                    if (parentVDI != null) {
                         size = size
                                 + parentVDI.getPhysicalUtilisation(conn)
                                         .longValue();
+                    }
                 }
             } catch (Exception e) {
                 s_logger.debug("Exception occurs when calculate "
@@ -6843,8 +6841,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         try {
             // check if VM snapshot already exists
             Set<VM> vmSnapshots = VM.getByNameLabel(conn, cmd.getTarget().getSnapshotName());
-            if(vmSnapshots.size() > 0)
+            if(vmSnapshots.size() > 0) {
                 return new CreateVMSnapshotAnswer(cmd, cmd.getTarget(), cmd.getVolumeTOs());
+            }
 
             // check if there is already a task for this VM snapshot
             Task task = null;
@@ -7023,8 +7022,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     vdiList.add(vdi);
                 }
             }
-            if(cmd.getTarget().getType() == VMSnapshot.Type.DiskAndMemory)
+            if(cmd.getTarget().getType() == VMSnapshot.Type.DiskAndMemory) {
                 vdiList.add(snapshot.getSuspendVDI(conn));
+            }
             snapshot.destroy(conn);
             for (VDI vdi : vdiList) {
                 vdi.destroy(conn);

@@ -43,7 +43,7 @@ public interface ResourceManager extends ResourceService {
     /**
      * Register a listener for different types of resource life cycle events.
      * There can only be one type of listener per type of host.
-     * 
+     *
      * @param Event type see ResourceListener.java, allow combination of multiple events.
      * @param listener the listener to notify.
      */
@@ -52,7 +52,7 @@ public interface ResourceManager extends ResourceService {
     public void unregisterResourceEvent(ResourceListener listener);
 
     /**
-     * 
+     *
      * @param name of adapter
      * @param adapter
      * @param hates, a list of names which will be eliminated by this adapter. Especially for the case where
@@ -138,12 +138,13 @@ public interface ResourceManager extends ResourceService {
      * @return
      */
     List<HostVO> listAllUpAndEnabledNonHAHosts(Type type, Long clusterId, Long podId, long dcId);
-    
-    
+
+
     /**
-     * Power on a host with wake on lan (required support and correct configurations on target Host). 
+     * Power on a host with wake on lan (required support and correct configurations on target Host).
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      * @param HostVO
+     * @throws Exception
      */
-    public void startHost(HostVO host); 
+    public void startHost(HostVO host) throws Exception;
 }

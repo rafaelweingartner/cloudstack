@@ -2528,20 +2528,34 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      */
     public void shutdownHost(long hostId) {
         HostVO host = _hostDao.findById(hostId);
-        if (host == null) {
-            throw new CloudRuntimeException("Host with id " + hostId + " doesn't exist");
-        }
-        _accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
+        validationBeforeShutdown(hostId, host);
 
         List<VMInstanceVO> vms = _vmDao.listByHostId(hostId);
         if (CollectionUtils.isNotEmpty(vms)) {
             s_logger.debug(String.format("Could not shut dow host [hostid=%d], [hostname=%s], there are %d VMs running in this host.", host.getId(), host.getName(), vms.size()));
             return;
         }
+        putHostInMaintenance(hostId, host);
+        shutdownHost(hostId, host);
+    }
+
+    private void shutdownHost(long hostId, HostVO host) {
+        dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
+        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.ShutDownToConsolidate);
+        _hostDao.update(host.getId(), host);
+        try {
+            resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, _nodeId);
+            _agentMgr.agentStatusTransitTo(host, Status.Event.ShutdownRequested, _nodeId);
+        } catch (NoTransitionException e) {
+            throw new RuntimeException(String.format("Problems while shutting dows host[%d]", hostId), e);
+        }
+    }
+
+    private void putHostInMaintenance(long hostId, HostVO host) {
         try {
             maintain(hostId);
-        } catch (AgentUnavailableException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Problems while putting host[%d] on maintenance", hostId), e);
         }
         int tries = 0;
         while (host.getResourceState() != ResourceState.Maintenance) {
@@ -2556,15 +2570,13 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 throw new CloudRuntimeException(String.format("Timeout error while sending the maintenance command to [host=%d], [hostname=%s]", host.getId(), host.getName()));
             }
         }
-        dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
-        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.ShutDownToConsolidate);
-        _hostDao.update(host.getId(), host);
-        try {
-            resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, _nodeId);
-            _agentMgr.agentStatusTransitTo(host, Status.Event.ShutdownRequested, _nodeId);
-        } catch (NoTransitionException e) {
-            e.printStackTrace();
+    }
+
+    private void validationBeforeShutdown(long hostId, HostVO host) {
+        if (host == null) {
+            throw new CloudRuntimeException("Host with id " + hostId + " doesn't exist");
         }
+        _accountMgr.checkAccessAndSpecifyAuthority(CallContext.current().getCallingAccount(), host.getDataCenterId());
     }
 
     /**
@@ -2573,9 +2585,10 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      *
      * @see this method is used by a plugin in development, and was not planned to be used in other scope.
      * @param
+     * @throws Exception
      */
     @Override
-    public void startHost(HostVO host) {
+    public void startHost(HostVO host) throws Exception {
         executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
 
         if (!isHostAlive(host)) {
@@ -2583,6 +2596,32 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             return;
         }
         sleepThread(30);
+        reAddHostToXenPool(host);
+        _agentMgr.pullAgentOutMaintenance(host.getId());
+
+        changeConsolidationStatus(host);
+        changeHostStatusToUp(host);
+    }
+
+    private void changeHostStatusToUp(HostVO host) {
+        try {
+            s_logger.debug(String.format("Transiting Host[%d] resource_stated to Enabled with Start event.", host.getId()));
+            resourceStateTransitTo(host, ResourceState.Event.StartHost, _nodeId);
+            s_logger.debug(String.format("Host[%d] status changed resource_state to Enabled .", host.getId()));
+            sleepThread(15);
+            AgentManagerImpl agentManagerImpl = (AgentManagerImpl)_agentMgr;
+            agentManagerImpl.loadDirectlyConnectedHost(host, true);
+        } catch (NoTransitionException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void changeConsolidationStatus(HostVO host) {
+        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.Up);
+        _hostDao.update(host.getId(), host);
+    }
+
+    private void reAddHostToXenPool(HostVO host) throws Exception {
         for (Discoverer d : _discoverers) {
             if (!d.matchHypervisor(host.getHypervisorType().name())) {
                 continue;
@@ -2596,23 +2635,8 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
                 d.find(host.getDataCenterId(), host.getPodId(), host.getClusterId(), uri, username, password, null);
             } catch (Exception e) {
                 markHostAsFailedToStart(host);
-                e.printStackTrace();
-                return;
+                throw e;
             }
-        }
-        _agentMgr.pullAgentOutMaintenance(host.getId());
-
-        host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.Up);
-        _hostDao.update(host.getId(), host);
-        try {
-            s_logger.debug(String.format("Transiting Host[%d] resource_stated to Enabled with Start event.", host.getId()));
-            resourceStateTransitTo(host, ResourceState.Event.StartHost, _nodeId);
-            s_logger.debug(String.format("Host[%d] status changed resource_state to Enabled .", host.getId()));
-            sleepThread(15);
-            AgentManagerImpl agentManagerImpl = (AgentManagerImpl)_agentMgr;
-            agentManagerImpl.loadDirectlyConnectedHost(host, true);
-        } catch (NoTransitionException e) {
-            e.printStackTrace();
         }
     }
 

@@ -3416,7 +3416,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                 }
                 sleepThread(10);
             }
-        } catch (CloudRuntimeException failToStartHost) {
+        } catch (Exception failToStartHost) {
             s_logger.warn(String.format("Failed to start host [hostId=%d],[hostName=%s], [hostIp=%s]", hostVO.getId(), hostVO.getName(), hostVO.getPublicIpAddress()));
         }
         s_logger.warn(String.format("Failed to start host [hostId=%d],[hostName=%s], [hostIp=%s]. It seems that the host status is not up in database.", hostVO.getId(),

@@ -2536,10 +2536,10 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             return;
         }
         putHostInMaintenance(hostId, host);
-        shutdownHost(hostId, host);
+        shutdownHost(_hostDao.findById(hostId));
     }
 
-    private void shutdownHost(long hostId, HostVO host) {
+    private void shutdownHost(HostVO host) {
         dispatchToStateAdapters(ResourceStateAdapter.Event.SHUT_DOWN_HOST, false, host);
         host.setHostConsolidationStatus(HostVO.HostConsolidationStatus.ShutDownToConsolidate);
         _hostDao.update(host.getId(), host);
@@ -2547,7 +2547,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             resourceStateTransitTo(host, ResourceState.Event.ShutDownHost, _nodeId);
             _agentMgr.agentStatusTransitTo(host, Status.Event.ShutdownRequested, _nodeId);
         } catch (NoTransitionException e) {
-            throw new RuntimeException(String.format("Problems while shutting dows host[%d]", hostId), e);
+            throw new RuntimeException(String.format("Problems while shutting dows host[%d]", host.getId()), e);
         }
     }
 

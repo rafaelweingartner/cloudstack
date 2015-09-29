@@ -87,6 +87,7 @@ import org.apache.log4j.Logger;
 import br.ufsc.lrg.cloudstack.autonomic.algorithms.ClusterResources;
 import br.ufsc.lrg.cloudstack.autonomic.algorithms.HostResources;
 import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.AllocationAlgorithm;
+import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.LrgAllocationScorePreferenceForBigHosts;
 import br.ufsc.lrg.cloudstack.autonomic.allocation.algorithm.impl.ScoredClustersAllocationAlgorithm;
 
 import com.cloud.agent.AgentManager;
@@ -3234,7 +3235,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
     }
 
     public ScoredClustersAllocationAlgorithm getAllocationAlgorithm() {
-        return new ScoredClustersAllocationAlgorithm();
+        return new LrgAllocationScorePreferenceForBigHosts();
     }
 
     private Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> doStartVirtualMachine(long vmId, Long hostId, Map<VirtualMachineProfile.Param, Object> additionalParams)

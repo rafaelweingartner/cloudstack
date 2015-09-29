@@ -363,7 +363,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     protected static HashMap<Types.VmPowerState, PowerState> s_powerStatesTable;
     static {
-    	s_powerStatesTable = new HashMap<Types.VmPowerState, PowerState>();
+        s_powerStatesTable = new HashMap<Types.VmPowerState, PowerState>();
         s_powerStatesTable.put(Types.VmPowerState.HALTED, PowerState.PowerOff);
         s_powerStatesTable.put(Types.VmPowerState.PAUSED, PowerState.PowerOn);
         s_powerStatesTable.put(Types.VmPowerState.RUNNING, PowerState.PowerOn);
@@ -625,35 +625,42 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      * @return
      */
     private Answer shutDownHost(ShutdownCommand cmd) {
-    	Connection conn = getConnection();
-    	try {
-    	    Host master = getMasterHost(conn);
+        Connection conn = getConnection();
+        try {
+            Host master = getMasterHost(conn);
             String masterAddress = master.getAddress(conn);
 
-    	    if (_host.uuid.equals(master.getUuid(conn))) {
-    	        changePoolMasterHost(conn);
-    	        waitChangePoolMasterHost(master, conn);
+            boolean hasMoreThanOneHostOnPool = !isLastHostOnPool(conn);
+            if (_host.uuid.equals(master.getUuid(conn)) && hasMoreThanOneHostOnPool) {
+                changePoolMasterHost(conn);
+                waitChangePoolMasterHost(master, conn);
 
                 master = getMasterHost(conn);
                 masterAddress = master.getAddress(conn);
-    	    }
-    	    Host host = Host.getByUuid(conn, _host.uuid);
-
+            }
+            Host host = Host.getByUuid(conn, _host.uuid);
             String hostAddress = host.getAddress(conn);
-            executeCommandOnHostViaSsh(hostAddress, "update-rc.d xenPoolHostShutdownManager defaults");
+            if (hasMoreThanOneHostOnPool) {
+                executeCommandOnHostViaSsh(hostAddress, "update-rc.d xenPoolHostShutdownManager defaults");
+            }
 
             host.disable(conn);
-			host.shutdown(conn);
+            host.shutdown(conn);
             do {
                 sleepThread(2);
             } while (isHostReacheable(hostAddress));
+            if (hasMoreThanOneHostOnPool) {
+                executeCommandOnHostViaSsh(masterAddress, "echo \"yes\" | xe host-forget uuid=" + _host.uuid);
+            }
+        } catch (Exception e) {
+            throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]", _host.uuid), e);
+        }
+        return null;
+    }
 
-            executeCommandOnHostViaSsh(masterAddress, "echo \"yes\" | xe host-forget uuid=" + _host.uuid);
-    	} catch (Exception e) {
-			throw new CloudRuntimeException(String.format("Could not shut down host [uuid=%s]", _host.uuid), e);
-		}
-		return null;
-	}
+    private boolean isLastHostOnPool(Connection conn) throws BadServerResponse, XenAPIException, XmlRpcException {
+        return Host.getAll(conn).size() == 1;
+    }
 
     private void executeCommandOnHostViaSsh(String hostIp, String command) {
         com.trilead.ssh2.Connection sshConnectionWithHost = getSshConnectionWithHost(hostIp);
@@ -742,7 +749,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         return null;
     }
 
-	protected void scaleVM(Connection conn, VM vm, VirtualMachineTO vmSpec, Host host) throws XenAPIException, XmlRpcException {
+    protected void scaleVM(Connection conn, VM vm, VirtualMachineTO vmSpec, Host host) throws XenAPIException, XmlRpcException {
 
         Long staticMemoryMax = vm.getMemoryStaticMax(conn);
         Long staticMemoryMin = vm.getMemoryStaticMin(conn);
@@ -1199,8 +1206,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         vifr.otherConfig.put("nicira-vm-id", vm.getUuid(conn));
         // Provide XAPI with the cloudstack vm and nic uids.
         vifr.otherConfig.put("cloudstack-nic-id", nic.getUuid());
-	if (vmSpec != null) {
-	    vifr.otherConfig.put("cloudstack-vm-id", vmSpec.getUuid()); 	}
+        if (vmSpec != null) {
+            vifr.otherConfig.put("cloudstack-vm-id", vmSpec.getUuid()); 	}
 
         vifr.network = getNetwork(conn, nic);
 
@@ -1394,7 +1401,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         vmr.actionsAfterCrash = Types.OnCrashBehaviour.DESTROY;
         vmr.actionsAfterShutdown = Types.OnNormalExit.DESTROY;
         vmr.VCPUsMax = (long) vmSpec.getCpus(); // FIX ME: In case of dynamic scaling this VCPU max should be the minumum of
-                                                // recommended value for that template and capacity remaining on host
+        // recommended value for that template and capacity remaining on host
 
         if (isDmcEnabled(conn, host) && vmSpec.isEnableDynamicallyScaleVm()) {
             //scaling is allowed
@@ -1474,14 +1481,14 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 DiskTO[] disks = vmSpec.getDisks();
                 for (DiskTO disk : disks) {
                     if (disk.getType() == Volume.Type.ISO ) {
-                    	TemplateObjectTO iso = (TemplateObjectTO)disk.getData();
-                    	String osType = iso.getGuestOsType();
-                    	if (osType != null) {
-                    		String isoGuestOsName = getGuestOsType(osType, vmSpec.getBootloader() == BootloaderType.CD);
-                    		if (!isoGuestOsName.equals(guestOsTypeName)) {
-                    			vmSpec.setBootloader(BootloaderType.PyGrub);
-                    		}
-                    	}
+                        TemplateObjectTO iso = (TemplateObjectTO)disk.getData();
+                        String osType = iso.getGuestOsType();
+                        if (osType != null) {
+                            String isoGuestOsName = getGuestOsType(osType, vmSpec.getBootloader() == BootloaderType.CD);
+                            if (!isoGuestOsName.equals(guestOsTypeName)) {
+                                vmSpec.setBootloader(BootloaderType.PyGrub);
+                            }
+                        }
                     }
                 }
             }
@@ -1530,10 +1537,10 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
                 String xentoolsversion = details.get("hypervisortoolsversion");
                 if ( xentoolsversion == null || !xentoolsversion.equalsIgnoreCase("xenserver61") ) {
-                     Map<String, String> platform = vm.getPlatform(conn);
-                     platform.remove("device_id");
-                     vm.setPlatform(conn, platform);
-                 }
+                    Map<String, String> platform = vm.getPlatform(conn);
+                    platform.remove("device_id");
+                    vm.setPlatform(conn, platform);
+                }
 
             }
         }
@@ -3145,9 +3152,9 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     s_logger.error("Failed to get host uuid for host " + host.toWireString(), e);
                 }
                 vmStates.put(
-                	record.nameLabel,
-                	new HostVmStateReportEntry(convertPowerState(ps), host_uuid, xstoolsversion)
-                );
+                        record.nameLabel,
+                        new HostVmStateReportEntry(convertPowerState(ps), host_uuid, xstoolsversion)
+                        );
             }
         }
 
@@ -5140,7 +5147,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             }
 
             if (_securityGroupEnabled) {
-            	_canBridgeFirewall = can_bridge_firewall(conn);
+                _canBridgeFirewall = can_bridge_firewall(conn);
             }
 
             boolean r = launchHeartBeat(conn);
@@ -5263,19 +5270,19 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             /* push patches to XenServer */
             Host.Record hr = host.getRecord(conn);
 
-//            Iterator<String> it = hr.tags.iterator();
-//
-//            while (it.hasNext()) {
-//                String tag = it.next();
-//                if (tag.startsWith("vmops-version-")) {
-//                    if (tag.contains(version)) {
-//                        s_logger.info(logX(host, "Host " + hr.address + " is already setup."));
-//                        return false;
-//                    } else {
-//                        it.remove();
-//                    }
-//                }
-//            }
+            //            Iterator<String> it = hr.tags.iterator();
+            //
+            //            while (it.hasNext()) {
+            //                String tag = it.next();
+            //                if (tag.startsWith("vmops-version-")) {
+            //                    if (tag.contains(version)) {
+            //                        s_logger.info(logX(host, "Host " + hr.address + " is already setup."));
+            //                        return false;
+            //                    } else {
+            //                        it.remove();
+            //                    }
+            //                }
+            //            }
 
             com.trilead.ssh2.Connection sshConnection = getSshConnectionWithHost(hr.address);
             try {
@@ -6699,7 +6706,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
             if (cmd.getAttach() && cmd.isManaged()) {
                 SR sr = getIscsiSR(conn, cmd.get_iScsiName(), cmd.getStorageHost(), cmd.get_iScsiName(),
-                            cmd.getChapInitiatorUsername(), cmd.getChapInitiatorPassword(), true);
+                        cmd.getChapInitiatorUsername(), cmd.getChapInitiatorPassword(), true);
 
                 vdi = getVDIbyUuid(conn, cmd.getVolumePath(), false);
 
@@ -6819,7 +6826,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     if (parentVDI != null) {
                         size = size
                                 + parentVDI.getPhysicalUtilisation(conn)
-                                        .longValue();
+                                .longValue();
                     }
                 }
             } catch (Exception e) {
@@ -6841,7 +6848,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                             VDI memoryVDI = vmr.getSuspendVDI(conn);
                             size = size
                                     + memoryVDI.getParent(conn)
-                                            .getPhysicalUtilisation(conn);
+                                    .getPhysicalUtilisation(conn);
                             size = size
                                     + memoryVDI.getPhysicalUtilisation(conn);
                         }
@@ -8107,7 +8114,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 args += "0";
             }
             if (cmd.isPassive()) {
-            	args += " -p ";
+                args += " -p ";
             }
         } else {
             args += " -D";

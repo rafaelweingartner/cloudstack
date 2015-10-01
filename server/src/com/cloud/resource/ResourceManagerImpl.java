@@ -2535,7 +2535,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
             s_logger.debug(String.format("Could not shut dow host [hostid=%d], [hostname=%s], there are %d VMs running in this host.", host.getId(), host.getName(), vms.size()));
             return;
         }
-        putHostInMaintenance(hostId, host);
+        putHostInMaintenance(host);
         shutdownHost(_hostDao.findById(hostId));
     }
 
@@ -2551,25 +2551,21 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    private void putHostInMaintenance(long hostId, HostVO host) {
+    private void putHostInMaintenance(HostVO host) {
+        long hostId = host.getId();
         try {
             maintain(hostId);
         } catch (Exception e) {
             throw new RuntimeException(String.format("Problems while putting host[%d] on maintenance", hostId), e);
         }
-        int tries = 0;
-        while (host.getResourceState() != ResourceState.Maintenance) {
-            tries++;
+        do {
             sleepThread(3);
-
-            host = _hostDao.findById(hostId);
+            host = _hostDao.findById(host.getId());
             if (host.getResourceState() == ResourceState.ErrorInMaintenance) {
-                throw new CloudRuntimeException(String.format("Error while sending the maintenance command to [host=%d], [hostname=%s]", host.getId(), host.getName()));
+                throw new CloudRuntimeException(String.format("Error while sending the maintenance command to [host=%d], [hostname=%s]", hostId, host.getName()));
             }
-            if (tries > 30) {
-                throw new CloudRuntimeException(String.format("Timeout error while sending the maintenance command to [host=%d], [hostname=%s]", host.getId(), host.getName()));
-            }
-        }
+
+        } while (host.getResourceState() == ResourceState.PrepareForMaintenance);
     }
 
     private void validationBeforeShutdown(long hostId, HostVO host) {

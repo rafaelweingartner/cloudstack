@@ -80,6 +80,7 @@ import com.cloud.hypervisor.xen.resource.Xenserver625Resource;
 import com.cloud.resource.Discoverer;
 import com.cloud.resource.DiscovererBase;
 import com.cloud.resource.ResourceManager;
+import com.cloud.resource.ResourceState;
 import com.cloud.resource.ResourceStateAdapter;
 import com.cloud.resource.ServerResource;
 import com.cloud.resource.UnableDeleteHostException;
@@ -173,8 +174,9 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
 
         ClusterVO cluster = _clusterDao.findById(clusterId);
         if(cluster == null || cluster.getHypervisorType() != HypervisorType.XenServer) {
-        	if(s_logger.isInfoEnabled())
+        	if(s_logger.isInfoEnabled()) {
                 s_logger.info("invalid cluster id or cluster is not for XenServer hypervisors");
+            }
     		return null;
         }
 
@@ -387,11 +389,17 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         String password = null;
         Queue<String> pass=new LinkedList<String>();
         for (HostVO host : hosts) {
+            String address = host.getPrivateIpAddress();
+            if (address.equals(hostIp)) {
+                continue;
+            }
+            if (ResourceState.ShutDown == host.getResourceState()) {
+                continue;
+            }
             _hostDao.loadDetails(host);
             username = host.getDetail("username");
             password = host.getDetail("password");
             pass.add(password);
-            String address = host.getPrivateIpAddress();
             Connection hostConn = _connPool.getConnect(address, username, pass);
             if (hostConn == null) {
                 continue;
@@ -452,15 +460,15 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
         } else if (prodBrand.equals("XCP") && prodVersion.startsWith("1.6")) {
             return new XcpServer16Resource();
         } // Citrix Xenserver group of hypervisors
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("5.6.0"))
+        else if (prodBrand.equals("XenServer") && prodVersion.equals("5.6.0")) {
             return new XenServer56Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.0"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.0")) {
             return new XenServer600Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.2"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.2")) {
             return new XenServer602Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0")) {
             return new XenServer610Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.2.0")) {
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.2.0")) {
             /*
             Set<String> tags =record.tags;
             if (tags.contains(xs620snapshothotfix)) {
@@ -530,8 +538,9 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
 
     @Override
 	public boolean matchHypervisor(String hypervisor) {
-    	if(hypervisor == null)
-    		return true;
+    	if(hypervisor == null) {
+            return true;
+        }
     	return Hypervisor.HypervisorType.XenServer.toString().equalsIgnoreCase(hypervisor);
     }
 

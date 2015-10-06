@@ -80,13 +80,14 @@ import com.cloud.host.Host;
 import com.cloud.host.HostVO;
 import com.cloud.host.Status;
 import com.cloud.host.Status.Event;
+import com.cloud.resource.ResourceState;
 import com.cloud.resource.ServerResource;
 import com.cloud.serializer.GsonHelper;
 import com.cloud.utils.DateUtil;
 import com.cloud.utils.concurrency.NamedThreadFactory;
 import com.cloud.utils.db.QueryBuilder;
-import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.db.SearchCriteria.Op;
+import com.cloud.utils.db.TransactionLegacy;
 import com.cloud.utils.exception.CloudRuntimeException;
 import com.cloud.utils.nio.Link;
 import com.cloud.utils.nio.Task;
@@ -107,16 +108,16 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     protected HashMap<String, SSLEngine> _sslEngines;
     private final Timer _timer = new Timer("ClusteredAgentManager Timer");
     boolean _agentLbHappened = false;
-    
+
     @Inject
     protected ClusterManager _clusterMgr = null;
     @Inject
     protected ManagementServerHostDao _mshostDao;
     @Inject
     protected HostTransferMapDao _hostTransferDao;
-    @Inject 
+    @Inject
     protected List<AgentLoadBalancerPlanner> _lbPlanners;
-    @Inject 
+    @Inject
     ConfigurationDao _configDao;
     @Inject
     ConfigDepot _configDepot;
@@ -146,7 +147,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
 
         _clusterMgr.registerListener(this);
         _clusterMgr.registerDispatcher(new ClusterDispatcher());
-        
+
         _gson = GsonHelper.getGson();
 
         return super.configure(name, xmlParams);
@@ -161,7 +162,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         if (s_logger.isDebugEnabled()) {
             s_logger.debug("Scheduled direct agent scan task to run at an interval of " + ScanInterval.value() + " seconds");
         }
-        
+
         // Schedule tasks for agent rebalancing
         if (isAgentRebalanceEnabled()) {
             s_transferExecutor.scheduleAtFixedRate(getAgentRebalanceScanTask(), 60000, 60000, TimeUnit.MILLISECONDS);
@@ -197,6 +198,9 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         if (hosts != null && hosts.size() > 0) {
             s_logger.debug("Found " + hosts.size() + " unmanaged direct hosts, processing connect for them...");
             for (HostVO host : hosts) {
+                if (host.getResourceState() == ResourceState.ShutDown) {
+                    continue;
+                }
                 try {
                     AgentAttache agentattache = findAttache(host.getId());
                     if (agentattache != null) {
@@ -915,7 +919,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
         if (ansStr == null) {
             throw new AgentUnavailableException(agentId);
         }
-        
+
         Answer[] answers = _gson.fromJson(ansStr, Answer[].class);
 
         if (s_logger.isDebugEnabled()) {
@@ -1369,8 +1373,8 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     public boolean isAgentRebalanceEnabled() {
         return EnableLB.value();
     }
-    
-    
+
+
     private Runnable getAgentRebalanceScanTask() {
         return new ManagedContextRunnable() {
             @Override
@@ -1412,7 +1416,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     };
 }
 
-    
+
     @Override
     public void rescan() {
         // schedule a scan task immediately
@@ -1429,7 +1433,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
     @Override
     public ConfigKey<?>[] getConfigKeys() {
         ConfigKey<?>[] keys = super.getConfigKeys();
-        
+
         List<ConfigKey<?>> keysLst = new ArrayList<ConfigKey<?>>();
         keysLst.addAll(Arrays.asList(keys));
         keysLst.add(EnableLB);

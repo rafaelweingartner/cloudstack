@@ -2585,7 +2585,7 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
      */
     @Override
     public void startHost(HostVO host) throws Exception {
-        executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
+        executeCommandToStartHost(host);
 
         if (!isHostAlive(host)) {
             markHostAsFailedToStart(host);
@@ -2597,6 +2597,14 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
 
         changeConsolidationStatus(host);
         changeHostStatusToUp(host);
+    }
+
+    private void executeCommandToStartHost(HostVO host) {
+        if ("hurricane".equals(host.getName())) {
+            executeProgram("/etc/cloudstack/management/startHurricane.sh");
+            return;
+        }
+        executeProgram(String.format("%s %s", startHostCommand.trim(), host.getPrivateMacAddress().trim()));
     }
 
     private void changeHostStatusToUp(HostVO host) {

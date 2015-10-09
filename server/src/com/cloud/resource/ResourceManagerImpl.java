@@ -16,7 +16,6 @@
 // under the License.
 package com.cloud.resource;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -2674,10 +2673,11 @@ public class ResourceManagerImpl extends ManagerBase implements ResourceManager,
         }
     }
 
-    private Process executeProgram(String cmd) {
+    private void executeProgram(String cmd) {
         try {
-            return Runtime.getRuntime().exec(cmd);
-        } catch (IOException e) {
+            Process process = Runtime.getRuntime().exec(cmd);
+            process.waitFor();
+        } catch (Exception e) {
             throw new CloudRuntimeException(e);
         }
     }

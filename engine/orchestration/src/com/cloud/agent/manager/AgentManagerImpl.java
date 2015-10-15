@@ -681,7 +681,6 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
         //        if (resource instanceof DummySecondaryStorageResource || resource instanceof KvmDummyResourceBase) {
         //            return new DummyAttache(this, host.getId(), false);
         //        }
-
         s_logger.debug("create DirectAgentAttache for " + host.getId());
         DirectAgentAttache attache = new DirectAgentAttache(this, host.getId(), host.getName(), resource, host.isInMaintenanceStates(), this);
 
@@ -1297,10 +1296,11 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
     public boolean tapLoadingAgents(Long hostId, TapAgentsAction action) {
         synchronized (_loadingAgents) {
             if (action == TapAgentsAction.Add) {
-                if (_loadingAgents.contains(hostId))
+                if (_loadingAgents.contains(hostId)) {
                     return false;
-                else
+                } else {
                     _loadingAgents.add(hostId);
+                }
             } else if (action == TapAgentsAction.Del) {
                 _loadingAgents.remove(hostId);
             } else if (action == TapAgentsAction.Contains) {
@@ -1391,9 +1391,10 @@ public class AgentManagerImpl extends ManagerBase implements AgentManager, Handl
 
     @Override
     public boolean handleDirectConnectAgent(Host host, StartupCommand[] cmds, ServerResource resource, boolean forRebalance) throws ConnectionException {
-        AgentAttache attache;
-
-        attache = createAttacheForDirectConnect(host, resource);
+        if (host.getResourceState() == ResourceState.ShutDown) {
+            return false;
+        }
+        AgentAttache attache = createAttacheForDirectConnect(host, resource);
         StartupAnswer[] answers = new StartupAnswer[cmds.length];
         for (int i = 0; i < answers.length; i++) {
             answers[i] = new StartupAnswer(cmds[i], attache.getId(), PingInterval.value());

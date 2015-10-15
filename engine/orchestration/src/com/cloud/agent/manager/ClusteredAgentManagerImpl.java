@@ -283,7 +283,7 @@ public class ClusteredAgentManagerImpl extends AgentManagerImpl implements Clust
 // return new DummyAttache(this, host.getId(), false);
 // }
         s_logger.debug("create ClusteredDirectAgentAttache for " + host.getId());
-        final DirectAgentAttache attache = new ClusteredDirectAgentAttache(this, host.getId(), host.getName(), _nodeId, resource, host.isInMaintenanceStates(), this);
+        DirectAgentAttache attache = new ClusteredDirectAgentAttache(this, host.getId(), host.getName(), _nodeId, resource, host.isInMaintenanceStates(), this);
         AgentAttache old = null;
         synchronized (_agents) {
             old = _agents.get(host.getId());

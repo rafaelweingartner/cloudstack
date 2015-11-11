@@ -273,7 +273,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
     protected AffinityGroupVMMapDao _affinityGroupVMMapDao;
     @Inject
     protected EntityManager _entityMgr;
-    
+
     @Inject
     ConfigDepot _configDepot;
 
@@ -595,6 +595,7 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
     }
 
     @Override
+    //TODO Tem que colocar o tratamento para iniciar host caso necessário aqui
     public void start(String vmUuid, Map<VirtualMachineProfile.Param, Object> params, DeploymentPlan planToDeploy) {
         try {
             advanceStart(vmUuid, params, planToDeploy, null);
@@ -670,8 +671,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 });
 
                 work = result.third();
-                if (result.first() != null)
+                if (result.first() != null) {
                     return result;
+                }
             } catch (NoTransitionException e) {
                 if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Unable to transition into Starting state due to " + e.getMessage());
@@ -776,10 +778,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ConcurrentOperationException)
+                if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof ResourceUnavailableException)
+                } else if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
+                }
             }
         }
     }
@@ -1329,12 +1332,13 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof AgentUnavailableException)
+                if (jobResult instanceof AgentUnavailableException) {
                     throw (AgentUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof OperationTimedoutException)
+                } else if (jobResult instanceof OperationTimedoutException) {
                     throw (OperationTimedoutException)jobResult;
+                }
             }
         }
     }
@@ -1635,8 +1639,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof RuntimeException)
+                if (jobResult instanceof RuntimeException) {
                     throw (RuntimeException)jobResult;
+                }
             }
         }
     }
@@ -1728,12 +1733,13 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ResourceUnavailableException)
+                if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof RuntimeException)
+                } else if (jobResult instanceof RuntimeException) {
                     throw (RuntimeException)jobResult;
+                }
             }
         }
     }
@@ -2012,10 +2018,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobException = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobException != null) {
-                if (jobException instanceof ResourceUnavailableException)
+                if (jobException instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobException;
-                else if (jobException instanceof ConcurrentOperationException)
+                } else if (jobException instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobException;
+                }
            }
         }
     }
@@ -2258,10 +2265,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         boolean isMachineUpgradable = true;
         for (HostAllocator allocator : _hostAllocators) {
             isMachineUpgradable = allocator.isVirtualMachineUpgradable(vm, offering);
-            if (isMachineUpgradable)
+            if (isMachineUpgradable) {
                 continue;
-            else
+            } else {
                 break;
+            }
         }
 
         return isMachineUpgradable;
@@ -2308,12 +2316,13 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ResourceUnavailableException)
+                if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof InsufficientCapacityException)
+                } else if (jobResult instanceof InsufficientCapacityException) {
                     throw (InsufficientCapacityException)jobResult;
+                }
             }
         }
     }
@@ -2479,8 +2488,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
     }
 
     public void fullSync(final long clusterId, Map<String, Ternary<String, State, String>> newStates) {
-        if (newStates==null)
+        if (newStates==null) {
             return;
+        }
         Map<Long, AgentVmInfo> infos = convertToInfos(newStates);
         Set<VMInstanceVO> set_vms = Collections.synchronizedSet(new HashSet<VMInstanceVO>());
         set_vms.addAll(_vmDao.listByClusterId(clusterId));
@@ -2591,7 +2601,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         for (final AgentVmInfo left : infos.values()) {
             if (!VirtualMachineName.isValidVmName(left.name))
+             {
                 continue;  // if the vm doesn't follow CS naming ignore it for stopping
+            }
             try {
                 Host host = _hostDao.findByGuid(left.getHostUuid());
                 if (host != null) {
@@ -3000,8 +3012,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             return;
         }
 
-        if(s_logger.isDebugEnabled())
+        if(s_logger.isDebugEnabled()) {
             s_logger.debug("Received startup command from hypervisor host. host id: " + agent.getId());
+        }
 
         if(VmJobEnabled.value()) {
             _syncMgr.resetHostSyncState(agent.getId());
@@ -3243,16 +3256,17 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobException = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobException != null) {
-                if (jobException instanceof ResourceUnavailableException)
+                if (jobException instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobException;
-                else if (jobException instanceof ConcurrentOperationException)
+                } else if (jobException instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobException;
-                else if (jobException instanceof InsufficientCapacityException)
+                } else if (jobException instanceof InsufficientCapacityException) {
                     throw (InsufficientCapacityException)jobException;
-                else if (jobException instanceof RuntimeException)
+                } else if (jobException instanceof RuntimeException) {
                     throw (RuntimeException)jobException;
-                else if (jobException instanceof Long)
+                } else if (jobException instanceof Long) {
                     return requested;
+                }
             }
 
             throw new RuntimeException("Unexpected job execution result");
@@ -3357,14 +3371,15 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ResourceUnavailableException)
+                if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof RuntimeException)
+                } else if (jobResult instanceof RuntimeException) {
                     throw (RuntimeException)jobResult;
-                else if (jobResult instanceof Boolean)
+                } else if (jobResult instanceof Boolean) {
                     return (Boolean)jobResult;
+                }
             }
 
             throw new RuntimeException("Job failed with un-handled exception");
@@ -3604,10 +3619,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ResourceUnavailableException)
+                if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
+                }
             }
         }
     }
@@ -3865,13 +3881,13 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
             Object jobResult = _jobMgr.unmarshallResultObject(outcome.getJob());
             if (jobResult != null) {
-                if (jobResult instanceof ResourceUnavailableException)
+                if (jobResult instanceof ResourceUnavailableException) {
                     throw (ResourceUnavailableException)jobResult;
-                else if (jobResult instanceof ConcurrentOperationException)
+                } else if (jobResult instanceof ConcurrentOperationException) {
                     throw (ConcurrentOperationException)jobResult;
-                else if (jobResult instanceof InsufficientServerCapacityException)
+                } else if (jobResult instanceof InsufficientServerCapacityException) {
                     throw (InsufficientServerCapacityException)jobResult;
-                else if (jobResult instanceof Throwable) {
+                } else if (jobResult instanceof Throwable) {
                     s_logger.error("Unhandled exception", (Throwable)jobResult);
                     throw new RuntimeException("Unhandled exception", (Throwable)jobResult);
                 }
@@ -4024,8 +4040,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
 
         case Running:
             try {
-                if (vm.getHostId() != null && vm.getHostId().longValue() != vm.getPowerHostId().longValue())
+                if (vm.getHostId() != null && vm.getHostId().longValue() != vm.getPowerHostId().longValue()) {
                     s_logger.info("Detected out of band VM migration from host " + vm.getHostId() + " to host " + vm.getPowerHostId());
+                }
                 stateTransitTo(vm, VirtualMachine.Event.FollowAgentPowerOnReport, vm.getPowerHostId());
             } catch (NoTransitionException e) {
                 s_logger.warn("Unexpected VM state transition exception, race-condition?", e);
@@ -4140,10 +4157,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         for (Long vmId : vmsWithRecentReport) {
             VMInstanceVO vm = _vmDao.findById(vmId);
             assert (vm != null);
-            if (vm.getPowerState() == PowerState.PowerOn)
+            if (vm.getPowerState() == PowerState.PowerOn) {
                 handlePowerOnReportWithNoPendingJobsOnVM(vm);
-            else
+            } else {
                 handlePowerOffReportWithNoPendingJobsOnVM(vm);
+            }
         }
     }
 
@@ -4188,8 +4206,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
 
         } finally {
-            if (txn != null)
+            if (txn != null) {
                 txn.close();
+            }
         }
         return l;
     }
@@ -4221,8 +4240,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
             return l;
         } finally {
-            if (txn != null)
+            if (txn != null) {
                 txn.close();
+            }
         }
     }
 
@@ -4251,8 +4271,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
             return l;
         } finally {
-            if (txn != null)
+            if (txn != null) {
                 txn.close();
+            }
         }
     }
 
@@ -4268,8 +4289,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 @Override
                 public boolean checkCondition() {
                     VMInstanceVO instance = _vmDao.findById(vmId);
-                    if (instance.getPowerState() == desiredPowerState && (srcHostIdForMigration != null && instance.getPowerHostId() != srcHostIdForMigration))
+                    if (instance.getPowerState() == desiredPowerState && (srcHostIdForMigration != null && instance.getPowerHostId() != srcHostIdForMigration)) {
                         return true;
+                    }
                     return false;
                 }
             }, Topics.VM_POWER_STATE, AsyncJob.Topics.JOB_STATE);
@@ -4291,8 +4313,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
                 public boolean checkCondition() {
                     AsyncJobVO jobVo = _entityMgr.findById(AsyncJobVO.class, job.getId());
                     assert (jobVo != null);
-                    if (jobVo == null || jobVo.getStatus() != JobInfo.Status.IN_PROGRESS)
+                    if (jobVo == null || jobVo.getStatus() != JobInfo.Status.IN_PROGRESS) {
                         return true;
+                    }
 
                     return false;
                 }

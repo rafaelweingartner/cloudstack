@@ -132,6 +132,7 @@ import com.cloud.exception.AgentUnavailableException;
 import com.cloud.exception.CloudException;
 import com.cloud.exception.ConcurrentOperationException;
 import com.cloud.exception.InsufficientCapacityException;
+import com.cloud.exception.InsufficientServerCapacityException;
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ManagementServerException;
 import com.cloud.exception.OperationTimedoutException;
@@ -261,6 +262,7 @@ import com.cloud.utils.exception.ExecutionException;
 import com.cloud.utils.fsm.NoTransitionException;
 import com.cloud.utils.net.NetUtils;
 import com.cloud.vm.VirtualMachine.State;
+import com.cloud.vm.VirtualMachineProfile.Param;
 import com.cloud.vm.dao.InstanceGroupDao;
 import com.cloud.vm.dao.InstanceGroupVMMapDao;
 import com.cloud.vm.dao.NicDao;
@@ -3341,8 +3343,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
             }
         }
 
-        String reservationId = reserveHost(callerUser, plan, vmEntity, plannerName);
-        vmEntity.deploy(reservationId, Long.toString(callerUser.getId()), params);
+        reserverAndDeployVirtualMachine(callerUser, plan, params, vmEntity, plannerName);
 
         Pair<UserVmVO, Map<VirtualMachineProfile.Param, Object>> vmParamPair = new Pair(vm, params);
         if (vm != null && vm.isUpdateParameters()) {
@@ -3357,37 +3358,51 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
         return vmParamPair;
     }
 
-    /**
-     * This method encapsulates "reserve" method.
-     * If "reserve" throws insufficient capacity exception, "reserveHost" get other host to start and tries to reserve again.
-     * In case of no host available to start, then reserveHost throws insufficient capacity exception as "reserve".
-     * @param callerUser
-     * @param plan
-     * @param vmEntity
-     * @param plannerName
-     * @return
-     * @throws ResourceUnavailableException
-     * @throws InsufficientCapacityException
-     */
-    private String reserveHost(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
-            throws ResourceUnavailableException, InsufficientCapacityException {
+    private void reserverAndDeployVirtualMachine(UserVO callerUser, DataCenterDeployment plan, Map<VirtualMachineProfile.Param, Object> params, VirtualMachineEntity vmEntity,
+            String plannerName) {
         try {
-            return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
-        } catch (InsufficientCapacityException e) {
-            return synchronizedStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
+            internalReserveAndDeployVM(callerUser, plan, params, vmEntity, plannerName);
+        } catch (Exception e) {
+            if (shouldTryToStartHost(e)) {
+                synchronizedStartAndRetryDeploy(callerUser, plan, params, vmEntity, plannerName);
+                //we can ignore the first time the exception occur, since we will try to deploy the vm again.
+                return;
+            }
+            throw new CloudRuntimeException(e);
+        }
+
+    }
+
+    private boolean shouldTryToStartHost(Exception e) {
+        if (e instanceof InsufficientServerCapacityException) {
+            return true;
+        }
+        return "Unable to start a VM due to insufficient capacity".equals(e.getMessage());
+    }
+
+    private void internalReserveAndDeployVM(UserVO callerUser, DataCenterDeployment plan, Map<VirtualMachineProfile.Param, Object> params, VirtualMachineEntity vmEntity,
+            String plannerName) throws InsufficientCapacityException, ResourceUnavailableException {
+        String reservationId = vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
+        vmEntity.deploy(reservationId, Long.toString(callerUser.getId()), params);
+    }
+
+    private synchronized void synchronizedStartAndRetryDeploy(UserVO callerUser, DataCenterDeployment plan, Map<Param, Object> params, VirtualMachineEntity vmEntity,
+            String plannerName) {
+        try {
+            internalStartHostAndRetryDeploy(callerUser, plan, params, vmEntity, plannerName);
+        } catch (Exception e) {
+            throw new CloudRuntimeException(e);
         }
     }
 
-    private synchronized String synchronizedStartHostAndReserveResources(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName) throws InsufficientCapacityException,
-    ResourceUnavailableException {
-        return internalStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
-    }
-
-    private String internalStartHostAndReserveResources(UserVO callerUser, DataCenterDeployment plan, VirtualMachineEntity vmEntity, String plannerName)
-            throws InsufficientCapacityException, ResourceUnavailableException {
+    private void internalStartHostAndRetryDeploy(UserVO callerUser, DataCenterDeployment plan, Map<Param, Object> params, VirtualMachineEntity vmEntity, String plannerName)
+            throws Exception {
         try {
-            return vmEntity.reserve(plannerName, plan, new ExcludeList(), Long.toString(callerUser.getId()));
-        } catch (InsufficientCapacityException e) {
+            internalReserveAndDeployVM(callerUser, plan, params, vmEntity, plannerName);
+        } catch (Exception e) {
+            if (!shouldTryToStartHost(e)) {
+                throw e;
+            }
             List<HostResources> hostsToStart = getHostToStart(vmEntity);
 
             if (hostsToStart.isEmpty()) {
@@ -3400,7 +3415,7 @@ public class UserVmManagerImpl extends ManagerBase implements UserVmManager, Vir
                     break;
                 }
             }
-            return internalStartHostAndReserveResources(callerUser, plan, vmEntity, plannerName);
+            internalStartHostAndRetryDeploy(callerUser, plan, params, vmEntity, plannerName);
         }
     }
 

@@ -52,6 +52,7 @@ import org.apache.cloudstack.storage.to.VolumeObjectTO;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.apache.xmlrpc.XmlRpcException;
+import org.springframework.expression.spel.ast.Ternary;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -235,13 +236,6 @@ import com.cloud.storage.resource.StorageSubsystemCommandHandler;
 import com.cloud.storage.resource.StorageSubsystemCommandHandlerBase;
 import com.cloud.storage.template.TemplateProp;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
-import com.cloud.utils.NumbersUtil;
-import com.cloud.utils.Pair;
-import com.cloud.utils.StringUtils;
-import com.cloud.utils.Ternary;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
-import com.cloud.utils.ssh.SSHCmdHelper;
 import com.cloud.vm.DiskProfile;
 import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.PowerState;
@@ -6003,10 +5997,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
             if( hr.softwareVersion.get("product_version_text_short") != null ) {
                 details.put("product_version_text_short", hr.softwareVersion.get("product_version_text_short"));
-                cmd.setHypervisorVersion(hr.softwareVersion.get("product_version_text_short"));
-
-                cmd.setHypervisorVersion(_host.product_version);
             }
+            cmd.setHypervisorVersion(_host.product_version);
             if (_privateNetworkName != null) {
                 details.put("private.network.device", _privateNetworkName);
             }

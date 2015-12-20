@@ -116,17 +116,6 @@ import com.cloud.storage.VolumeVO;
 import com.cloud.storage.resource.StorageSubsystemCommandHandler;
 import com.cloud.storage.resource.StorageSubsystemCommandHandlerBase;
 import com.cloud.template.VirtualMachineTemplate.BootloaderType;
-import com.cloud.utils.ExecutionResult;
-import com.cloud.utils.NumbersUtil;
-import com.cloud.utils.Pair;
-import com.cloud.utils.PropertiesUtil;
-import com.cloud.utils.StringUtils;
-import com.cloud.utils.Ternary;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.net.NetUtils;
-import com.cloud.utils.script.Script;
-import com.cloud.utils.ssh.SSHCmdHelper;
-import com.cloud.utils.ssh.SshHelper;
 import com.cloud.vm.VirtualMachine.PowerState;
 import com.trilead.ssh2.SCPClient;
 import com.xensource.xenapi.Bond;
@@ -152,6 +141,12 @@ import com.xensource.xenapi.VIF;
 import com.xensource.xenapi.VLAN;
 import com.xensource.xenapi.VM;
 import com.xensource.xenapi.XenAPIObject;
+
+import main.java.com.cloud.utils.NumbersUtil;
+import main.java.com.cloud.utils.exception.CloudRuntimeException;
+import main.java.com.cloud.utils.script.Script;
+import main.java.com.cloud.utils.ssh.SSHCmdHelper;
+import main.java.com.cloud.utils.ssh.SshHelper;
 
 /**
  * CitrixResourceBase encapsulates the calls to the XenServer Xapi process to
@@ -1691,23 +1686,20 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             if (details == null) {
                 details = new HashMap<String, String>();
             }
-
             String productBrand = hr.softwareVersion.get("product_brand");
             if (productBrand == null) {
                 productBrand = hr.softwareVersion.get("platform_name");
             }
             details.put("product_brand", productBrand);
             details.put("product_version", _host.getProductVersion());
+            cmd.setHypervisorVersion(_host.getProductVersion());
+
             if (hr.softwareVersion.get("product_version_text_short") != null) {
                 details.put("product_version_text_short", hr.softwareVersion.get("product_version_text_short"));
-                cmd.setHypervisorVersion(hr.softwareVersion.get("product_version_text_short"));
-
-                cmd.setHypervisorVersion(_host.getProductVersion());
             }
             if (_privateNetworkName != null) {
                 details.put("private.network.device", _privateNetworkName);
             }
-
             cmd.setHostDetails(details);
             cmd.setName(hr.nameLabel);
             cmd.setGuid(_host.getUuid());

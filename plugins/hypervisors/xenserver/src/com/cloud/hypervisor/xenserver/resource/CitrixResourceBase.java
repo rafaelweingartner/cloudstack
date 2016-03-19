@@ -167,6 +167,8 @@ import com.xensource.xenapi.XenAPIObject;
 @Local(value = ServerResource.class)
 public abstract class CitrixResourceBase implements ServerResource, HypervisorResource, VirtualRouterDeployer {
 
+    private final static int BASE_TO_CONVERT_BYTES_INTO_KILOBYTES = 1024;
+
     public enum SRType {
         EXT, FILE, ISCSI, ISO, LVM, LVMOHBA, LVMOISCSI, NFS;
 
@@ -2306,7 +2308,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     }
                     if (target.equals(dc.get("target")) && targetiqn.equals(dc.get("targetIQN")) && lunid.equals(dc.get("lunid"))) {
                         throw new CloudRuntimeException("There is a SR using the same configuration target:" + dc.get("target") + ",  targetIQN:" + dc.get("targetIQN")
-                                + ", lunid:" + dc.get("lunid") + " for pool " + srNameLabel + "on host:" + _host.getUuid());
+                        + ", lunid:" + dc.get("lunid") + " for pool " + srNameLabel + "on host:" + _host.getUuid());
                     }
                 }
                 deviceConfig.put("target", target);
@@ -2617,7 +2619,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         final Bond bond = mgmtPifRec.bondSlaveOf;
         if (!isRefNull(bond)) {
             final String msg = "Management interface is on slave(" + mgmtPifRec.uuid + ") of bond(" + bond.getUuid(conn) + ") on host(" + _host.getUuid()
-                    + "), please move management interface to bond!";
+            + "), please move management interface to bond!";
             s_logger.warn(msg);
             throw new CloudRuntimeException(msg);
         }
@@ -2837,7 +2839,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
                     if (server.equals(dc.get("server")) && serverpath.equals(dc.get("serverpath"))) {
                         throw new CloudRuntimeException("There is a SR using the same configuration server:" + dc.get("server") + ", serverpath:" + dc.get("serverpath")
-                                + " for pool " + uuid + " on host:" + _host.getUuid());
+                        + " for pool " + uuid + " on host:" + _host.getUuid());
                     }
 
                 }
@@ -3324,20 +3326,22 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 if (param.contains("cpu")) {
                     vmStatsAnswer.setNumCPUs(vmStatsAnswer.getNumCPUs() + 1);
                     vmStatsAnswer.setCPUUtilization(vmStatsAnswer.getCPUUtilization() + getDataAverage(dataNode, col, numRows));
-                } else if (param.matches("vif_\\d*_rx")) {
-                    vmStatsAnswer.setNetworkReadKBs(vmStatsAnswer.getNetworkReadKBs() + getDataAverage(dataNode, col, numRows) / 1000);
-                } else if (param.matches("vif_\\d*_tx")) {
-                    vmStatsAnswer.setNetworkWriteKBs(vmStatsAnswer.getNetworkWriteKBs() + getDataAverage(dataNode, col, numRows) / 1000);
-                } else if (param.matches("vbd_.*_read")) {
-                    vmStatsAnswer.setDiskReadKBs(vmStatsAnswer.getDiskReadKBs() + getDataAverage(dataNode, col, numRows) / 1000);
-                } else if (param.matches("vbd_.*_write")) {
-                    vmStatsAnswer.setDiskWriteKBs(vmStatsAnswer.getDiskWriteKBs() + getDataAverage(dataNode, col, numRows) / 1000);
-                } else if (param.contains("memory_internal_free")) {
-                    vmStatsAnswer.setIntFreeMemoryKBs(vmStatsAnswer.getIntFreeMemoryKBs() + getDataAverage(dataNode, col, numRows) / 1024);
-                } else if (param.contains("memory_target")) {
-                    vmStatsAnswer.setTargetMemoryKBs(vmStatsAnswer.getTargetMemoryKBs() + getDataAverage(dataNode, col, numRows) / 1024);
-                } else if (param.contains("memory")) {
-                    vmStatsAnswer.setMemoryKBs(vmStatsAnswer.getMemoryKBs() + getDataAverage(dataNode, col, numRows) / 1024);
+                } else {
+                    if (param.matches("vif_\\d*_rx")) {
+                        vmStatsAnswer.setNetworkReadKBs(vmStatsAnswer.getNetworkReadKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.matches("vif_\\d*_tx")) {
+                        vmStatsAnswer.setNetworkWriteKBs(vmStatsAnswer.getNetworkWriteKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.matches("vbd_.*_read")) {
+                        vmStatsAnswer.setDiskReadKBs(vmStatsAnswer.getDiskReadKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.matches("vbd_.*_write")) {
+                        vmStatsAnswer.setDiskWriteKBs(vmStatsAnswer.getDiskWriteKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.contains("memory_internal_free")) {
+                        vmStatsAnswer.setIntFreeMemoryKBs(vmStatsAnswer.getIntFreeMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.contains("memory_target")) {
+                        vmStatsAnswer.setTargetMemoryKBs(vmStatsAnswer.getTargetMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    } else if (param.contains("memory")) {
+                        vmStatsAnswer.setMemoryKBs(vmStatsAnswer.getMemoryKBs() + getDataAverage(dataNode, col, numRows) / BASE_TO_CONVERT_BYTES_INTO_KILOBYTES);
+                    }
                 }
 
             }
@@ -5080,8 +5084,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                         if (result && content != null && !content.isEmpty()) {
                             File file = new File(folder+"/"+fileName+".txt");
                             try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file.getAbsoluteFile()),"UTF-8");
-                                 BufferedWriter bw = new BufferedWriter(fw);
-                                ) {
+                                    BufferedWriter bw = new BufferedWriter(fw);
+                                    ) {
                                 bw.write(content);
                                 s_logger.debug("created file: "+ file + " in folder:"+folder);
                             } catch (final IOException ex) {

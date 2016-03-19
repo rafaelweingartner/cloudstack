@@ -64,10 +64,10 @@ import org.libvirt.DomainInfo;
 import org.libvirt.DomainInfo.DomainState;
 import org.libvirt.DomainInterfaceStats;
 import org.libvirt.LibvirtException;
+import org.libvirt.MemoryStatistic;
 import org.libvirt.NodeInfo;
 import org.libvirt.StorageVol;
-import org.libvirt.MemoryStatistic;
-
+import org.libvirt.jna.virDomainMemoryStats;
 import org.mockito.Matchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -717,10 +717,9 @@ public class LibvirtComputingResourceTest {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Test
+    @SuppressWarnings("unchecked")
     public void testGetVmDiskStatsCommandException() {
-        final Connect conn = Mockito.mock(Connect.class);
         final LibvirtUtilitiesHelper libvirtUtilitiesHelper = Mockito.mock(LibvirtUtilitiesHelper.class);
 
         final String vmName = "Test";
@@ -940,7 +939,6 @@ public class LibvirtComputingResourceTest {
     public void testGetHostStatsCommand() {
         // A bit difficult to test due to the logger being passed and the parser itself relying on the connection.
         // Have to spend some more time afterwards in order to refactor the wrapper itself.
-        final LibvirtUtilitiesHelper libvirtUtilitiesHelper = Mockito.mock(LibvirtUtilitiesHelper.class);
         final CPUStat cpuStat = Mockito.mock(CPUStat.class);
         final MemStat memStat = Mockito.mock(MemStat.class);
 
@@ -3521,7 +3519,6 @@ public class LibvirtComputingResourceTest {
         verify(libvirtComputingResource, times(1)).configureVPCNetworkUsage(command.getPrivateIP(), command.getGatewayIP(), command.getOption(), command.getVpcCIDR());
     }
 
-    @SuppressWarnings("unchecked")
     @Test
     public void testCreatePrivateTemplateFromVolumeCommand() {
         //Simple test used to make sure the flow (LibvirtComputingResource => Request => CommandWrapper) is working.
@@ -5029,5 +5026,41 @@ public class LibvirtComputingResourceTest {
                 assertTrue("The pattern '" + ifNamePattern + "' is expected to be valid for interface " + ifName,lvcr.isInterface(ifName));
             }
         }
+    }
+
+    @Test
+    public void testFetMemoryFreeInKBsDomainReturningNoMemoryStatistics() throws LibvirtException {
+        LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
+
+        Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(null);
+        long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
+
+        Assert.assertEquals(0, memoryFreeInKBs);
+    }
+
+    @Test
+    public void testFetMemoryFreeInKBsDomainReturningOfSomeMemoryStatistics() throws LibvirtException {
+        LibvirtComputingResource libvirtComputingResource = new LibvirtComputingResource();
+
+        MemoryStatistic[] mem = createMemoryStatisticFreeMemory100();
+        Domain domainMock = getDomainConfiguredToReturnMemoryStatistic(mem);
+        long memoryFreeInKBs = libvirtComputingResource.getMemoryFreeInKBs(domainMock);
+
+        Assert.assertEquals(100, memoryFreeInKBs);
+    }
+
+    private MemoryStatistic[] createMemoryStatisticFreeMemory100() {
+        virDomainMemoryStats stat = new virDomainMemoryStats();
+        stat.val = 100;
+
+        MemoryStatistic[] mem = new MemoryStatistic[2];
+        mem[0] = new MemoryStatistic(stat);
+        return mem;
+    }
+
+    private Domain getDomainConfiguredToReturnMemoryStatistic(MemoryStatistic[] mem) throws LibvirtException {
+        Domain domainMock = Mockito.mock(Domain.class);
+        when(domainMock.memoryStats(2)).thenReturn(mem);
+        return domainMock;
     }
 }

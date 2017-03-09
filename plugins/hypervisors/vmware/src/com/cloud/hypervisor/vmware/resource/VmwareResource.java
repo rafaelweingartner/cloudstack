@@ -104,6 +104,7 @@ import com.vmware.vim25.VirtualMachineRuntimeInfo;
 import com.vmware.vim25.VirtualMachineVideoCard;
 import com.vmware.vim25.VmwareDistributedVirtualSwitchVlanIdSpec;
 
+import org.apache.cloudstack.resource.hypervisors.utils.HypervisorResourceUtils;
 import org.apache.cloudstack.storage.command.CopyCommand;
 import org.apache.cloudstack.storage.command.StorageSubSystemCommand;
 import org.apache.cloudstack.storage.resource.NfsSecondaryStorageResource;
@@ -1402,22 +1403,7 @@ public class VmwareResource implements StoragePoolResource, ServerResource, Vmwa
     private CopyFileInVmAnswer execute(CopyFileInVmCommand cmd) {
         VmwareManager mgr = getServiceContext().getStockObject(VmwareManager.CONTEXT_STOCK_NAME);
         File keyFile = mgr.getSystemVMKeyFile();
-        try {
-            File file = new File(cmd.getSrc());
-            if(file.exists()) {
-                if(file.isDirectory()) {
-                    for (File f : FileUtils.listFiles(new File(cmd.getSrc()), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
-                        SshHelper.scpTo(cmd.getVmIp(), 3922, "root", keyFile, null, cmd.getDest(), f.getCanonicalPath(), null);
-                    }
-                } else {
-                    SshHelper.scpTo(cmd.getVmIp(), 3922, "root", keyFile, null, cmd.getDest(), file.getCanonicalPath(), null);
-                }
-            }
-        } catch (Exception e) {
-            s_logger.error("Fail to copy file " + cmd.getSrc() + " in VM " + cmd.getVmIp(), e);
-            return new CopyFileInVmAnswer(cmd, e);
-        }
-        return new CopyFileInVmAnswer(cmd);
+        return HypervisorResourceUtils.copyFileInVm(cmd, keyFile);
     }
 
     protected ScaleVmAnswer execute(ScaleVmCommand cmd) {

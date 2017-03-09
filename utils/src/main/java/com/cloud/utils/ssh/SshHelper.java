@@ -34,6 +34,7 @@ import com.trilead.ssh2.ChannelCondition;
 import com.trilead.ssh2.Connection;
 import com.trilead.ssh2.Session;
 import com.cloud.utils.Pair;
+import com.cloud.utils.exception.CloudRuntimeException;
 
 public class SshHelper {
     private static final int DEFAULT_CONNECT_TIMEOUT = 180000;
@@ -48,24 +49,21 @@ public class SshHelper {
     private static final Logger s_logger = Logger.getLogger(SshHelper.class);
 
     public static Pair<Boolean, String> sshExecute(String host, int port, String user, File pemKeyFile, String password, String command) throws Exception {
-
         return sshExecute(host, port, user, pemKeyFile, password, command, DEFAULT_CONNECT_TIMEOUT, DEFAULT_KEX_TIMEOUT, 120000);
     }
 
-    public static void scpTo(String host, int port, String user, File pemKeyFile, String password, String remoteTargetDirectory, String localFile, String fileMode)
-            throws Exception {
-
+    public static void scpTo(String host, int port, String user, File pemKeyFile, String password, String remoteTargetDirectory, String localFile, String fileMode) throws IOException{
         scpTo(host, port, user, pemKeyFile, password, remoteTargetDirectory, localFile, fileMode, DEFAULT_CONNECT_TIMEOUT, DEFAULT_KEX_TIMEOUT);
     }
 
     public static void scpTo(String host, int port, String user, File pemKeyFile, String password, String remoteTargetDirectory, byte[] data, String remoteFileName,
-            String fileMode) throws Exception {
+            String fileMode) throws IOException {
 
         scpTo(host, port, user, pemKeyFile, password, remoteTargetDirectory, data, remoteFileName, fileMode, DEFAULT_CONNECT_TIMEOUT, DEFAULT_KEX_TIMEOUT);
     }
 
     public static void scpTo(String host, int port, String user, File pemKeyFile, String password, String remoteTargetDirectory, String localFile, String fileMode,
-            int connectTimeoutInMs, int kexTimeoutInMs) throws Exception {
+            int connectTimeoutInMs, int kexTimeoutInMs) throws IOException {
 
         com.trilead.ssh2.Connection conn = null;
         com.trilead.ssh2.SCPClient scpClient = null;
@@ -78,13 +76,13 @@ public class SshHelper {
                 if (!conn.authenticateWithPassword(user, password)) {
                     String msg = "Failed to authentication SSH user " + user + " on host " + host;
                     s_logger.error(msg);
-                    throw new Exception(msg);
+                    throw new CloudRuntimeException(msg);
                 }
             } else {
                 if (!conn.authenticateWithPublicKey(user, pemKeyFile, password)) {
                     String msg = "Failed to authentication SSH user " + user + " on host " + host;
                     s_logger.error(msg);
-                    throw new Exception(msg);
+                    throw new CloudRuntimeException(msg);
                 }
             }
 
@@ -101,7 +99,7 @@ public class SshHelper {
     }
 
     public static void scpTo(String host, int port, String user, File pemKeyFile, String password, String remoteTargetDirectory, byte[] data, String remoteFileName,
-            String fileMode, int connectTimeoutInMs, int kexTimeoutInMs) throws Exception {
+            String fileMode, int connectTimeoutInMs, int kexTimeoutInMs) throws IOException{
 
         com.trilead.ssh2.Connection conn = null;
         com.trilead.ssh2.SCPClient scpClient = null;
@@ -114,13 +112,13 @@ public class SshHelper {
                 if (!conn.authenticateWithPassword(user, password)) {
                     String msg = "Failed to authentication SSH user " + user + " on host " + host;
                     s_logger.error(msg);
-                    throw new Exception(msg);
+                    throw new CloudRuntimeException(msg);
                 }
             } else {
                 if (!conn.authenticateWithPublicKey(user, pemKeyFile, password)) {
                     String msg = "Failed to authentication SSH user " + user + " on host " + host;
                     s_logger.error(msg);
-                    throw new Exception(msg);
+                    throw new CloudRuntimeException(msg);
                 }
             }
 

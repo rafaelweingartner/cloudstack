@@ -19,41 +19,21 @@
 
 package com.cloud.hypervisor.kvm.resource.wrapper;
 
+import java.io.File;
+
+import org.apache.cloudstack.resource.hypervisors.utils.HypervisorResourceUtils;
+
 import com.cloud.agent.api.Answer;
-import com.cloud.agent.api.CopyFileInVmAnswer;
 import com.cloud.agent.api.CopyFileInVmCommand;
 import com.cloud.hypervisor.kvm.resource.LibvirtComputingResource;
 import com.cloud.resource.CommandWrapper;
 import com.cloud.resource.ResourceWrapper;
-import com.cloud.utils.ssh.SshHelper;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.filefilter.TrueFileFilter;
-import org.apache.log4j.Logger;
-
-import java.io.File;
 
 @ResourceWrapper(handles = CopyFileInVmCommand.class)
 public class LibvirtCopyFileInVmCommandWrapper   extends CommandWrapper<CopyFileInVmCommand, Answer, LibvirtComputingResource> {
 
-    private static final Logger s_logger = Logger.getLogger(LibvirtCopyFileInVmCommandWrapper.class);
-
     @Override public Answer execute(CopyFileInVmCommand cmd, LibvirtComputingResource libvirtComputingResource) {
         final File keyFile = new File("/root/.ssh/id_rsa.cloud");
-        try {
-            File file = new File(cmd.getSrc());
-            if(file.exists()) {
-                if(file.isDirectory()) {
-                    for (File f : FileUtils.listFiles(new File(cmd.getSrc()), TrueFileFilter.INSTANCE, TrueFileFilter.INSTANCE)) {
-                        SshHelper.scpTo(cmd.getVmIp(), 3922, "root", keyFile, null, cmd.getDest(), f.getCanonicalPath(), null);
-                    }
-                } else {
-                    SshHelper.scpTo(cmd.getVmIp(), 3922, "root", keyFile, null, cmd.getDest(), file.getCanonicalPath(), null);
-                }
-            }
-        } catch (Exception e) {
-            s_logger.error("Fail to copy file " + cmd.getSrc() + " in VM " + cmd.getVmIp(), e);
-            return new CopyFileInVmAnswer(cmd, e);
-        }
-        return new CopyFileInVmAnswer(cmd);
+        return HypervisorResourceUtils.copyFileInVm(cmd, keyFile);
     }
 }

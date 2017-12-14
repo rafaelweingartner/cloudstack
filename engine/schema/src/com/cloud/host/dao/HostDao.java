@@ -19,6 +19,8 @@ package com.cloud.host.dao;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+
 import com.cloud.host.Host;
 import com.cloud.host.Host.Type;
 import com.cloud.host.HostVO;
@@ -99,4 +101,6 @@ public interface HostDao extends GenericDao<HostVO, Long>, StateDao<Status, Stat
     HostVO findByPublicIp(String publicIp);
 
     List<HostVO> listByType(Type type);
+
+    HostVO findHostToOperateOnSnapshotBasedOnStoragePool(StoragePoolVO storagePoolVO);
 }

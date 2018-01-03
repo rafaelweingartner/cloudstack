@@ -23,8 +23,6 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.springframework.stereotype.Component;
-
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStore;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataStoreManager;
@@ -33,6 +31,7 @@ import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.VolumeDataFactory;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
+import org.springframework.stereotype.Component;
 
 import com.cloud.storage.DataStoreRole;
 import com.cloud.storage.SnapshotVO;
@@ -107,4 +106,19 @@ public class SnapshotDataFactoryImpl implements SnapshotDataFactory {
         return snapObjs;
     }
 
+    @Override
+    public List<SnapshotInfo> getSnapshots(long volumeId, DataStoreRole role) {
+        SnapshotDataStoreVO snapshotStore = snapshotStoreDao.findByVolume(volumeId, role);
+        if (snapshotStore == null) {
+            return new ArrayList<>();
+        }
+        DataStore store = storeMgr.getDataStore(snapshotStore.getDataStoreId(), role);
+        List<SnapshotVO> volSnapShots = snapshotDao.listByVolumeId(volumeId);
+        List<SnapshotInfo> infos = new ArrayList<>();
+        for (SnapshotVO snapshot : volSnapShots) {
+            SnapshotObject info = SnapshotObject.getSnapshotObject(snapshot, store);
+            infos.add(info);
+        }
+        return infos;
+    }
 }

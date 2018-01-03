@@ -28,14 +28,6 @@ import java.util.Random;
 
 import javax.inject.Inject;
 
-import com.cloud.dc.dao.ClusterDao;
-import com.cloud.offering.DiskOffering;
-import com.cloud.org.Cluster;
-import com.cloud.org.Grouping.AllocationState;
-import com.cloud.resource.ResourceState;
-import com.cloud.server.ManagementService;
-import com.cloud.storage.RegisterVolumePayload;
-import com.cloud.utils.Pair;
 import org.apache.cloudstack.engine.cloud.entity.api.VolumeEntity;
 import org.apache.cloudstack.engine.subsystem.api.storage.ChapInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.CopyCommandResult;
@@ -87,6 +79,7 @@ import com.cloud.agent.api.to.VirtualMachineTO;
 import com.cloud.alert.AlertManager;
 import com.cloud.configuration.Config;
 import com.cloud.configuration.Resource.ResourceType;
+import com.cloud.dc.dao.ClusterDao;
 import com.cloud.event.EventTypes;
 import com.cloud.event.UsageEventUtils;
 import com.cloud.exception.ConcurrentOperationException;
@@ -96,7 +89,13 @@ import com.cloud.host.HostVO;
 import com.cloud.host.dao.HostDao;
 import com.cloud.host.dao.HostDetailsDao;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.offering.DiskOffering;
+import com.cloud.org.Cluster;
+import com.cloud.org.Grouping.AllocationState;
+import com.cloud.resource.ResourceState;
+import com.cloud.server.ManagementService;
 import com.cloud.storage.DataStoreRole;
+import com.cloud.storage.RegisterVolumePayload;
 import com.cloud.storage.ScopeType;
 import com.cloud.storage.Storage.StoragePoolType;
 import com.cloud.storage.StoragePool;
@@ -113,6 +112,7 @@ import com.cloud.storage.template.TemplateProp;
 import com.cloud.user.AccountManager;
 import com.cloud.user.ResourceLimitService;
 import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.Pair;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GlobalLock;
 import com.cloud.utils.exception.CloudRuntimeException;
@@ -831,11 +831,11 @@ public class VolumeServiceImpl implements VolumeService {
         }
 
         try {
-           // copy the template from sec storage to the created volume
+            // copy the template from sec storage to the created volume
             CreateBaseImageContext<CreateCmdResult> copyContext = new CreateBaseImageContext<>(
                     null, null, destPrimaryDataStore, srcTemplateInfo,
                     copyTemplateFuture, templateOnPrimary, templatePoolRefId
-            );
+                    );
 
             AsyncCallbackDispatcher<VolumeServiceImpl, CopyCommandResult> copyCaller = AsyncCallbackDispatcher.create(this);
             copyCaller.setCallback(copyCaller.getTarget().copyManagedTemplateCallback(null, null)).setContext(copyContext);
@@ -1029,7 +1029,7 @@ public class VolumeServiceImpl implements VolumeService {
 
         Boolean storageCanCloneVolume = new Boolean(
                 destPrimaryDataStore.getDriver().getCapabilities().get(DataStoreCapabilities.CAN_CREATE_VOLUME_FROM_VOLUME.toString())
-        );
+                );
 
         boolean computeZoneSupportsResign = computeZoneSupportsResign(destHost.getDataCenterId(), destHost.getHypervisorType());
 
@@ -1053,9 +1053,9 @@ public class VolumeServiceImpl implements VolumeService {
 
             if (templatePoolRef == null) {
                 throw new CloudRuntimeException("Failed to find template " +
-                    srcTemplateInfo.getUniqueName() + " in storage pool " +
-                    destPrimaryDataStore.getId()
-                );
+                        srcTemplateInfo.getUniqueName() + " in storage pool " +
+                        destPrimaryDataStore.getId()
+                        );
             }
 
             if (templatePoolRef.getDownloadState() == Status.NOT_DOWNLOADED) {
@@ -1091,32 +1091,32 @@ public class VolumeServiceImpl implements VolumeService {
         Collections.shuffle(clusters, new Random(System.nanoTime()));
 
         clusters:
-        for (Cluster cluster : clusters) {
-            if (cluster.getAllocationState() == AllocationState.Enabled) {
-                List<HostVO> hosts = _hostDao.findByClusterId(cluster.getId());
+            for (Cluster cluster : clusters) {
+                if (cluster.getAllocationState() == AllocationState.Enabled) {
+                    List<HostVO> hosts = _hostDao.findByClusterId(cluster.getId());
 
-                if (hosts != null) {
-                    Collections.shuffle(hosts, new Random(System.nanoTime()));
+                    if (hosts != null) {
+                        Collections.shuffle(hosts, new Random(System.nanoTime()));
 
-                    for (HostVO host : hosts) {
-                        if (host.getResourceState() == ResourceState.Enabled) {
-                            if (computeClusterMustSupportResign) {
-                                if (clusterDao.getSupportsResigning(cluster.getId())) {
-                                    return host;
+                        for (HostVO host : hosts) {
+                            if (host.getResourceState() == ResourceState.Enabled) {
+                                if (computeClusterMustSupportResign) {
+                                    if (clusterDao.getSupportsResigning(cluster.getId())) {
+                                        return host;
+                                    }
+                                    else {
+                                        // no other host in the cluster in question should be able to satisfy our requirements here, so move on to the next cluster
+                                        continue clusters;
+                                    }
                                 }
                                 else {
-                                    // no other host in the cluster in question should be able to satisfy our requirements here, so move on to the next cluster
-                                    continue clusters;
+                                    return host;
                                 }
-                            }
-                            else {
-                                return host;
                             }
                         }
                     }
                 }
             }
-        }
 
         return null;
     }
@@ -1486,6 +1486,7 @@ public class VolumeServiceImpl implements VolumeService {
                 srcVolume.processEvent(Event.OperationFailed);
                 future.complete(res);
             } else {
+                snapshotMgr.cleanupSnapshotsByVolume(srcVolume.getId());
                 srcVolume.processEvent(Event.OperationSuccessed);
                 future.complete(res);
             }
@@ -1551,8 +1552,7 @@ public class VolumeServiceImpl implements VolumeService {
         return future;
     }
 
-    protected Void
-    migrateVmWithVolumesCallBack(AsyncCallbackDispatcher<VolumeServiceImpl, CopyCommandResult> callback, MigrateVmWithVolumesContext<CommandResult> context) {
+    protected Void migrateVmWithVolumesCallBack(AsyncCallbackDispatcher<VolumeServiceImpl, CopyCommandResult> callback, MigrateVmWithVolumesContext<CommandResult> context) {
         Map<VolumeInfo, DataStore> volumeToPool = context.volumeToPool;
         CopyCommandResult result = callback.getResult();
         AsyncCallFuture<CommandResult> future = context.future;
@@ -1568,6 +1568,7 @@ public class VolumeServiceImpl implements VolumeService {
             } else {
                 for (Map.Entry<VolumeInfo, DataStore> entry : volumeToPool.entrySet()) {
                     VolumeInfo volume = entry.getKey();
+                    snapshotMgr.cleanupSnapshotsByVolume(volume.getId());
                     volume.processEvent(Event.OperationSuccessed);
                 }
                 future.complete(res);

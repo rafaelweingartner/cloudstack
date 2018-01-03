@@ -32,4 +32,6 @@ public interface SnapshotDataFactory {
     List<SnapshotInfo> listSnapshotOnCache(long snapshotId);
 
     SnapshotInfo getReadySnapshotOnCache(long snapshotId);
+
+    List<SnapshotInfo> getSnapshots(long volumeId, DataStoreRole store);
 }

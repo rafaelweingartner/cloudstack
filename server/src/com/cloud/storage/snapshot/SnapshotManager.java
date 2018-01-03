@@ -63,4 +63,6 @@ public interface SnapshotManager {
     Snapshot backupSnapshot(Long snapshotId);
 
     SnapshotInfo takeSnapshot(VolumeInfo volume) throws ResourceAllocationException;
+
+    void cleanupSnapshotsByVolume(Long volumeId);
 }

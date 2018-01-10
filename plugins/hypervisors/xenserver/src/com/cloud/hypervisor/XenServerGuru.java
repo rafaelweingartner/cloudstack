@@ -191,10 +191,11 @@ public class XenServerGuru extends HypervisorGuruBase implements HypervisorGuru,
             logger.debug("We are returning the default host to execute commands because the source and destination objects are not snapshot and template respectively.");
             return defaultHostToExecuteCommands;
         }
-        long snapshotId = srcData.getId();
-        StoragePoolVO storagePoolVO = storagePoolDao.findStoragePoolForSnapshot(snapshotId);
-        HostVO hostCandidateToExecutedCommand = hostDao.findHostToOperateOnSnapshotBasedOnStoragePool(storagePoolVO);
+        HostVO defaultHostToExecuteCommand = hostDao.findById(hostId);
+
+        HostVO hostCandidateToExecutedCommand = hostDao.findHostInZoneToExecuteCommand(defaultHostToExecuteCommand.getDataCenterId(), srcData.getHypervisorType());
         hostDao.loadDetails(hostCandidateToExecutedCommand);
+
         String hypervisorVersion = hostCandidateToExecutedCommand.getHypervisorVersion();
         if (StringUtils.isBlank(hypervisorVersion)) {
             logger.debug("We are returning the default host to execute commands because the hypervisor version is blank.");

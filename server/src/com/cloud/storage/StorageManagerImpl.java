@@ -592,7 +592,7 @@ public class StorageManagerImpl extends ManagerBase implements StorageManager, C
             DataStoreLifeCycle lifeCycle = provider.getDataStoreLifeCycle();
             if (pool == null) {
                 Map<String, Object> params = new HashMap<String, Object>();
-                String name = (host.getName() + " Local Storage");
+                String name = String.format("%s-%s-%s", host.getName().trim(), "Local Storage", pInfo.getUuid().split("-")[0]);
                 params.put("zoneId", host.getDataCenterId());
                 params.put("clusterId", host.getClusterId());
                 params.put("podId", host.getPodId());

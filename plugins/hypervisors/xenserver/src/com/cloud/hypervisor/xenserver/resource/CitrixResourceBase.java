@@ -29,9 +29,6 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
-
-import org.apache.commons.collections.MapUtils;
-import org.joda.time.Duration;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -54,9 +51,13 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.cloudstack.storage.to.TemplateObjectTO;
 import org.apache.cloudstack.storage.to.VolumeObjectTO;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.log4j.Logger;
 import org.apache.xmlrpc.XmlRpcException;
+import org.joda.time.Duration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -173,7 +174,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
      * used to describe what type of resource a storage device is of
      */
     public enum SRType {
-        EXT, FILE, ISCSI, ISO, LVM, LVMOHBA, LVMOISCSI,
+        EXT, ISCSI, ISO, LVM, LVMOHBA, LVMOISCSI,
         /**
          * used for resigning metadata (like SR UUID and VDI UUID when a
          * particular storage manager is installed on a XenServer host (for back-end snapshots to work))
@@ -1152,7 +1153,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
             vbdr.userdevice = "autodetect";
             final Long deviceId = volume.getDiskSeq();
             if (deviceId != null && (!isDeviceUsed(conn, vm, deviceId) || deviceId > 3)) {
-                    vbdr.userdevice = deviceId.toString();
+                vbdr.userdevice = deviceId.toString();
             }
         }
         final VBD vbd = VBD.create(conn, vbdr);
@@ -1820,7 +1821,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                 boolean supportsClonedVolumes = result != null && result.first() != null && result.first() &&
                         result.second() != null && result.second().length() > 0;
 
-                cmd.setSupportsClonedVolumes(supportsClonedVolumes);
+                        cmd.setSupportsClonedVolumes(supportsClonedVolumes);
             } catch (NumberFormatException ex) {
                 s_logger.warn("Issue sending 'xe sm-list' via SSH to XenServer host: " + ex.getMessage());
             }
@@ -2343,7 +2344,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                     }
                     if (target.equals(dc.get("target")) && targetiqn.equals(dc.get("targetIQN")) && lunid.equals(dc.get("lunid"))) {
                         throw new CloudRuntimeException("There is a SR using the same configuration target:" + dc.get("target") + ",  targetIQN:" + dc.get("targetIQN")
-                                + ", lunid:" + dc.get("lunid") + " for pool " + srNameLabel + "on host:" + _host.getUuid());
+                        + ", lunid:" + dc.get("lunid") + " for pool " + srNameLabel + "on host:" + _host.getUuid());
                     }
                 }
                 deviceConfig.put("target", target);
@@ -2554,76 +2555,6 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         return result;
     }
 
-    protected SR getLocalEXTSR(final Connection conn) {
-        try {
-            final Map<SR, SR.Record> map = SR.getAllRecords(conn);
-            if (map != null && !map.isEmpty()) {
-                for (final Map.Entry<SR, SR.Record> entry : map.entrySet()) {
-                    final SR.Record srRec = entry.getValue();
-                    if (SRType.FILE.equals(srRec.type) || SRType.EXT.equals(srRec.type)) {
-                        final Set<PBD> pbds = srRec.PBDs;
-                        if (pbds == null) {
-                            continue;
-                        }
-                        for (final PBD pbd : pbds) {
-                            final Host host = pbd.getHost(conn);
-                            if (!isRefNull(host) && host.getUuid(conn).equals(_host.getUuid())) {
-                                if (!pbd.getCurrentlyAttached(conn)) {
-                                    pbd.plug(conn);
-                                }
-                                final SR sr = entry.getKey();
-                                sr.scan(conn);
-                                return sr;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (final XenAPIException e) {
-            final String msg = "Unable to get local EXTSR in host:" + _host.getUuid() + e.toString();
-            s_logger.warn(msg);
-        } catch (final XmlRpcException e) {
-            final String msg = "Unable to get local EXTSR in host:" + _host.getUuid() + e.getCause();
-            s_logger.warn(msg);
-        }
-        return null;
-    }
-
-    protected SR getLocalLVMSR(final Connection conn) {
-        try {
-            final Map<SR, SR.Record> map = SR.getAllRecords(conn);
-            if (map != null && !map.isEmpty()) {
-                for (final Map.Entry<SR, SR.Record> entry : map.entrySet()) {
-                    final SR.Record srRec = entry.getValue();
-                    if (SRType.LVM.equals(srRec.type)) {
-                        final Set<PBD> pbds = srRec.PBDs;
-                        if (pbds == null) {
-                            continue;
-                        }
-                        for (final PBD pbd : pbds) {
-                            final Host host = pbd.getHost(conn);
-                            if (!isRefNull(host) && host.getUuid(conn).equals(_host.getUuid())) {
-                                if (!pbd.getCurrentlyAttached(conn)) {
-                                    pbd.plug(conn);
-                                }
-                                final SR sr = entry.getKey();
-                                sr.scan(conn);
-                                return sr;
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (final XenAPIException e) {
-            final String msg = "Unable to get local LVMSR in host:" + _host.getUuid() + e.toString();
-            s_logger.warn(msg);
-        } catch (final XmlRpcException e) {
-            final String msg = "Unable to get local LVMSR in host:" + _host.getUuid() + e.getCause();
-            s_logger.warn(msg);
-        }
-        return null;
-    }
-
     public String getLowestAvailableVIFDeviceNum(final Connection conn, final VM vm) {
         String vmName = "";
         try {
@@ -2695,7 +2626,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         final Bond bond = mgmtPifRec.bondSlaveOf;
         if (!isRefNull(bond)) {
             final String msg = "Management interface is on slave(" + mgmtPifRec.uuid + ") of bond(" + bond.getUuid(conn) + ") on host(" + _host.getUuid()
-                    + "), please move management interface to bond!";
+            + "), please move management interface to bond!";
             s_logger.warn(msg);
             throw new CloudRuntimeException(msg);
         }
@@ -2915,7 +2846,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
                     if (server.equals(dc.get("server")) && serverpath.equals(dc.get("serverpath"))) {
                         throw new CloudRuntimeException("There is a SR using the same configuration server:" + dc.get("server") + ", serverpath:" + dc.get("serverpath")
-                                + " for pool " + uuid + " on host:" + _host.getUuid());
+                        + " for pool " + uuid + " on host:" + _host.getUuid());
                     }
 
                 }
@@ -3574,75 +3505,144 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         } catch (final Throwable e) {
             s_logger.warn("Check for master failed, failing the FULL Cluster sync command");
         }
-        final StartupStorageCommand sscmd = initializeLocalSR(conn);
-        if (sscmd != null) {
-            return new StartupCommand[] { cmd, sscmd };
+        List<StartupStorageCommand> startUpLocalStorageCommands = null;
+        try {
+            startUpLocalStorageCommands = initializeLocalSR(conn);
+        } catch (XenAPIException | XmlRpcException e) {
+            s_logger.warn("Could not initialize local SRs on host: " + _host.getUuid(), e);
         }
-        return new StartupCommand[] { cmd };
+        if (CollectionUtils.isEmpty(startUpLocalStorageCommands)) {
+            return new StartupCommand[] {cmd};
+        }
+        return createStartupCommandsArray(cmd, startUpLocalStorageCommands);
     }
 
-    protected StartupStorageCommand initializeLocalSR(final Connection conn) {
-        final SR lvmsr = getLocalLVMSR(conn);
-        if (lvmsr != null) {
-            try {
-                _host.setLocalSRuuid(lvmsr.getUuid(conn));
+    /**
+     * We simply create an array and add the {@link StartupRoutingCommand} as the first element of the array. Then, we add all elements from startUpLocalStorageCommands
+     */
+    private StartupCommand[] createStartupCommandsArray(StartupRoutingCommand startupRoutingCommand, List<StartupStorageCommand> startUpLocalStorageCommands) {
+        StartupCommand[] startupCommands = new StartupCommand[startUpLocalStorageCommands.size() + 1];
+        startupCommands[0] = startupRoutingCommand;
+        for (int i = 1; i < startupCommands.length; i++) {
+            startupCommands[i] = startUpLocalStorageCommands.get(i - 1);
+        }
+        return startupCommands;
+    }
 
-                final String lvmuuid = lvmsr.getUuid(conn);
-                final long cap = lvmsr.getPhysicalSize(conn);
-                if (cap > 0) {
-                    final long avail = cap - lvmsr.getPhysicalUtilisation(conn);
-                    lvmsr.setNameLabel(conn, lvmuuid);
-                    final String name = "Cloud Stack Local LVM Storage Pool for " + _host.getUuid();
-                    lvmsr.setNameDescription(conn, name);
-                    final Host host = Host.getByUuid(conn, _host.getUuid());
-                    final String address = host.getAddress(conn);
-                    final StoragePoolInfo pInfo = new StoragePoolInfo(lvmuuid, address, SRType.LVM.toString(), SRType.LVM.toString(), StoragePoolType.LVM, cap, avail);
-                    final StartupStorageCommand cmd = new StartupStorageCommand();
-                    cmd.setPoolInfo(pInfo);
-                    cmd.setGuid(_host.getUuid());
-                    cmd.setDataCenter(Long.toString(_dcId));
-                    cmd.setResourceType(Storage.StorageResourceType.STORAGE_POOL);
-                    return cmd;
-                }
-            } catch (final XenAPIException e) {
-                final String msg = "build local LVM info err in host:" + _host.getUuid() + e.toString();
-                s_logger.warn(msg);
-            } catch (final XmlRpcException e) {
-                final String msg = "build local LVM info err in host:" + _host.getUuid() + e.getMessage();
-                s_logger.warn(msg);
+    /**
+     *  This method will prepare Local SRs to be used by Apache CloudStack.
+     */
+    private List<StartupStorageCommand> initializeLocalSR(Connection conn) throws XenAPIException, XmlRpcException {
+        List<StartupStorageCommand> localStorageStartupCommands = new ArrayList<>();
+        List<SR> allLocalSrs = getAllLocalSrs(conn);
+
+        for (SR sr : allLocalSrs) {
+            long totalCapacity = sr.getPhysicalSize(conn);
+            if (totalCapacity > 0) {
+                StartupStorageCommand cmd = createStartUpStorageCommand(conn, sr);
+                localStorageStartupCommands.add(cmd);
             }
         }
+        return localStorageStartupCommands;
+    }
 
-        final SR extsr = getLocalEXTSR(conn);
-        if (extsr != null) {
-            try {
-                final String extuuid = extsr.getUuid(conn);
-                _host.setLocalSRuuid(extuuid);
-                final long cap = extsr.getPhysicalSize(conn);
-                if (cap > 0) {
-                    final long avail = cap - extsr.getPhysicalUtilisation(conn);
-                    extsr.setNameLabel(conn, extuuid);
-                    final String name = "Cloud Stack Local EXT Storage Pool for " + _host.getUuid();
-                    extsr.setNameDescription(conn, name);
-                    final Host host = Host.getByUuid(conn, _host.getUuid());
-                    final String address = host.getAddress(conn);
-                    final StoragePoolInfo pInfo = new StoragePoolInfo(extuuid, address, SRType.EXT.toString(), SRType.EXT.toString(), StoragePoolType.EXT, cap, avail);
-                    final StartupStorageCommand cmd = new StartupStorageCommand();
-                    cmd.setPoolInfo(pInfo);
-                    cmd.setGuid(_host.getUuid());
-                    cmd.setDataCenter(Long.toString(_dcId));
-                    cmd.setResourceType(Storage.StorageResourceType.STORAGE_POOL);
-                    return cmd;
+    /**
+     * This method creates the StartUp storage command for the local SR.
+     * We will configure 'name-label' and 'description' using {@link #configureStorageNameAndDescription(Connection, SR)}.
+     * Then, we will create the POJO {@link StoragePoolInfo} with SR's information using method {@link #createStoragePoolInfo(Connection, SR)}.
+     */
+    private StartupStorageCommand createStartUpStorageCommand(Connection conn, SR sr) throws XenAPIException, XmlRpcException {
+        configureStorageNameAndDescription(conn, sr);
+
+        StoragePoolInfo storagePoolInfo = createStoragePoolInfo(conn, sr);
+
+        StartupStorageCommand cmd = new StartupStorageCommand();
+        cmd.setPoolInfo(storagePoolInfo);
+        cmd.setGuid(_host.getUuid());
+        cmd.setDataCenter(Long.toString(_dcId));
+        cmd.setResourceType(Storage.StorageResourceType.STORAGE_POOL);
+
+        String.format("StartUp command created for local storage [%s] of type [%s] on host [%s]", storagePoolInfo.getUuid(), storagePoolInfo.getPoolType(), _host.getUuid());
+        return cmd;
+    }
+
+    /**
+     *  Instantiate {@link StoragePoolInfo} with SR's information.
+     */
+    private StoragePoolInfo createStoragePoolInfo(Connection conn, SR sr) throws XenAPIException, XmlRpcException {
+        long totalCapacity = sr.getPhysicalSize(conn);
+        String srUuid = sr.getUuid(conn);
+        Host host = Host.getByUuid(conn, _host.getUuid());
+        String address = host.getAddress(conn);
+        long availableCapacity = totalCapacity - sr.getPhysicalUtilisation(conn);
+        String srType = sr.getType(conn).toUpperCase();
+        return new StoragePoolInfo(srUuid, address, srType, srType, StoragePoolType.valueOf(srType), totalCapacity, availableCapacity);
+    }
+
+    private void configureStorageNameAndDescription(Connection conn, SR sr) throws XenAPIException, XmlRpcException {
+        String srUuid = sr.getUuid(conn);
+        sr.setNameLabel(conn, srUuid);
+
+        String nameFormat = "Cloud Stack Local (%s) Storage Pool for %s";
+        sr.setNameDescription(conn, String.format(nameFormat, sr.getType(conn), _host.getUuid()));
+    }
+
+    /**
+     * This method will retrieve all Local SRs according to {@link #getAllLocalSrForType(Connection, SRType)}.
+     * The types used are {@link SRType#LVM} and {@link SRType#EXT}.
+     *
+     */
+    private List<SR> getAllLocalSrs(Connection conn) throws XenAPIException, XmlRpcException {
+        List<SR> allLocalSrLvmType = getAllLocalSrForType(conn, SRType.LVM);
+        List<SR> allLocalSrExtType = getAllLocalSrForType(conn, SRType.EXT);
+        List<SR> allLocalSrs = new ArrayList<>(allLocalSrLvmType);
+        allLocalSrs.addAll(allLocalSrExtType);
+        return allLocalSrs;
+    }
+
+    /**
+     * This  method will return a list of all local SRs.
+     * An SR is considered local if it meets all of the following criteria:
+     * <ul>
+     *  <li> {@link Record#shared} is equal to false
+     *  <li> The PBDs of the SR ({@link Record#PBDs}) are connected to host {@link #_host}
+     *  <li> SR type is equal to the {@link SRType} sent as parameter
+     * </ul>
+     */
+    private List<SR> getAllLocalSrForType(Connection conn, SRType srType) throws XenAPIException, XmlRpcException {
+        List<SR> localSrs = new ArrayList<>();
+        Map<SR, SR.Record> allSrRecords = SR.getAllRecords(conn);
+        if (MapUtils.isEmpty(allSrRecords)) {
+            return localSrs;
+        }
+        for (Map.Entry<SR, SR.Record> entry : allSrRecords.entrySet()) {
+            SR.Record srRec = entry.getValue();
+            if (!srType.equals(srRec.type)) {
+                continue;
+            }
+            if (BooleanUtils.toBoolean(srRec.shared)) {
+                continue;
+            }
+            Set<PBD> pbds = srRec.PBDs;
+            if (CollectionUtils.isEmpty(pbds)) {
+                continue;
+            }
+            for (final PBD pbd : pbds) {
+                Host host = pbd.getHost(conn);
+                if (!isRefNull(host) && org.apache.commons.lang.StringUtils.equals(host.getUuid(conn), _host.getUuid())) {
+                    if (!pbd.getCurrentlyAttached(conn)) {
+                        s_logger.debug(String.format("PBD [%s] of local SR [%s] was unplugged, pluggin it now", pbd.getUuid(conn), srRec.uuid));
+                        pbd.plug(conn);
+                    }
+                    s_logger.debug("Scanning local SR: " + srRec.uuid);
+                    SR sr = entry.getKey();
+                    sr.scan(conn);
+                    localSrs.add(sr);
                 }
-            } catch (final XenAPIException e) {
-                final String msg = "build local EXT info err in host:" + _host.getUuid() + e.toString();
-                s_logger.warn(msg);
-            } catch (final XmlRpcException e) {
-                final String msg = "build local EXT info err in host:" + _host.getUuid() + e.getMessage();
-                s_logger.warn(msg);
             }
         }
-        return null;
+        s_logger.debug(String.format("Found %d local storage of type [%s] for host [%s]", localSrs.size(), srType.toString(), _host.getUuid()));
+        return localSrs;
     }
 
     public boolean isDeviceUsed(final Connection conn, final VM vm, final Long deviceId) {
@@ -5200,8 +5200,8 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
                         if (result && content != null && !content.isEmpty()) {
                             File file = new File(folder+"/"+fileName+".txt");
                             try (OutputStreamWriter fw = new OutputStreamWriter(new FileOutputStream(file.getAbsoluteFile()),"UTF-8");
-                                 BufferedWriter bw = new BufferedWriter(fw);
-                                ) {
+                                    BufferedWriter bw = new BufferedWriter(fw);
+                                    ) {
                                 bw.write(content);
                                 s_logger.debug("created file: "+ file + " in folder:"+folder);
                             } catch (final IOException ex) {

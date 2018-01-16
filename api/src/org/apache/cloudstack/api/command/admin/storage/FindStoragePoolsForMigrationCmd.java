@@ -17,9 +17,9 @@
 package org.apache.cloudstack.api.command.admin.storage;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
@@ -29,12 +29,13 @@ import org.apache.cloudstack.api.Parameter;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.StoragePoolResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
+import org.apache.log4j.Logger;
 
 import com.cloud.storage.StoragePool;
 import com.cloud.utils.Pair;
 
 @APICommand(name = "findStoragePoolsForMigration", description = "Lists storage pools available for migration of a volume.", responseObject = StoragePoolResponse.class,
-        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class FindStoragePoolsForMigrationCmd extends BaseListCmd {
     public static final Logger s_logger = Logger.getLogger(FindStoragePoolsForMigrationCmd.class.getName());
 
@@ -90,7 +91,18 @@ public class FindStoragePoolsForMigrationCmd extends BaseListCmd {
             poolResponse.setObjectName("storagepool");
             poolResponses.add(poolResponse);
         }
-
+        Collections.sort(poolResponses, new Comparator<StoragePoolResponse>() {
+            @Override
+            public int compare(StoragePoolResponse o1, StoragePoolResponse o2) {
+                if (o1.getSuitableForMigration()) {
+                    return -1;
+                }
+                if (o2.getSuitableForMigration()) {
+                    return 1;
+                }
+                return 0;
+            }
+        });
         response.setResponses(poolResponses);
         response.setResponseName(getCommandName());
         this.setResponseObject(response);

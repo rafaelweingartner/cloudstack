@@ -73,10 +73,10 @@ import com.cloud.storage.Storage;
 import com.cloud.storage.Storage.ImageFormat;
 import com.cloud.storage.resource.StorageProcessor;
 import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.storage.S3.ClientOptions;
 import com.cloud.utils.storage.encoding.DecodedDataObject;
 import com.cloud.utils.storage.encoding.DecodedDataStore;
 import com.cloud.utils.storage.encoding.Decoder;
-import com.cloud.utils.storage.S3.ClientOptions;
 import com.xensource.xenapi.Connection;
 import com.xensource.xenapi.Host;
 import com.xensource.xenapi.PBD;
@@ -1223,7 +1223,7 @@ public class XenServerStorageProcessor implements StorageProcessor {
         return false;
     }
 
-    private boolean destroySnapshotOnPrimaryStorage(final Connection conn, final String lastSnapshotUuid) {
+    protected boolean destroySnapshotOnPrimaryStorage(final Connection conn, final String lastSnapshotUuid) {
         try {
             final VDI snapshot = getVDIbyUuid(conn, lastSnapshotUuid);
             if (snapshot == null) {

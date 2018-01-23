@@ -617,12 +617,12 @@ public class Xenserver625StorageProcessor extends XenServerStorageProcessor {
             s_logger.info("New snapshot physical utilization: " + physicalSize);
 
             return new CopyCmdAnswer(newSnapshot);
-        } catch (final Types.XenAPIException e) {
-            details = "BackupSnapshot Failed due to " + e.toString();
-            s_logger.warn(details, e);
         } catch (final Exception e) {
-            details = "BackupSnapshot Failed due to " + e.getMessage();
+            final String reason = e instanceof Types.XenAPIException ? e.toString() : e.getMessage();
+            details = "BackupSnapshot Failed due to " + reason;
             s_logger.warn(details, e);
+
+            destroySnapshotOnPrimaryStorage(conn, snapshotUuid);
         }
 
         return new CopyCmdAnswer(details);

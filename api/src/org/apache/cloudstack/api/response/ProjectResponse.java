@@ -29,7 +29,6 @@ import com.cloud.projects.Project;
 import com.cloud.serializer.Param;
 
 @EntityReference(value = Project.class)
-@SuppressWarnings("unused")
 public class ProjectResponse extends BaseResponse implements ResourceLimitAndCountResponse {
 
     @SerializedName(ApiConstants.ID)
@@ -130,7 +129,7 @@ public class ProjectResponse extends BaseResponse implements ResourceLimitAndCou
 
     @SerializedName("secondarystoragetotal")
     @Param(description = "the total secondary storage space (in GiB) owned by project", since = "4.2.0")
-    private Long secondaryStorageTotal;
+    private float secondaryStorageTotal;
 
     @SerializedName("secondarystorageavailable")
     @Param(description = "the total secondary storage space (in GiB) available to be used for this project", since = "4.2.0")
@@ -406,7 +405,7 @@ public class ProjectResponse extends BaseResponse implements ResourceLimitAndCou
     }
 
     @Override
-    public void setSecondaryStorageTotal(Long secondaryStorageTotal) {
+    public void setSecondaryStorageTotal(float secondaryStorageTotal) {
         this.secondaryStorageTotal = secondaryStorageTotal;
     }
 

@@ -2143,6 +2143,9 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
             }
 
         }
+        if(!canTargetHostAccessVolumeStoragePool && CollectionUtils.isEmpty(poolList)) {
+            throw new CloudRuntimeException(String.format("There is not storage pools avaliable at the target host [%s] to migrate volume [%s]", targetHost.getUuid(), volume.getUuid()));
+        }
         if (!canTargetHostAccessVolumeStoragePool) {
             volumeToPoolObjectMap.put(volume, _storagePoolDao.findByUuid(poolList.get(0).getUuid()));
         }
@@ -2162,6 +2165,11 @@ public class VirtualMachineManagerImpl extends ManagerBase implements VirtualMac
         DiskProfile diskProfile = new DiskProfile(volume, diskOffering, profile.getHypervisorType());
         DataCenterDeployment plan = new DataCenterDeployment(targetHost.getDataCenterId(), targetHost.getPodId(), targetHost.getClusterId(), targetHost.getId(), null, null);
         ExcludeList avoid = new ExcludeList();
+
+        StoragePoolVO volumeStoragePool = _storagePoolDao.findById(volume.getPoolId());
+        if (volumeStoragePool.isLocal()) {
+            diskProfile.setUseLocalStorage(true);
+        }
 
         for (StoragePoolAllocator allocator : _storagePoolAllocators) {
             List<StoragePool> poolListFromAllocator = allocator.allocateToPool(diskProfile, profile, plan, avoid, StoragePoolAllocator.RETURN_UPTO_ALL);

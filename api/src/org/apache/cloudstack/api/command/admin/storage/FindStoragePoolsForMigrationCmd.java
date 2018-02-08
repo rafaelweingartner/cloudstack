@@ -94,6 +94,9 @@ public class FindStoragePoolsForMigrationCmd extends BaseListCmd {
         Collections.sort(poolResponses, new Comparator<StoragePoolResponse>() {
             @Override
             public int compare(StoragePoolResponse o1, StoragePoolResponse o2) {
+                if (o1.getSuitableForMigration() && o2.getSuitableForMigration()) {
+                    return o1.getName().compareTo(o2.getName());
+                }
                 if (o1.getSuitableForMigration()) {
                     return -1;
                 }

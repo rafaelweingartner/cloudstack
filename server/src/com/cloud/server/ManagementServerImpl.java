@@ -521,6 +521,7 @@ import org.apache.cloudstack.managed.context.ManagedContextRunnable;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreDao;
 import org.apache.cloudstack.storage.datastore.db.ImageStoreVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.collections.CollectionUtils;
@@ -537,8 +538,6 @@ import com.cloud.alert.AlertVO;
 import com.cloud.alert.dao.AlertDao;
 import com.cloud.api.ApiDBUtils;
 import com.cloud.api.query.QueryManagerImpl;
-import com.cloud.api.query.dao.ServiceOfferingJoinDao;
-import com.cloud.api.query.vo.ServiceOfferingJoinVO;
 import com.cloud.capacity.Capacity;
 import com.cloud.capacity.CapacityVO;
 import com.cloud.capacity.dao.CapacityDao;
@@ -621,7 +620,6 @@ import com.cloud.storage.GuestOSHypervisor;
 import com.cloud.storage.GuestOSHypervisorVO;
 import com.cloud.storage.GuestOSVO;
 import com.cloud.storage.GuestOsCategory;
-import com.cloud.storage.ScopeType;
 import com.cloud.storage.StorageManager;
 import com.cloud.storage.StoragePool;
 import com.cloud.storage.Volume;
@@ -799,8 +797,6 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     private DeploymentPlanningManager _dpMgr;
     @Inject
     private KeystoreManager _ksMgr;
-    @Inject
-    private ServiceOfferingJoinDao serviceOfferingJoinDao;
 
     private LockMasterListener _lockMasterListener;
     private final ScheduledExecutorService _eventExecutor = Executors.newScheduledThreadPool(1, new NamedThreadFactory("EventChecker"));
@@ -1211,12 +1207,13 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             allHosts = allHostsPair.first();
             allHosts.remove(srcHost);
             for (final VolumeVO volume : volumes) {
-                final Long volClusterId = _poolDao.findById(volume.getPoolId()).getClusterId();
+                StoragePoolVO storagePool = _poolDao.findById(volume.getPoolId());
+                final Long volClusterId = storagePool.getClusterId();
                 // only check for volume which are not in zone wide primary store, as only those may require storage motion
                 if (volClusterId != null) {
                     for (final Iterator<HostVO> iterator = allHosts.iterator(); iterator.hasNext();) {
                         final Host host = iterator.next();
-                        if (!host.getClusterId().equals(volClusterId) || usesLocal) {
+                        if (storagePool.isLocal() || !host.getClusterId().equals(volClusterId) || usesLocal) {
                             if (hasSuitablePoolsForVolume(volume, host, vmProfile)) {
                                 requiresStorageMotion.put(host, true);
                             } else {
@@ -1352,7 +1349,7 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
             }
         }
         StoragePool srcVolumePool = _poolDao.findById(volume.getPoolId());
-        allPools = getAllStoragePoolCompatileWithVm(vm, srcVolumePool);
+        allPools = getAllStoragePoolCompatileWithVolumeSourceStoragePool(srcVolumePool);
         allPools.remove(srcVolumePool);
 
         suitablePools = findAllSuitableStoragePoolsForVm(volume, vm, srcVolumePool);
@@ -1362,8 +1359,11 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     /**
-     *  Looks for all suitable storage pools to allocate the given volume. We take into account the service offering of the VM and volume to find suitable storage pools. It is also excluded from the search the current storage pool used by the volume.
-     *  We use {@link StoragePoolAllocator} to look for possible storage pools to allocate the given volume. If the VM can use local storage pools, we check if the local storage pools found are in the same host as the VM.
+     *  Looks for all suitable storage pools to allocate the given volume.
+     *  We take into account the service offering of the VM and volume to find suitable storage pools. It is also excluded from the search the current storage pool used by the volume.
+     *  We use {@link StoragePoolAllocator} to look for possible storage pools to allocate the given volume. We will look for possible local storage poosl even if the volume is using a shared storage disk offering.
+     *
+     *  Side note: the idea behind this method is to provide power for administrators of manually overriding deployments defined by CloudStack.
      */
     private List<StoragePool> findAllSuitableStoragePoolsForVm(final VolumeVO volume, VMInstanceVO vm, StoragePool srcVolumePool) {
         List<StoragePool> suitablePools = new ArrayList<>();
@@ -1380,7 +1380,9 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
         VirtualMachineProfile profile = new VirtualMachineProfileImpl(vm);
 
         DiskOfferingVO diskOffering = _diskOfferingDao.findById(volume.getDiskOfferingId());
+        //This is an override mechanism so we can list the possible local storage pools that a volume in a shared pool might be able to be migrated to
         DiskProfile diskProfile = new DiskProfile(volume, diskOffering, profile.getHypervisorType());
+        diskProfile.setUseLocalStorage(true);
 
         for (StoragePoolAllocator allocator : _storagePoolAllocators) {
             List<StoragePool> pools = allocator.allocateToPool(diskProfile, profile, plan, avoid, StoragePoolAllocator.RETURN_UPTO_ALL);
@@ -1399,26 +1401,17 @@ public class ManagementServerImpl extends ManagerBase implements ManagementServe
     }
 
     /**
-     * This method looks for all storage pools that are compatible with the given VM.
+     * This method looks for all storage pools that are compatible with the given volume.
      * <ul>
-     * <li>If VM's volume is stored in a zone wide primary storage, we will look for storage systems that are zone wide.</li>
-     * <li>Otherwise, we check VM's service offering to see if it allows using local storage.</li>
-     * <ul>
-     *  <li>If the VM can use local storage, we list all storage available filtering by data center, pod and cluster as the current storage pool used.</li>
-     *  <li>or, if the VM cannot use local storage, we list all storage filtering by scope ({@link ScopeType#CLUSTER}), data center, pod and cluster.</li>
-     *  </ul>
+     *  <li>If volume is stored in a zone wide primary storage, we will look for storage systems that are zone wide.</li>
+     *  <li>Otherwise, we list all volumes we list all storage available filtering by data center, pod and cluster as the current storage pool used. .</li>
      * </ul>
      */
-    private List<? extends StoragePool> getAllStoragePoolCompatileWithVm(VMInstanceVO vm, StoragePool srcVolumePool) {
-        ServiceOfferingJoinVO serviceOfferingOfVm = serviceOfferingJoinDao.findByIdIncludingRemoved(vm.getServiceOfferingId());
+    private List<? extends StoragePool> getAllStoragePoolCompatileWithVolumeSourceStoragePool(StoragePool srcVolumePool) {
         if (srcVolumePool.getClusterId() == null) {
             return _poolDao.findZoneWideStoragePoolsByTags(srcVolumePool.getDataCenterId(), null);
         }
-        ScopeType scope = ScopeType.CLUSTER;
-        if (serviceOfferingOfVm.isUseLocalStorage()) {
-            scope = null;
-        }
-        return _poolDao.listBy(srcVolumePool.getDataCenterId(), srcVolumePool.getPodId(), srcVolumePool.getClusterId(), scope);
+        return _poolDao.listBy(srcVolumePool.getDataCenterId(), srcVolumePool.getPodId(), srcVolumePool.getClusterId(), null);
     }
 
     private Pair<List<HostVO>, Integer> searchForServers(final Long startIndex, final Long pageSize, final Object name, final Object type, final Object state, final Object zone, final Object pod,

@@ -77,6 +77,10 @@
                     });
                 });
             }
+            var $actions = undefined;
+            if(options.editOptionsFirst){
+            	$actions = $('<td>').addClass('multi-actions').appendTo($item.find('tr'));
+            }
 
 
             // Setup columns
@@ -159,6 +163,7 @@
                 }
 
                 if (!field.isPassword) {
+                	$td.attr('title', data[fieldName]);
                     if (field.edit) {
                         // Edit fields append value of data
                         if (field.range) {
@@ -176,7 +181,6 @@
                             } else {
                                 $td.append($('<span>').html(_s(data[fieldName])));
                             }
-                            $td.attr('title', data[fieldName]);
                         }
                     } else if (field.select) {
                         // Get matching option text
@@ -287,7 +291,9 @@
             });
 
             // Actions column
-            var $actions = $('<td>').addClass('multi-actions').appendTo($item.find('tr'));
+            if(!options.editOptionsFirst){
+            	$actions = $('<td>').addClass('multi-actions').appendTo($item.find('tr'));
+            }
 
             // Align action column width
             $actions.width($multi.find('th.multi-actions').width() + 4);
@@ -866,16 +872,21 @@
         var $thead = $('<tr>').appendTo(
             $('<thead>').appendTo($inputTable)
         );
-        var $inputForm = $('<tr>').appendTo(
-            $('<tbody>').appendTo($inputTable)
-        );
+        
+        if (!args.doNotShowInputTable){
+	        var $inputForm = $('<tr>').appendTo(
+	            $('<tbody>').appendTo($inputTable)
+	        );
+        }
         var $dataBody = $('<div>').addClass('data-body').appendTo($dataTable);
 
         // Setup input table headers
 
         if (reorder) {
             $('<th>').addClass('reorder').appendTo($thead);
-            $('<td>').addClass('reorder').appendTo($inputForm);
+            if (!args.doNotShowInputTable){
+	            $('<td>').addClass('reorder').appendTo($inputForm);
+            }
             $multi.find('.data-body').sortable({
                 handle: '.action.moveDrag',
 
@@ -905,8 +916,16 @@
                     });
                 }
             });
-        }
+            }
+      
 
+        if (args.editOptionsFirst && args.actions && !args.noHeaderActionsColumn) {
+            $thead.append($('<th></th>').html(_l('label.actions')).addClass('multi-actions'));
+            if (!args.doNotShowInputTable){
+            	$inputForm.append($('<td></td>').addClass('multi-actions'));
+            }
+        }
+        
         $.each(args.fields, function(fieldName, field) {
             if (!field) return true;
 
@@ -915,7 +934,9 @@
             $th.appendTo($thead);
             var $td = $('<td>').addClass(fieldName);
             $td.attr('rel', fieldName);
-            $td.appendTo($inputForm);
+            if (!args.doNotShowInputTable){
+            	$td.appendTo($inputForm);
+            }
 
             var isHidden = $.isFunction(field.isHidden) ?
                     field.isHidden({ context: context }) : field.isHidden;
@@ -1026,7 +1047,10 @@
                 ).appendTo($td);
             }
 
-            if (field.desc) $input.attr('title', field.desc);
+            if (field.desc){
+            	$input.attr('title', _l(field.desc));
+            	$th.attr('title', _l(field.desc));
+            }
         });
 
         // Setup header fields
@@ -1048,130 +1072,134 @@
                 .prependTo($multi);
         }
 
-        if (args.actions && !args.noHeaderActionsColumn) {
+        if (!args.editOptionsFirst && args.actions && !args.noHeaderActionsColumn) {
             $thead.append($('<th></th>').html(_l('label.actions')).addClass('multi-actions'));
-            $inputForm.append($('<td></td>').addClass('multi-actions'));
+            if (!args.doNotShowInputTable){
+            	$inputForm.append($('<td></td>').addClass('multi-actions'));
+            }
         }
 
-        $addVM.bind('click', function() {
-            // Validate form first
-            if (!$multiForm.valid()) {
-                if ($multiForm.find('input.error:visible').size()) {
-                    return false;
-                }
-            }
-
-            var $dataList;
-            var addItem = function(itemData) {
-                var data = {};
-
-                $.each(getMultiData($multi), function(key, value) {
-                    if (value != '') {
-                        data[key] = value;
-                    }
-                });
-
-                // Append custom data
-                var $customFields = $multi.find('tbody td').filter(function() {
-                    return $(this).data('multi-custom-data');
-                });
-
-                $customFields.each(function() {
-                    var $field = $(this);
-                    var fieldID = $field.attr('rel');
-                    var fieldData = $field.data('multi-custom-data');
-
-                    data[fieldID] = fieldData;
-                });
-
-                // Loading appearance
-                var $loading = _medit.loadingItem($multi, _l('label.adding') + '...');
-                $dataBody.prepend($loading);
-
-                // Clear out fields
-                $multi.find('input').each(function() {
-                    var $input = $(this);
-
-                    if ($input.data('multi-default-value')) {
-                        $input.val($input.data('multi-default-value'));
-                    } else {
-                        $input.val('');
-                    }
-                });
-                $multi.find('tbody td').each(function() {
-                    var $item = $(this);
-
-                    if ($item.data('multi-custom-data')) {
-                        $item.data('multi-custom-data', null);
-                    }
-                });
-
-                // Apply action
-                args.add.action({
-                    context: context,
-                    data: data,
-                    itemData: itemData,
-                    $multi: $multi,
-                    response: {
-                        success: function(successArgs) {
-                            var notification = successArgs ? successArgs.notification : null;
-                            if (notification) {
-                                $('.notifications').notifications('add', {
-                                    section: 'network',
-                                    desc: notification.label,
-                                    interval: 3000,
-                                    _custom: successArgs._custom,
-                                    poll: function(pollArgs) {
-                                        var complete = pollArgs.complete;
-                                        var error = pollArgs.error;
-
-                                        notification.poll({
-                                            _custom: pollArgs._custom,
-                                            complete: function(completeArgs) {
-                                                complete(args);
-                                                $loading.remove();
-                                                getData();
-                                            },
-
-                                            error: function(args) {
-                                                error(args);
-                                                $loading.remove();
-
-                                                return cloudStack.dialog.error(args);
-                                            }
-                                        });
-                                    }
-                                });
-                            } else {
-                                $loading.remove();
-                                getData();
-                            }
-                        },
-
-                        error: cloudStack.dialog.error(function() {
-                            $loading.remove();
-                        })
-                    }
-                });
-            };
-
-            if (args.noSelect) {
-                // Don't append instance data
-                addItem([]);
-
-                return true;
-            }
-
-            _medit.vmList($multi,
-                args.listView,
-                args.context,
-                multipleAdd, _l('label.add.vms'),
-                addItem);
-
-            return true;
-        });
-
+        if($addVM){
+	        $addVM.bind('click', function() {
+	            // Validate form first
+	            if (!$multiForm.valid()) {
+	                if ($multiForm.find('input.error:visible').size()) {
+	                    return false;
+	                }
+	            }
+	
+	            var $dataList;
+	            var addItem = function(itemData) {
+	                var data = {};
+	
+	                $.each(getMultiData($multi), function(key, value) {
+	                    if (value != '') {
+	                        data[key] = value;
+	                    }
+	                });
+	
+	                // Append custom data
+	                var $customFields = $multi.find('tbody td').filter(function() {
+	                    return $(this).data('multi-custom-data');
+	                });
+	
+	                $customFields.each(function() {
+	                    var $field = $(this);
+	                    var fieldID = $field.attr('rel');
+	                    var fieldData = $field.data('multi-custom-data');
+	
+	                    data[fieldID] = fieldData;
+	                });
+	
+	                // Loading appearance
+	                var $loading = _medit.loadingItem($multi, _l('label.adding') + '...');
+	                $dataBody.prepend($loading);
+	
+	                // Clear out fields
+	                $multi.find('input').each(function() {
+	                    var $input = $(this);
+	
+	                    if ($input.data('multi-default-value')) {
+	                        $input.val($input.data('multi-default-value'));
+	                    } else {
+	                        $input.val('');
+	                    }
+	                });
+	                $multi.find('tbody td').each(function() {
+	                    var $item = $(this);
+	
+	                    if ($item.data('multi-custom-data')) {
+	                        $item.data('multi-custom-data', null);
+	                    }
+	                });
+	
+	                // Apply action
+	                args.add.action({
+	                    context: context,
+	                    data: data,
+	                    itemData: itemData,
+	                    $multi: $multi,
+	                    response: {
+	                        success: function(successArgs) {
+	                            var notification = successArgs ? successArgs.notification : null;
+	                            if (notification) {
+	                                $('.notifications').notifications('add', {
+	                                    section: 'network',
+	                                    desc: notification.label,
+	                                    interval: 3000,
+	                                    _custom: successArgs._custom,
+	                                    poll: function(pollArgs) {
+	                                        var complete = pollArgs.complete;
+	                                        var error = pollArgs.error;
+	
+	                                        notification.poll({
+	                                            _custom: pollArgs._custom,
+	                                            complete: function(completeArgs) {
+	                                                complete(args);
+	                                                $loading.remove();
+	                                                getData();
+	                                            },
+	
+	                                            error: function(args) {
+	                                                error(args);
+	                                                $loading.remove();
+	
+	                                                return cloudStack.dialog.error(args);
+	                                            }
+	                                        });
+	                                    }
+	                                });
+	                            } else {
+	                                $loading.remove();
+	                                getData();
+	                            }
+	                        },
+	
+	                        error: cloudStack.dialog.error(function() {
+	                            $loading.remove();
+	                        })
+	                    }
+	                });
+	            };
+	
+	            if (args.noSelect) {
+	                // Don't append instance data
+	                addItem([]);
+	
+	                return true;
+	            }
+	
+	            _medit.vmList($multi,
+	                args.listView,
+	                args.context,
+	                multipleAdd, _l('label.add.vms'),
+	                addItem);
+	
+	            return true;
+	        });
+    	}
         var listView = args.listView;
+        var editOptionsFirst = args.editOptionsFirst;
         var getData = function() {
             dataProvider({
                 context: context,
@@ -1188,7 +1216,8 @@
                                 fields,
                                 $multi,
                                 itemData,
-                                actions, {
+                                actions, 
+                                {
                                     multipleAdd: multipleAdd,
                                     itemActions: itemActions,
                                     noSelect: noSelect,
@@ -1197,7 +1226,8 @@
                                     preFilter: actionPreFilter,
                                     listView: listView,
                                     tags: tags,
-                                    reorder: reorder
+                                    reorder: reorder,
+                                    editOptionsFirst: editOptionsFirst
                                 }
                             ).appendTo($dataBody);
                         });

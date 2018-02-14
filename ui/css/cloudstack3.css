@@ -8366,7 +8366,6 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
   border-right: 1px solid #CFC9C9;
   height: 15px;
   overflow: auto;
-  padding-right: 0;
 }
 
 .multi-edit .data .data-body .data-item > table tbody tr td span {
@@ -8399,10 +8398,6 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
 
 .multi-edit .data .data-body .data-item .expandable-listing table tbody tr td.name span:hover {
   color: #0000FF;
-}
-
-.multi-edit .data .data-body .data-item table tbody tr td.multi-actions {
-  border-right: none;
 }
 
 .multi-edit .data .data-body .data-item table tbody tr td.multi-actions .action {
@@ -8521,19 +8516,60 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
   max-width: inherit;
 }
 
+div#details-tab-aclRules div.multi-edit table tr th.action,
+div#details-tab-aclRules div.multi-edit table tr td.action {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+}
+
+div#details-tab-aclRules div.multi-edit table tr th.protocol,
+div#details-tab-aclRules div.multi-edit table tr td.protocol {
+    width: 50px !important;
+    min-width: 50px !important;
+    max-width: 50px !important;
+}
+
+div#details-tab-aclRules div.multi-edit table tr th.protocolnumber,
+div#details-tab-aclRules div.multi-edit table tr td.protocolnumber {
+    width: 60px !important;
+    min-width: 60px !important;
+    max-width: 60px !important;
+}
+
+div#details-tab-aclRules div.multi-edit table tr th.startport, div#details-tab-aclRules div.multi-edit table tr td.startport,
+div#details-tab-aclRules div.multi-edit table tr th.endport, div#details-tab-aclRules div.multi-edit table tr td.endport {
+    width: 70px !important;
+    min-width: 70px !important;
+    max-width: 70px !important;
+}
+
+div#details-tab-aclRules td.cidrlist span {
+	text-align: center;
+	width: 100%;
+}
+
 .detail-view .multi-edit table tr th,
 .detail-view .multi-edit table tr td {
-  width: 87px !important;
-  min-width: 87px !important;
-  max-width: 87px !important;
+  width: 84px !important;
+  min-width: 84px !important;
+  max-width: 84px !important;
   font-size: 10px;
+}
+
+div#details-tab-aclRules table.multi-edit tr th.number,
+div#details-tab-aclRules div.data-item table tr td.number {
+  width: 45px !important;
+  min-width: 45px !important;
+  max-width: 45px !important;
 }
 
 /* special case for 'Source CIDR' column - make it wide enough to fit a CIDR without ellipsizing*/
 .detail-view .multi-edit table tr th.cidrlist,
 .detail-view .multi-edit table tr td.cidrlist {
-  min-width: 112px !important;
-  max-width: 112px !important;
+  min-width: 118px !important;
+  max-width: 118px !important;
+  padding: 0 0 0 0;
 }
 .detail-view .multi-edit td.cidrlist input {
   width: 85%;
@@ -8590,9 +8626,9 @@ div.container div.panel div#details-tab-addloadBalancer.detail-group div.loadBal
 /*Sortable*/
 .multi-edit table tbody tr td.reorder,
 .multi-edit table thead tr th.reorder {
-  width: 30px !important;
-  min-width: 30px !important;
-  max-width: 30px !important;
+  width: 16px !important;
+  min-width: 16px !important;
+  max-width: 16px !important;
 }
 
 /*Security Rules*/
@@ -12951,7 +12987,7 @@ div.ui-dialog div.autoscaler div.field-group div.form-container form div.form-it
   -khtml-border-radius: 10px;
   border-radius: 10px;
   border-radius: 10px 10px 10px 10px;
-  background-position: -74px -162px;
+  background-position: -82px -162px;
 }
 
 .moveDrag:hover .icon {

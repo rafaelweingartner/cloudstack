@@ -18,11 +18,12 @@ under the License.
 --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
+
 <c:if test="${!empty cookie.lang}">
   <fmt:setLocale value="${cookie.lang.value}" />
 </c:if>
 <fmt:setBundle basename="resources/messages"/>
-<% long now = System.currentTimeMillis(); %>
+
 <script type="text/javascript">
  $.extend(dictionary, {
 'label.add.ldap.account': '<fmt:message key="label.add.ldap.account" />',
@@ -1126,6 +1127,8 @@ under the License.
 'message.removed.ssh.key.pair': '<fmt:message key="message.removed.ssh.key.pair" />',
 'message.please.select.ssh.key.pair.use.with.this.vm': '<fmt:message key="message.please.select.ssh.key.pair.use.with.this.vm" />',
 'message.ldap.group.import': '<fmt:message key="message.ldap.group.import" />',
-'label.vpn.force.encapsulation': '<fmt:message key="label.vpn.force.encapsulation" />'
+'label.vpn.force.encapsulation': '<fmt:message key="label.vpn.force.encapsulation" />',
+'label.protocol.number.short.label': '<fmt:message key="label.protocol.number.short.label" />',
+'label.rule.number.short': '<fmt:message key="label.rule.number.short" />'
 });
 </script>

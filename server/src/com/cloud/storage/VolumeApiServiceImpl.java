@@ -1117,21 +1117,6 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             } else if (userVm.getLastHostId() != null) {
                 hosts = new long[] {userVm.getLastHostId()};
             }
-
-            final String errorMsg = "The VM must be stopped or the disk detached in order to resize with the XenServer Hypervisor.";
-
-            if (storagePool.isManaged() && storagePool.getHypervisor() == HypervisorType.Any && hosts != null && hosts.length > 0) {
-                HostVO host = _hostDao.findById(hosts[0]);
-
-                if (currentSize != newSize && host.getHypervisorType() == HypervisorType.XenServer && !userVm.getState().equals(State.Stopped)) {
-                    throw new InvalidParameterValueException(errorMsg);
-                }
-            }
-
-            /* Xen only works offline, SR does not support VDI.resizeOnline */
-            if (currentSize != newSize && _volsDao.getHypervisorType(volume.getId()) == HypervisorType.XenServer && !userVm.getState().equals(State.Stopped)) {
-                throw new InvalidParameterValueException(errorMsg);
-            }
         }
 
         ResizeVolumePayload payload = new ResizeVolumePayload(newSize, newMinIops, newMaxIops, newHypervisorSnapshotReserve,

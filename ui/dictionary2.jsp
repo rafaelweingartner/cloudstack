@@ -1129,6 +1129,7 @@ under the License.
 'message.ldap.group.import': '<fmt:message key="message.ldap.group.import" />',
 'label.vpn.force.encapsulation': '<fmt:message key="label.vpn.force.encapsulation" />',
 'label.protocol.number.short.label': '<fmt:message key="label.protocol.number.short.label" />',
-'label.rule.number.short': '<fmt:message key="label.rule.number.short" />'
+'label.rule.number.short': '<fmt:message key="label.rule.number.short" />',
+'label.edit.acl.list': '<fmt:message key="label.edit.acl.list" />'
 });
 </script>

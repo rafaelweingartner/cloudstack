@@ -23,7 +23,7 @@
   <parent>
     <groupId>org.apache.cloudstack</groupId>
     <artifactId>cloudstack-framework</artifactId>
-    <version>4.9.3.0-yew1</version>
+    <version>4.9.3.0-yew2</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <dependencies>

@@ -18,16 +18,17 @@
 //
 package org.apache.cloudstack.utils;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
-import com.google.common.collect.ImmutableList;
-
-import java.util.regex.Pattern;
-
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkState;
 import static org.apache.commons.lang.StringUtils.isNotBlank;
-import static org.apache.commons.lang.StringUtils.substringBefore;
+
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.google.common.base.Joiner;
+import com.google.common.base.Objects;
+import com.google.common.collect.ImmutableList;
 
 /**
  *
@@ -64,7 +65,8 @@ public final class CloudStackVersion implements Comparable<CloudStackVersion> {
     public static CloudStackVersion parse(final String value) {
 
         // Strip out any legacy patch information from the version string ...
-        final String trimmedValue = substringBefore(value, "-");
+        final String trimmedValue = StringUtils.substringBefore(value, "-");
+        String releaseBit = StringUtils.substringAfter(value, "-");
 
         checkArgument(isNotBlank(trimmedValue), CloudStackVersion.class.getName() + ".parse(String) requires a non-blank value");
         checkArgument(VERSION_FORMAT.matcher(trimmedValue).matches(), CloudStackVersion.class.getName() + "parse(String) passed " +
@@ -80,7 +82,7 @@ public final class CloudStackVersion implements Comparable<CloudStackVersion> {
         final int patchRelease = Integer.valueOf(components[2]);
         final Integer securityRelease = components.length == 3 ? null : Integer.valueOf(components[3]);
 
-        return new CloudStackVersion(majorRelease, minorRelease, patchRelease, securityRelease);
+        return new CloudStackVersion(majorRelease, minorRelease, patchRelease, securityRelease, releaseBit);
 
     }
 
@@ -88,9 +90,9 @@ public final class CloudStackVersion implements Comparable<CloudStackVersion> {
     private final int minorRelease;
     private final int patchRelease;
     private final Integer securityRelease;
+    private String releaseBit;
 
-    private CloudStackVersion(final int majorRelease, final int minorRelease, final int patchRelease, final Integer securityRelease) {
-
+    private CloudStackVersion(final int majorRelease, final int minorRelease, final int patchRelease, final Integer securityRelease, String releaseBit) {
         super();
 
         checkArgument(majorRelease >= 0, CloudStackVersion.class.getName() + "(int, int, int, Integer) requires a majorRelease greater than 0.");
@@ -103,7 +105,7 @@ public final class CloudStackVersion implements Comparable<CloudStackVersion> {
         this.minorRelease = minorRelease;
         this.patchRelease = patchRelease;
         this.securityRelease = securityRelease;
-
+        this.releaseBit = releaseBit;
     }
 
     private static ImmutableList<Integer> normalizeVersionValues(final ImmutableList<Integer> values) {
@@ -202,13 +204,13 @@ public final class CloudStackVersion implements Comparable<CloudStackVersion> {
         return majorRelease == thatVersion.majorRelease &&
                 minorRelease == thatVersion.minorRelease &&
                 patchRelease == thatVersion.patchRelease &&
-                Objects.equal(securityRelease, thatVersion.securityRelease);
+                Objects.equal(securityRelease, thatVersion.securityRelease) && StringUtils.equals(this.releaseBit, thatVersion.releaseBit);
 
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(majorRelease, minorRelease, patchRelease, securityRelease);
+        return Objects.hashCode(majorRelease, minorRelease, patchRelease, securityRelease, releaseBit);
     }
 
     @Override

@@ -16,6 +16,24 @@
 // under the License.
 package com.cloud.hypervisor.xenserver.discoverer;
 
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.naming.ConfigurationException;
+import javax.persistence.EntityExistsException;
+
+import org.apache.cloudstack.hypervisor.xenserver.XenserverConfigs;
+import org.apache.log4j.Logger;
+import org.apache.xmlrpc.XmlRpcException;
+
 import com.cloud.agent.AgentManager;
 import com.cloud.agent.Listener;
 import com.cloud.agent.api.AgentControlAnswer;
@@ -81,22 +99,6 @@ import com.xensource.xenapi.Session;
 import com.xensource.xenapi.Types.SessionAuthenticationFailed;
 import com.xensource.xenapi.Types.UuidInvalid;
 import com.xensource.xenapi.Types.XenAPIException;
-import org.apache.cloudstack.hypervisor.xenserver.XenserverConfigs;
-import org.apache.log4j.Logger;
-import org.apache.xmlrpc.XmlRpcException;
-
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-import javax.persistence.EntityExistsException;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.UnknownHostException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
 
 
 public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, Listener, ResourceStateAdapter {
@@ -198,8 +200,9 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
 
         ClusterVO cluster = _clusterDao.findById(clusterId);
         if (cluster == null || cluster.getHypervisorType() != HypervisorType.XenServer) {
-            if (s_logger.isInfoEnabled())
+            if (s_logger.isInfoEnabled()) {
                 s_logger.info("invalid cluster id or cluster is not for XenServer hypervisors");
+            }
             return null;
         }
 
@@ -237,7 +240,7 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
                 if (clusterHosts != null && clusterHosts.size() > 0) {
                     if (!clu.getGuid().equals(poolUuid)) {
                         String msg = "Please join the host " +  hostIp + " to XS pool  "
-                                       + clu.getGuid() + " through XC/XS before adding it through CS UI";
+                                + clu.getGuid() + " through XC/XS before adding it through CS UI";
                         s_logger.warn(msg);
                         throw new DiscoveryException(msg);
                     }
@@ -395,18 +398,18 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
     protected CitrixResourceBase createServerResource(String prodBrand, String prodVersion, String prodVersionTextShort, String hotfix) {
         // Xen Cloud Platform group of hypervisors
         if (prodBrand.equals("XCP") && (prodVersion.equals("1.0.0") || prodVersion.equals("1.1.0")
-              || prodVersion.equals("5.6.100") || prodVersion.startsWith("1.4") || prodVersion.startsWith("1.6"))) {
+                || prodVersion.equals("5.6.100") || prodVersion.startsWith("1.4") || prodVersion.startsWith("1.6"))) {
             return new XcpServerResource();
         } // Citrix Xenserver group of hypervisors
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("5.6.0"))
+        else if (prodBrand.equals("XenServer") && prodVersion.equals("5.6.0")) {
             return new XenServer56Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.0"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.0")) {
             return new XenServer600Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.2"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.0.2")) {
             return new XenServer600Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0"))
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.1.0")) {
             return new XenServer610Resource();
-        else if (prodBrand.equals("XenServer") && prodVersion.equals("6.2.0")) {
+        } else if (prodBrand.equals("XenServer") && prodVersion.equals("6.2.0")) {
             if (hotfix != null && hotfix.equals(XenserverConfigs.XSHotFix62ESP1004)) {
                 return new Xenserver625Resource();
             } else if (hotfix != null && hotfix.equals(XenserverConfigs.XSHotFix62ESP1)) {
@@ -493,8 +496,9 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
 
     @Override
     public boolean matchHypervisor(String hypervisor) {
-        if (hypervisor == null)
+        if (hypervisor == null) {
             return true;
+        }
         return Hypervisor.HypervisorType.XenServer.toString().equalsIgnoreCase(hypervisor);
     }
 
@@ -531,17 +535,19 @@ public class XcpServerDiscoverer extends DiscovererBase implements Discoverer, L
     private void createXsToolsISO() {
         String isoName = "xs-tools.iso";
         VMTemplateVO tmplt = _tmpltDao.findByTemplateName(isoName);
+        String displayText = "XenServer Tools Installer ISO (xen-pv-drv-iso)";
         Long id;
         if (tmplt == null) {
             id = _tmpltDao.getNextInSequence(Long.class, "id");
             VMTemplateVO template =
                     VMTemplateVO.createPreHostIso(id, isoName, isoName, ImageFormat.ISO, true, true, TemplateType.PERHOST, null, null, true, 64, Account.ACCOUNT_ID_SYSTEM,
-                            null, "xen-pv-drv-iso", false, 1, false, HypervisorType.XenServer);
+                            null, displayText, false, 1, false, HypervisorType.XenServer);
             _tmpltDao.persist(template);
         } else {
             id = tmplt.getId();
             tmplt.setTemplateType(TemplateType.PERHOST);
             tmplt.setUrl(null);
+            tmplt.setDisplayText(displayText);
             _tmpltDao.update(id, tmplt);
         }
     }

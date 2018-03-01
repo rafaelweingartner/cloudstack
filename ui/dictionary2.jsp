@@ -1130,6 +1130,8 @@ under the License.
 'label.vpn.force.encapsulation': '<fmt:message key="label.vpn.force.encapsulation" />',
 'label.protocol.number.short.label': '<fmt:message key="label.protocol.number.short.label" />',
 'label.rule.number.short': '<fmt:message key="label.rule.number.short" />',
-'label.edit.acl.list': '<fmt:message key="label.edit.acl.list" />'
+'label.edit.acl.list': '<fmt:message key="label.edit.acl.list" />',
+'label.acl.reason': '<fmt:message key="label.acl.reason" />',
+'label.acl.reason.description': '<fmt:message key="label.acl.reason.description" />'
 });
 </script>

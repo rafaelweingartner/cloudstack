@@ -22,12 +22,11 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import junit.framework.TestCase;
-
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.messagebus.MessageBus;
 import org.apache.cloudstack.test.utils.SpringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +72,8 @@ import com.cloud.user.User;
 import com.cloud.user.UserVO;
 import com.cloud.utils.component.ComponentContext;
 import com.cloud.utils.db.EntityManager;
+
+import junit.framework.TestCase;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
@@ -167,7 +168,7 @@ public class NetworkACLManagerTest extends TestCase {
         Mockito.when(_networkDao.findById(Matchers.anyLong())).thenReturn(network);
         Mockito.when(_networkModel.isProviderSupportServiceInNetwork(Matchers.anyLong(),
                 Matchers.any(Network.Service.class), Matchers.any(Network.Provider.class)))
-                .thenReturn(true);
+        .thenReturn(true);
         Mockito.when(_networkAclElements.get(0).applyNetworkACLs(Matchers.any(Network.class),
                 Matchers.anyList())).thenReturn(applyNetworkACLs);
 
@@ -229,7 +230,7 @@ public class NetworkACLManagerTest extends TestCase {
     public void testUpdateACLItem() throws Exception {
         Mockito.when(_networkACLItemDao.findById(Matchers.anyLong())).thenReturn(aclItem);
         Mockito.when(_networkACLItemDao.update(Matchers.anyLong(), Matchers.any(NetworkACLItemVO.class))).thenReturn(true);
-        assertNotNull(_aclMgr.updateNetworkACLItem(1L, "UDP", null, NetworkACLItem.TrafficType.Ingress, "Deny", 10, 22, 32, null, null, null, true));
+        assertNotNull(_aclMgr.updateNetworkACLItem(1L, "UDP", null, NetworkACLItem.TrafficType.Ingress, "Deny", 10, 22, 32, null, null, null, true, StringUtils.EMPTY));
     }
 
     @Test

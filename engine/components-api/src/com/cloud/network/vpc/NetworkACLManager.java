@@ -79,7 +79,7 @@ public interface NetworkACLManager {
      * @return
      */
     NetworkACLItem createNetworkACLItem(Integer sourcePortStart, Integer sourcePortEnd, String protocol, List<String> sourceCidrList, Integer icmpCode, Integer icmpType,
-        NetworkACLItem.TrafficType trafficType, Long aclId, String action, Integer number, Boolean forDisplay);
+            NetworkACLItem.TrafficType trafficType, Long aclId, String action, Integer number, Boolean forDisplay, String reason);
 
     /**
      * Returns Network ACL Item with specified Id
@@ -138,7 +138,7 @@ public interface NetworkACLManager {
      * @throws ResourceUnavailableException
      */
     NetworkACLItem updateNetworkACLItem(Long id, String protocol, List<String> sourceCidrList, NetworkACLItem.TrafficType trafficType, String action, Integer number,
-        Integer sourcePortStart, Integer sourcePortEnd, Integer icmpCode, Integer icmpType, String customId, Boolean forDisplay) throws ResourceUnavailableException;
+            Integer sourcePortStart, Integer sourcePortEnd, Integer icmpCode, Integer icmpType, String customId, Boolean forDisplay, String reason) throws ResourceUnavailableException;
 
     /**
      * Associates acl with a network and applies the ACLItems

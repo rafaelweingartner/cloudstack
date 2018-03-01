@@ -101,8 +101,11 @@ public class NetworkACLItemVO implements NetworkACLItem {
         uuid = UUID.randomUUID().toString();
     }
 
+    @Column(name = "reason", length = 2500)
+    private String reason;
+
     public NetworkACLItemVO(Integer portStart, Integer portEnd, String protocol, long aclId, List<String> sourceCidrs, Integer icmpCode, Integer icmpType,
-            TrafficType trafficType, Action action, int number) {
+            TrafficType trafficType, Action action, int number, String reason) {
         sourcePortStart = portStart;
         sourcePortEnd = portEnd;
         this.protocol = protocol;
@@ -115,6 +118,7 @@ public class NetworkACLItemVO implements NetworkACLItem {
         this.trafficType = trafficType;
         this.action = action;
         this.number = number;
+        this.reason = reason;
     }
 
     public void setSourceCidrList(List<String> sourceCidrs) {
@@ -251,5 +255,14 @@ public class NetworkACLItemVO implements NetworkACLItem {
     @Override
     public boolean isDisplay() {
         return display;
+    }
+
+    @Override
+    public String getReason() {
+        return reason;
+    }
+
+    public void setReason(String reason) {
+        this.reason = reason;
     }
 }

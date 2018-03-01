@@ -55,9 +55,9 @@ public class Upgrade4930to4930Yew2 implements DbUpgrade {
 
     @Override
     public File[] getCleanupScripts() {
-        String script = Script.findScript("", "db/schema-4930to4930-yew2.sql");
+        String script = Script.findScript("", "db/schema-4930to4930-yew2-cleanup.sql");
         if (script == null) {
-            throw new CloudRuntimeException("Unable to find ddb/schema-4930to4930-yew2.sql");
+            throw new CloudRuntimeException("Unable to find db/schema-4930to4930-yew2-cleanup.sql");
         }
         return new File[] {new File(script)};
     }

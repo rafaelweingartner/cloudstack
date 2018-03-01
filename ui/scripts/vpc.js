@@ -428,6 +428,13 @@
                         }]
                     });
                 }
+            },
+            'reason': {
+                edit: true,
+                label: 'label.acl.reason',
+                desc: 'label.acl.reason.description',
+                isEditable: true,
+                isTextarea: true
             }
     };
 
@@ -593,7 +600,9 @@
                         number: args.data.number,
                         protocol: args.data.protocol,
                         traffictype: args.data.traffictype,
-                        action: args.data.action
+                        action: args.data.action,
+                        reason: args.data.reason
+                        
                     };
 
                     if (data.protocol === 'tcp' || data.protocol === 'udp') {
@@ -619,6 +628,7 @@
                     $.ajax({
                         url: createURL('updateNetworkACLItem'),
                         data: data,
+                        type: "POST",
                         success: function(json) {
                             args.response.success({
                                 _custom: {

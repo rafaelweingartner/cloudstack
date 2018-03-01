@@ -24,6 +24,7 @@ import org.apache.cloudstack.api.InternalIdentity;
 
 public interface NetworkACLItem extends InternalIdentity, Identity, Displayable {
 
+    @Override
     String getUuid();
 
     Action getAction();
@@ -78,4 +79,5 @@ public interface NetworkACLItem extends InternalIdentity, Identity, Displayable 
     @Override
     boolean isDisplay();
 
+    String getReason();
 }

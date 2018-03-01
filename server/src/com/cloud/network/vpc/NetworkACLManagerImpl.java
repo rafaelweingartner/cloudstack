@@ -21,6 +21,12 @@ import java.util.List;
 
 import javax.inject.Inject;
 
+import org.apache.cloudstack.context.CallContext;
+import org.apache.cloudstack.framework.messagebus.MessageBus;
+import org.apache.cloudstack.framework.messagebus.PublishScope;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
 import com.cloud.configuration.ConfigurationManager;
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
@@ -46,11 +52,6 @@ import com.cloud.utils.db.Transaction;
 import com.cloud.utils.db.TransactionCallback;
 import com.cloud.utils.db.TransactionStatus;
 import com.cloud.utils.exception.CloudRuntimeException;
-
-import org.apache.cloudstack.context.CallContext;
-import org.apache.cloudstack.framework.messagebus.MessageBus;
-import org.apache.cloudstack.framework.messagebus.PublishScope;
-import org.apache.log4j.Logger;
 
 public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLManager {
     private static final Logger s_logger = Logger.getLogger(NetworkACLManagerImpl.class);
@@ -228,7 +229,7 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_NETWORK_ACL_ITEM_CREATE, eventDescription = "creating network ACL Item", create = true)
     public NetworkACLItem createNetworkACLItem(final Integer portStart, final Integer portEnd, final String protocol, final List<String> sourceCidrList, final Integer icmpCode,
-            final Integer icmpType, final NetworkACLItem.TrafficType trafficType, final Long aclId, final String action, Integer number, final Boolean forDisplay) {
+            final Integer icmpType, final NetworkACLItem.TrafficType trafficType, final Long aclId, final String action, Integer number, final Boolean forDisplay, final String reason) {
         // If number is null, set it to currentMax + 1 (for backward compatibility)
         if (number == null) {
             number = _networkACLItemDao.getMaxNumberByACL(aclId) + 1;
@@ -244,7 +245,7 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
                 }
 
                 NetworkACLItemVO newRule =
-                        new NetworkACLItemVO(portStart, portEnd, protocol.toLowerCase(), aclId, sourceCidrList, icmpCode, icmpType, trafficType, ruleAction, numberFinal);
+                        new NetworkACLItemVO(portStart, portEnd, protocol.toLowerCase(), aclId, sourceCidrList, icmpCode, icmpType, trafficType, ruleAction, numberFinal, reason);
 
                 if (forDisplay != null) {
                     newRule.setDisplay(forDisplay);
@@ -414,7 +415,8 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
 
     @Override
     public NetworkACLItem updateNetworkACLItem(final Long id, final String protocol, final List<String> sourceCidrList, final NetworkACLItem.TrafficType trafficType, final String action,
-            final Integer number, final Integer sourcePortStart, final Integer sourcePortEnd, final Integer icmpCode, final Integer icmpType, final String customId, final Boolean forDisplay) throws ResourceUnavailableException {
+            final Integer number, final Integer sourcePortStart, final Integer sourcePortEnd, final Integer icmpCode, final Integer icmpType, final String customId, final Boolean forDisplay,
+            String reason) throws ResourceUnavailableException {
         final NetworkACLItemVO aclItem = _networkACLItemDao.findById(id);
         aclItem.setState(State.Add);
 
@@ -464,6 +466,10 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
 
         if (forDisplay != null) {
             aclItem.setDisplay(forDisplay);
+        }
+
+        if (StringUtils.isNotBlank(reason)) {
+            aclItem.setReason(reason);
         }
 
         if (_networkACLItemDao.update(id, aclItem)) {

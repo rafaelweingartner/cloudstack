@@ -30,7 +30,6 @@ import java.util.TimeZone;
 
 import javax.inject.Inject;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.ControlledEntity.ACLType;
 import org.apache.cloudstack.affinity.AffinityGroup;
@@ -157,6 +156,7 @@ import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.usage.Usage;
 import org.apache.cloudstack.usage.UsageService;
 import org.apache.cloudstack.usage.UsageTypes;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.VgpuTypesInfo;
@@ -501,8 +501,8 @@ public class ApiResponseHelper implements ResponseGenerator {
             s_logger.debug("Unable to find info for image store snapshot with uuid " + snapshot.getUuid());
             snapshotResponse.setRevertable(false);
         } else {
-        snapshotResponse.setRevertable(snapshotInfo.isRevertable());
-        snapshotResponse.setPhysicaSize(snapshotInfo.getPhysicalSize());
+            snapshotResponse.setRevertable(snapshotInfo.isRevertable());
+            snapshotResponse.setPhysicaSize(snapshotInfo.getPhysicalSize());
         }
 
         // set tag information
@@ -1215,7 +1215,7 @@ public class ApiResponseHelper implements ResponseGenerator {
     public List<UserVmResponse> createUserVmResponse(String objectName, EnumSet<VMDetails> details, UserVm... userVms) {
         return createUserVmResponse(null, objectName, userVms);
     }
-    */
+     */
 
     @Override
     public List<UserVmResponse> createUserVmResponse(ResponseView view, String objectName, EnumSet<VMDetails> details, UserVm... userVms) {
@@ -1309,10 +1309,10 @@ public class ApiResponseHelper implements ResponseGenerator {
                         vmResponse.setGateway(singleNicProfile.getIPv4Gateway());
                     } else if (network.getTrafficType() == TrafficType.Guest) {
                         /*
-                          * In basic zone, public ip has TrafficType.Guest in case EIP service is not enabled.
-                          * When EIP service is enabled in the basic zone, system VM by default get the public
-                          * IP allocated for EIP. So return the guest/public IP accordingly.
-                          * */
+                         * In basic zone, public ip has TrafficType.Guest in case EIP service is not enabled.
+                         * When EIP service is enabled in the basic zone, system VM by default get the public
+                         * IP allocated for EIP. So return the guest/public IP accordingly.
+                         * */
                         NetworkOffering networkOffering = ApiDBUtils.findNetworkOfferingById(network.getNetworkOfferingId());
                         if (networkOffering.getElasticIp()) {
                             IpAddress ip = ApiDBUtils.findIpByAssociatedVmId(vm.getId());
@@ -2178,8 +2178,8 @@ public class ApiResponseHelper implements ResponseGenerator {
             response.setPublicIpAddress(ip.getAddress().addr());
         }
 
-            Network network = ApiDBUtils.findNetworkById(fwRule.getNetworkId());
-            response.setNetworkId(network.getUuid());
+        Network network = ApiDBUtils.findNetworkById(fwRule.getNetworkId());
+        response.setNetworkId(network.getUuid());
 
         FirewallRule.State state = fwRule.getState();
         String stateToSet = state.toString();
@@ -2236,6 +2236,7 @@ public class ApiResponseHelper implements ResponseGenerator {
         response.setNumber(aclItem.getNumber());
         response.setAction(aclItem.getAction().toString());
         response.setForDisplay(aclItem.isDisplay());
+        response.setReason(aclItem.getReason());
 
         NetworkACL acl = ApiDBUtils.findByNetworkACLId(aclItem.getAclId());
         if (acl != null) {
@@ -2684,8 +2685,9 @@ public class ApiResponseHelper implements ResponseGenerator {
     @Override
     public ResourceTagResponse createResourceTagResponse(ResourceTag resourceTag, boolean keyValueOnly) {
         ResourceTagJoinVO rto = ApiDBUtils.newResourceTagView(resourceTag);
-        if(rto == null)
+        if(rto == null) {
             return null;
+        }
         return ApiDBUtils.newResourceTagResponse(rto, keyValueOnly);
     }
 

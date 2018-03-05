@@ -285,6 +285,11 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
 
     protected StorageSubsystemCommandHandler storageHandler;
 
+    private static final String XENSTORE_DATA_IP = "vm-data/ip";
+    private static final String XENSTORE_DATA_GATEWAY = "vm-data/gateway";
+    private static final String XENSTORE_DATA_NETMASK = "vm-data/netmask";
+    private static final String XENSTORE_DATA_CS_INIT = "vm-data/cloudstack/init";
+
     public CitrixResourceBase() {
     }
 
@@ -1336,11 +1341,14 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         if (bootArgs != null && bootArgs.length() > 0) {
             String pvargs = vm.getPVArgs(conn);
             pvargs = pvargs + vmSpec.getBootArgs().replaceAll(" ", "%");
-            if (s_logger.isDebugEnabled()) {
-                s_logger.debug("PV args are " + pvargs);
-            }
+            s_logger.debug("PV args are " + pvargs);
             vm.setPVArgs(conn, pvargs);
         }
+        // send boot args into xenstore-data for HVM instances
+        Map<String, String> xenstoreData = new HashMap<>();
+        xenstoreData.put(XENSTORE_DATA_CS_INIT, bootArgs);
+        vm.setXenstoreData(conn, xenstoreData);
+        s_logger.debug("HVM args are " + bootArgs);
 
         if (!(guestOsTypeName.startsWith("Windows") || guestOsTypeName.startsWith("Citrix") || guestOsTypeName.startsWith("Other"))) {
             if (vmSpec.getBootloader() == BootloaderType.CD) {

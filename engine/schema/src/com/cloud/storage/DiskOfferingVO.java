@@ -308,6 +308,7 @@ public class DiskOfferingVO implements DiskOffering {
         return domainId;
     }
 
+    @Override
     public Type getType() {
         return type;
     }
@@ -513,5 +514,9 @@ public class DiskOfferingVO implements DiskOffering {
     @Override
     public Integer getHypervisorSnapshotReserve() {
         return hypervisorSnapshotReserve;
+    }
+
+    public boolean isShared() {
+        return !useLocalStorage;
     }
 }

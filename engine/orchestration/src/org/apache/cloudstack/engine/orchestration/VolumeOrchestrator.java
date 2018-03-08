@@ -30,8 +30,6 @@ import java.util.concurrent.ExecutionException;
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
 
-import org.apache.log4j.Logger;
-
 import org.apache.cloudstack.engine.orchestration.service.VolumeOrchestrationService;
 import org.apache.cloudstack.engine.subsystem.api.storage.ChapInfo;
 import org.apache.cloudstack.engine.subsystem.api.storage.DataObject;
@@ -67,6 +65,7 @@ import org.apache.cloudstack.storage.datastore.db.SnapshotDataStoreVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.TemplateDataStoreVO;
+import org.apache.log4j.Logger;
 
 import com.cloud.agent.api.to.DataTO;
 import com.cloud.agent.api.to.DiskTO;
@@ -965,7 +964,9 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
     @DB
     public Volume migrateVolume(Volume volume, StoragePool destPool) throws StorageUnavailableException {
         VolumeInfo vol = volFactory.getVolume(volume.getId());
-        AsyncCallFuture<VolumeApiResult> future = volService.copyVolume(vol, (DataStore)destPool);
+
+        DataStore dataStoreTarget = dataStoreMgr.getDataStore(destPool.getId(), DataStoreRole.Primary);
+        AsyncCallFuture<VolumeApiResult> future = volService.copyVolume(vol, dataStoreTarget);
         try {
             VolumeApiResult result = future.get();
             if (result.isFailed()) {
@@ -1539,13 +1540,16 @@ public class VolumeOrchestrator extends ManagerBase implements VolumeOrchestrati
         VolumeVO vol = _volsDao.findById(volumeId);
         boolean needUpdate = false;
         // Volume path is not getting updated in the DB, need to find reason and fix the issue.
-        if (vol.getPath() == null)
+        if (vol.getPath() == null) {
             return;
-        if (!vol.getPath().equalsIgnoreCase(path))
+        }
+        if (!vol.getPath().equalsIgnoreCase(path)) {
             needUpdate = true;
+        }
 
-        if (chainInfo != null && (vol.getChainInfo() == null || !chainInfo.equalsIgnoreCase(vol.getChainInfo())))
+        if (chainInfo != null && (vol.getChainInfo() == null || !chainInfo.equalsIgnoreCase(vol.getChainInfo()))) {
             needUpdate = true;
+        }
 
         if (needUpdate) {
             s_logger.info("Update volume disk chain info. vol: " + vol.getId() + ", " + vol.getPath() + " -> " + path + ", " + vol.getChainInfo() + " -> " + chainInfo);

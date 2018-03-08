@@ -69,6 +69,7 @@ import org.apache.cloudstack.storage.command.AttachCommand;
 import org.apache.cloudstack.storage.command.DettachCommand;
 import org.apache.cloudstack.storage.command.TemplateOrVolumePostUploadCommand;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
+import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailVO;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolDetailsDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
 import org.apache.cloudstack.storage.datastore.db.VolumeDataStoreDao;
@@ -77,6 +78,7 @@ import org.apache.cloudstack.storage.image.datastore.ImageStoreEntity;
 import org.apache.cloudstack.utils.identity.ManagementServerNode;
 import org.apache.cloudstack.utils.imagestore.ImageStoreUtil;
 import org.apache.cloudstack.utils.volume.VirtualMachineDiskInfo;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -1024,9 +1026,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
             return volume;
         }
-
         UserVmVO userVm = _userVmDao.findById(volume.getInstanceId());
-
         if (userVm != null) {
             // serialize VM operation
             AsyncJobExecutionContext jobContext = AsyncJobExecutionContext.getCurrentExecutionContext();
@@ -1949,7 +1949,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 updateMissingRootDiskController(vm, vol.getChainInfo());
             }
         }
-
+        DiskOfferingVO newDiskOffering = retrieveAndValidateNewDiskOffering(cmd);
+        validateNewDiskOffering(vol, newDiskOffering, destPool);
         if (vm != null) {
             // serialize VM operation
             AsyncJobExecutionContext jobContext = AsyncJobExecutionContext.getCurrentExecutionContext();
@@ -1959,13 +1960,13 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
                 VmWorkJobVO placeHolder = null;
                 placeHolder = createPlaceHolderWork(vm.getId());
                 try {
-                    return orchestrateMigrateVolume(vol.getId(), destPool.getId(), liveMigrateVolume);
+                    return orchestrateMigrateVolume(vol, destPool, liveMigrateVolume, newDiskOffering);
                 } finally {
                     _workJobDao.expunge(placeHolder.getId());
                 }
 
             } else {
-                Outcome<Volume> outcome = migrateVolumeThroughJobQueue(vm.getId(), vol.getId(), destPool.getId(), liveMigrateVolume);
+                Outcome<Volume> outcome = migrateVolumeThroughJobQueue(vm, vol, destPool, liveMigrateVolume, newDiskOffering);
 
                 try {
                     outcome.get();
@@ -1994,21 +1995,72 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             }
         }
 
-        return orchestrateMigrateVolume(vol.getId(), destPool.getId(), liveMigrateVolume);
+        return orchestrateMigrateVolume(vol, destPool, liveMigrateVolume, newDiskOffering);
     }
 
-    private Volume orchestrateMigrateVolume(long volumeId, long destPoolId, boolean liveMigrateVolume) {
-        VolumeVO vol = _volsDao.findById(volumeId);
-        assert (vol != null);
-        StoragePool destPool = (StoragePool)dataStoreMgr.getDataStore(destPoolId, DataStoreRole.Primary);
-        assert (destPool != null);
+    private DiskOfferingVO retrieveAndValidateNewDiskOffering(MigrateVolumeCmd cmd) {
+        String newDiskOfferingUuid = cmd.getNewDiskOfferingUuid();
+        if (org.apache.commons.lang.StringUtils.isBlank(newDiskOfferingUuid)) {
+            return null;
+        }
+        DiskOfferingVO newDiskOffering = _diskOfferingDao.findByUuid(newDiskOfferingUuid);
+        if (newDiskOffering == null) {
+            throw new InvalidParameterValueException(String.format("The disk offering informed is not valid [id=%s].", newDiskOfferingUuid));
+        }
+        if (newDiskOffering.getRemoved() != null) {
+            throw new InvalidParameterValueException(String.format("We cannot assign a removed disk offering [id=%s] to a volume. ", newDiskOffering.getUuid()));
+        }
+        Account caller = CallContext.current().getCallingAccount();
+        _accountMgr.checkAccess(caller, newDiskOffering);
+        return newDiskOffering;
+    }
 
+    private void validateNewDiskOffering(VolumeVO vol, DiskOfferingVO newDiskOffering, StoragePool destPool) {
+        if (newDiskOffering == null) {
+            return;
+        }
+        if (Volume.Type.ROOT.equals(vol.getVolumeType())) {
+            throw new InvalidParameterValueException(String.format("Cannot change the disk offering of a ROOT volume [id=%s].", vol.getUuid()));
+        }
+        if ((destPool.isShared() && newDiskOffering.getUseLocalStorage()) || destPool.isLocal() && newDiskOffering.isShared()) {
+            throw new InvalidParameterValueException("You cannot move the volume to a shared storage and assing a disk offering for local storage and vice versa.");
+        }
+        String storageTags = getStoragePoolTags(destPool);
+        if (!StringUtils.areTagsEqual(storageTags, newDiskOffering.getTags())) {
+            throw new InvalidParameterValueException(String.format("Target Storage [id=%s] tags [%s] does not match new disk offering [id=%s] tags [%s].", destPool.getUuid(), storageTags,
+                    newDiskOffering.getUuid(), newDiskOffering.getTags()));
+        }
+        if (vol.getSize() != newDiskOffering.getDiskSize()) {
+            DiskOfferingVO oldDiskOffering = this._diskOfferingDao.findById(vol.getDiskOfferingId());
+            s_logger.warn(String.format(
+                    "You are migrating a volume [id=%s] and changing the disk offering[from id=%s to id=%s] to reflect this migration. However, the sizes of the volume and the new disk offering are different.",
+                    vol.getUuid(), oldDiskOffering.getUuid(), newDiskOffering.getUuid()));
+        }
+
+    }
+
+    private String getStoragePoolTags(StoragePool destPool) {
+        List<StoragePoolDetailVO> storagePoolDetails = storagePoolDetailsDao.listDetails(destPool.getId());
+        if (CollectionUtils.isEmpty(storagePoolDetails)) {
+            return null;
+        }
+        String storageTags = "";
+        for (StoragePoolDetailVO storagePoolDetailVO : storagePoolDetails) {
+            storageTags = storageTags + storagePoolDetailVO.getName() + ",";
+        }
+        return storageTags.substring(0, storageTags.length() - 1);
+    }
+
+    private Volume orchestrateMigrateVolume(VolumeVO volume, StoragePool destPool, boolean liveMigrateVolume, DiskOfferingVO newDiskOffering) {
         Volume newVol = null;
         try {
             if (liveMigrateVolume) {
-                newVol = liveMigrateVolume(vol, destPool);
+                newVol = liveMigrateVolume(volume, destPool);
             } else {
-                newVol = _volumeMgr.migrateVolume(vol, destPool);
+                newVol = _volumeMgr.migrateVolume(volume, destPool);
+            }
+            if (newDiskOffering != null) {
+                _volsDao.updateDiskOffering(newVol.getId(), newDiskOffering.getId());
             }
         } catch (StorageUnavailableException e) {
             s_logger.debug("Failed to migrate volume", e);
@@ -2023,7 +2075,9 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
     @DB
     protected Volume liveMigrateVolume(Volume volume, StoragePool destPool) throws StorageUnavailableException {
         VolumeInfo vol = volFactory.getVolume(volume.getId());
-        AsyncCallFuture<VolumeApiResult> future = volService.migrateVolume(vol, (DataStore)destPool);
+
+        DataStore dataStoreTarget = dataStoreMgr.getDataStore(destPool.getId(), DataStoreRole.Primary);
+        AsyncCallFuture<VolumeApiResult> future = volService.migrateVolume(vol, dataStoreTarget);
         try {
             VolumeApiResult result = future.get();
             if (result.isFailed()) {
@@ -2816,14 +2870,10 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         return new VmJobVolumeUrlOutcome(workJob);
     }
 
-    public Outcome<Volume> migrateVolumeThroughJobQueue(final Long vmId, final long volumeId,
-            final long destPoolId, final boolean liveMigrate) {
-
+    private Outcome<Volume> migrateVolumeThroughJobQueue(VMInstanceVO vm, VolumeVO vol, StoragePool destPool, boolean liveMigrateVolume, DiskOfferingVO newDiskOffering) {
         final CallContext context = CallContext.current();
         final User callingUser = context.getCallingUser();
         final Account callingAccount = context.getCallingAccount();
-
-        final VMInstanceVO vm = _vmInstanceDao.findById(vmId);
 
         VmWorkJobVO workJob = new VmWorkJobVO(context.getContextId());
 
@@ -2837,16 +2887,17 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         workJob.setVmInstanceId(vm.getId());
         workJob.setRelated(AsyncJobExecutionContext.getOriginJobId());
 
+        Long newDiskOfferingId = newDiskOffering != null ? newDiskOffering.getId() : null;
         // save work context info (there are some duplications)
         VmWorkMigrateVolume workInfo = new VmWorkMigrateVolume(callingUser.getId(), callingAccount.getId(), vm.getId(),
-                VolumeApiServiceImpl.VM_WORK_JOB_HANDLER, volumeId, destPoolId, liveMigrate);
+                VolumeApiServiceImpl.VM_WORK_JOB_HANDLER, vol.getId(), destPool.getId(), liveMigrateVolume, newDiskOfferingId);
         workJob.setCmdInfo(VmWorkSerializer.serialize(workInfo));
 
         _jobMgr.submitAsyncJob(workJob, VmWorkConstants.VM_WORK_QUEUE, vm.getId());
 
         AsyncJobExecutionContext.getCurrentExecutionContext().joinJob(workJob.getId());
 
-        return new VmJobVolumeOutcome(workJob,volumeId);
+        return new VmJobVolumeOutcome(workJob, vol.getId());
     }
 
     public Outcome<Snapshot> takeVolumeSnapshotThroughJobQueue(final Long vmId, final Long volumeId,
@@ -2914,9 +2965,11 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
 
     @ReflectionUse
     private Pair<JobInfo.Status, String> orchestrateMigrateVolume(VmWorkMigrateVolume work) throws Exception {
-        Volume newVol = orchestrateMigrateVolume(work.getVolumeId(), work.getDestPoolId(), work.isLiveMigrate());
-        return new Pair<JobInfo.Status, String>(JobInfo.Status.SUCCEEDED,
-                _jobMgr.marshallResultObject(new Long(newVol.getId())));
+        VolumeVO volume = _volsDao.findById(work.getVolumeId());
+        StoragePoolVO targetStoragePool = _storagePoolDao.findById(work.getDestPoolId());
+        DiskOfferingVO newDiskOffering = _diskOfferingDao.findById(work.getNewDiskOfferingId());
+        Volume newVol = orchestrateMigrateVolume(volume, targetStoragePool, work.isLiveMigrate(), newDiskOffering);
+        return new Pair<JobInfo.Status, String>(JobInfo.Status.SUCCEEDED, _jobMgr.marshallResultObject(new Long(newVol.getId())));
     }
 
     @ReflectionUse

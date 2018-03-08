@@ -1132,6 +1132,10 @@ under the License.
 'label.rule.number.short': '<fmt:message key="label.rule.number.short" />',
 'label.edit.acl.list': '<fmt:message key="label.edit.acl.list" />',
 'label.acl.reason': '<fmt:message key="label.acl.reason" />',
-'label.acl.reason.description': '<fmt:message key="label.acl.reason.description" />'
+'label.acl.reason.description': '<fmt:message key="label.acl.reason.description" />',
+'label.disk.newOffering': '<fmt:message key="label.disk.newOffering" />',
+'label.disk.newOffering.description': '<fmt:message key="label.disk.newOffering.description" />',
+'label.migrate.volume.newDiskOffering': '<fmt:message key="label.migrate.volume.newDiskOffering" />',
+'label.migrate.volume.newDiskOffering.desc': '<fmt:message key="label.migrate.volume.newDiskOffering.desc" />'
 });
 </script>

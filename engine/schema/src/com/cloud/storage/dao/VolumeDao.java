@@ -122,4 +122,6 @@ public interface VolumeDao extends GenericDao<VolumeVO, Long>, StateDao<Volume.S
      * @return returns true if transaction is successful.
      */
     boolean updateUuid(long srcVolId, long destVolId);
+
+    void updateDiskOffering(long volumeId, long diskOfferingId);
 }

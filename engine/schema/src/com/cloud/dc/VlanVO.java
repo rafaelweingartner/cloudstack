@@ -57,7 +57,7 @@ public class VlanVO implements Vlan {
     @Column(name = "data_center_id")
     long dataCenterId;
 
-    @Column(name = "description")
+    @Column(name = "ip4_range")
     String ipRange;
 
     @Column(name = "ip6_range")

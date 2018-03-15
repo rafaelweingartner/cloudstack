@@ -49,3 +49,6 @@ INSERT IGNORE INTO `cloud`.`guest_os_hypervisor` (uuid,hypervisor_type, hypervis
 
 -- Add reason column to ACL rule table
 ALTER TABLE `cloud`.`network_acl_item` ADD COLUMN `reason` VARCHAR(2500) AFTER `display`;
+
+-- Fix the name of the column used to hold IPv4 range in 'vlan' table.
+ALTER TABLE `vlan` CHANGE `description` `ip4_range` varchar(255);

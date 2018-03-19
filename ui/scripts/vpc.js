@@ -673,6 +673,7 @@
                         delete args.data.protocolnumber;
                     }
 
+                    data.partialupgrade = false;
                     $.ajax({
                         url: createURL('updateNetworkACLItem'),
                         data: data,

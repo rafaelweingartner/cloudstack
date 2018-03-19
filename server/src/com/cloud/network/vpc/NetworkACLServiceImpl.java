@@ -630,7 +630,7 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
     @Override
     public NetworkACLItem updateNetworkACLItem(final Long id, final String protocol, final List<String> sourceCidrList, final NetworkACLItem.TrafficType trafficType, final String action,
             final Integer number, final Integer sourcePortStart, final Integer sourcePortEnd, final Integer icmpCode, final Integer icmpType, final String newUUID, final Boolean forDisplay,
-            String reason) throws ResourceUnavailableException {
+            String reason, boolean partialUpgrade) throws ResourceUnavailableException {
         final NetworkACLItemVO aclItem = _networkACLItemDao.findById(id);
         if (aclItem == null) {
             throw new InvalidParameterValueException("Unable to find ACL Item cannot be found");
@@ -656,10 +656,10 @@ public class NetworkACLServiceImpl extends ManagerBase implements NetworkACLServ
             }
         }
 
-        validateNetworkACLItem(sourcePortStart == null ? aclItem.getSourcePortStart() : sourcePortStart, sourcePortEnd == null ? aclItem.getSourcePortEnd()
-                : sourcePortEnd, sourceCidrList, protocol, icmpCode, icmpType == null ? aclItem.getIcmpType() : icmpType, action, number);
+        validateNetworkACLItem(partialUpgrade && sourcePortStart == null ? aclItem.getSourcePortStart() : sourcePortStart, partialUpgrade && sourcePortEnd == null ? aclItem.getSourcePortEnd()
+                : sourcePortEnd, sourceCidrList, protocol, icmpCode, partialUpgrade && icmpType == null ? aclItem.getIcmpType() : icmpType, action, number);
 
-        return _networkAclMgr.updateNetworkACLItem(id, protocol, sourceCidrList, trafficType, action, number, sourcePortStart, sourcePortEnd, icmpCode, icmpType, newUUID, forDisplay, reason);
+        return _networkAclMgr.updateNetworkACLItem(id, protocol, sourceCidrList, trafficType, action, number, sourcePortStart, sourcePortEnd, icmpCode, icmpType, newUUID, forDisplay, reason, partialUpgrade);
     }
 
     @Override

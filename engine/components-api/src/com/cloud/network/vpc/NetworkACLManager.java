@@ -134,11 +134,12 @@ public interface NetworkACLManager {
      * @param icmpType
      * @param customId TODO
      * @param forDisplay TODO
+     * @param partialUpgrade
      * @return
      * @throws ResourceUnavailableException
      */
     NetworkACLItem updateNetworkACLItem(Long id, String protocol, List<String> sourceCidrList, NetworkACLItem.TrafficType trafficType, String action, Integer number,
-            Integer sourcePortStart, Integer sourcePortEnd, Integer icmpCode, Integer icmpType, String customId, Boolean forDisplay, String reason) throws ResourceUnavailableException;
+            Integer sourcePortStart, Integer sourcePortEnd, Integer icmpCode, Integer icmpType, String customId, Boolean forDisplay, String reason, boolean partialUpgrade) throws ResourceUnavailableException;
 
     /**
      * Associates acl with a network and applies the ACLItems

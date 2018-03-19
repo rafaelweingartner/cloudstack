@@ -228,8 +228,8 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
     @Override
     @DB
     @ActionEvent(eventType = EventTypes.EVENT_NETWORK_ACL_ITEM_CREATE, eventDescription = "creating network ACL Item", create = true)
-    public NetworkACLItem createNetworkACLItem(final Integer portStart, final Integer portEnd, final String protocol, final List<String> sourceCidrList, final Integer icmpCode,
-            final Integer icmpType, final NetworkACLItem.TrafficType trafficType, final Long aclId, final String action, Integer number, final Boolean forDisplay, final String reason) {
+    public NetworkACLItem createNetworkACLItem(final Integer portStart, final Integer portEnd, final String protocol, final List<String> sourceCidrList, final Integer icmpCode, final Integer icmpType,
+            final NetworkACLItem.TrafficType trafficType, final Long aclId, final String action, Integer number, final Boolean forDisplay, final String reason) {
         // If number is null, set it to currentMax + 1 (for backward compatibility)
         if (number == null) {
             number = _networkACLItemDao.getMaxNumberByACL(aclId) + 1;
@@ -244,8 +244,7 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
                     ruleAction = NetworkACLItem.Action.Deny;
                 }
 
-                NetworkACLItemVO newRule =
-                        new NetworkACLItemVO(portStart, portEnd, protocol.toLowerCase(), aclId, sourceCidrList, icmpCode, icmpType, trafficType, ruleAction, numberFinal, reason);
+                NetworkACLItemVO newRule = new NetworkACLItemVO(portStart, portEnd, protocol.toLowerCase(), aclId, sourceCidrList, icmpCode, icmpType, trafficType, ruleAction, numberFinal, reason);
 
                 if (forDisplay != null) {
                     newRule.setDisplay(forDisplay);
@@ -393,11 +392,11 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
             throw new CloudRuntimeException("Failed to initialize vpc elements");
         }
 
-        try{
+        try {
             for (final VpcProvider provider : vpcElements) {
                 return provider.applyACLItemsToPrivateGw(gateway, rules);
             }
-        } catch(final Exception ex) {
+        } catch (final Exception ex) {
             s_logger.debug("Failed to apply acl to private gateway " + gateway);
         }
         return false;
@@ -416,23 +415,23 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
     @Override
     public NetworkACLItem updateNetworkACLItem(final Long id, final String protocol, final List<String> sourceCidrList, final NetworkACLItem.TrafficType trafficType, final String action,
             final Integer number, final Integer sourcePortStart, final Integer sourcePortEnd, final Integer icmpCode, final Integer icmpType, final String customId, final Boolean forDisplay,
-            String reason) throws ResourceUnavailableException {
+            String reason, boolean partialUpgrade) throws ResourceUnavailableException {
         final NetworkACLItemVO aclItem = _networkACLItemDao.findById(id);
         aclItem.setState(State.Add);
 
-        if (protocol != null) {
+        if (!partialUpgrade || protocol != null) {
             aclItem.setProtocol(protocol);
         }
 
-        if (sourceCidrList != null) {
+        if (!partialUpgrade || sourceCidrList != null) {
             aclItem.setSourceCidrList(sourceCidrList);
         }
 
-        if (trafficType != null) {
+        if (!partialUpgrade || trafficType != null) {
             aclItem.setTrafficType(trafficType);
         }
 
-        if (action != null) {
+        if (!partialUpgrade || action != null) {
             NetworkACLItem.Action ruleAction = NetworkACLItem.Action.Allow;
             if ("deny".equalsIgnoreCase(action)) {
                 ruleAction = NetworkACLItem.Action.Deny;
@@ -440,23 +439,23 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
             aclItem.setAction(ruleAction);
         }
 
-        if (number != null) {
+        if (!partialUpgrade || number != null) {
             aclItem.setNumber(number);
         }
 
-        if (sourcePortStart != null) {
+        if (!partialUpgrade || sourcePortStart != null) {
             aclItem.setSourcePortStart(sourcePortStart);
         }
 
-        if (sourcePortEnd != null) {
+        if (!partialUpgrade || sourcePortEnd != null) {
             aclItem.setSourcePortEnd(sourcePortEnd);
         }
 
-        if (icmpCode != null) {
+        if (!partialUpgrade || icmpCode != null) {
             aclItem.setIcmpCode(icmpCode);
         }
 
-        if (icmpType != null) {
+        if (!partialUpgrade || icmpType != null) {
             aclItem.setIcmpType(icmpType);
         }
 
@@ -464,11 +463,11 @@ public class NetworkACLManagerImpl extends ManagerBase implements NetworkACLMana
             aclItem.setUuid(customId);
         }
 
-        if (forDisplay != null) {
+        if (!partialUpgrade || forDisplay != null) {
             aclItem.setDisplay(forDisplay);
         }
 
-        if (StringUtils.isNotBlank(reason)) {
+        if (!partialUpgrade || StringUtils.isNotBlank(reason)) {
             aclItem.setReason(reason);
         }
 

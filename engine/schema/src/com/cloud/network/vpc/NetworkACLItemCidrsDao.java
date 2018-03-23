@@ -23,10 +23,6 @@ import java.util.List;
 import com.cloud.utils.db.DB;
 import com.cloud.utils.db.GenericDao;
 
-/**
- * @author daan
- *
- */
 public interface NetworkACLItemCidrsDao extends GenericDao<NetworkACLItemCidrsVO, Long> {
 
     void persist(long networkACLItemId, List<String> cidrs);
@@ -37,5 +33,4 @@ public interface NetworkACLItemCidrsDao extends GenericDao<NetworkACLItemCidrsVO
 
     @DB
     List<NetworkACLItemCidrsVO> listByNetworkACLItemId(long networkACLItemId);
-
 }

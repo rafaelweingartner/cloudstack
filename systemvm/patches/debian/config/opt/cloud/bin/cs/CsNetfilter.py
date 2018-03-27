@@ -20,7 +20,6 @@ from pprint import pprint
 from CsDatabag import CsDataBag, CsCmdLine
 import logging
 
-
 class CsChain(object):
 
     def __init__(self):

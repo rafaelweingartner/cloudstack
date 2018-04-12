@@ -17,14 +17,12 @@
 
 package org.apache.cloudstack.network.contrail.management;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
-import java.net.InetAddress;
 
 import javax.inject.Inject;
 import javax.naming.ConfigurationException;
-
-import org.apache.log4j.Logger;
 
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.RoleType;
@@ -34,6 +32,7 @@ import org.apache.cloudstack.api.command.admin.user.DeleteUserCmd;
 import org.apache.cloudstack.api.command.admin.user.RegisterCmd;
 import org.apache.cloudstack.api.command.admin.user.UpdateUserCmd;
 import org.apache.cloudstack.context.CallContext;
+import org.apache.log4j.Logger;
 
 import com.cloud.api.query.vo.ControlledViewEntity;
 import com.cloud.configuration.ResourceLimit;
@@ -128,21 +127,21 @@ public class MockAccountManager extends ManagerBase implements AccountManager {
     }
 
     @Override public User createUser(String userName, String password, String firstName, String lastName, String email, String timeZone, String accountName, Long domainId,
-                                     String userUUID, User.Source source) {
+            String userUUID, User.Source source) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public UserAccount createUserAccount(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5, String arg6, short arg7, Long roleId, Long arg8, String arg9,
-        Map<String, String> arg10, String arg11, String arg12) {
+            Map<String, String> arg10, String arg11, String arg12) {
         // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public UserAccount createUserAccount(String userName, String password, String firstName, String lastName, String email, String timezone, String accountName, short accountType, Long roleId,
-                                         Long domainId, String networkDomain, Map<String, String> details, String accountUUID, String userUUID, User.Source source) {
+            Long domainId, String networkDomain, Map<String, String> details, String accountUUID, String userUUID, User.Source source) {
         // TODO Auto-generated method stub
         return null;
     }
@@ -166,8 +165,7 @@ public class MockAccountManager extends ManagerBase implements AccountManager {
 
     @Override
     public UserAccount updateUser(Long userId, String firstName, String lastName, String email, String userName, String password, String apiKey, String secretKey,
-                                  String timeZone) {
-        // TODO Auto-generated method stub
+            String timeZone, String oldPassword) {
         return null;
     }
 

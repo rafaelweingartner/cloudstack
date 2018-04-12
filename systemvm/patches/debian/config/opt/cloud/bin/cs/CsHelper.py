@@ -181,9 +181,10 @@ def get_hostname():
 
 def execute(command):
     """ Execute command """
-    logging.debug("Executing: %s" % command)
+    logging.info("Executing: %s" % command)
     p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
     result = p.communicate()[0]
+    logging.info("Command [%s] has the result [%s]" % (command, result))
     return result.splitlines()
 
 

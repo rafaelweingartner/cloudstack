@@ -57,10 +57,10 @@ public interface AccountService {
      * @return the user if created successfully, null otherwise
      */
     UserAccount createUserAccount(String userName, String password, String firstName, String lastName, String email, String timezone, String accountName,
-        short accountType, Long roleId, Long domainId, String networkDomain, Map<String, String> details, String accountUUID, String userUUID);
+            short accountType, Long roleId, Long domainId, String networkDomain, Map<String, String> details, String accountUUID, String userUUID);
 
     UserAccount createUserAccount(String userName, String password, String firstName, String lastName, String email, String timezone, String accountName, short accountType, Long roleId, Long domainId, String networkDomain,
-                                  Map<String, String> details, String accountUUID, String userUUID, User.Source source);
+            Map<String, String> details, String accountUUID, String userUUID, User.Source source);
 
     /**
      * Locks a user by userId. A locked user cannot access the API, but will still have running VMs/IP addresses
@@ -78,7 +78,7 @@ public interface AccountService {
     User createUser(String userName, String password, String firstName, String lastName, String email, String timeZone, String accountName, Long domainId, String userUUID);
 
     User createUser(String userName, String password, String firstName, String lastName, String email, String timeZone, String accountName, Long domainId, String userUUID,
-                    User.Source source);
+            User.Source source);
 
     boolean isAdmin(Long accountId);
 
@@ -88,7 +88,7 @@ public interface AccountService {
 
     UserAccount getActiveUserAccount(String username, Long domainId);
 
-    UserAccount updateUser(Long userId, String firstName, String lastName, String email, String userName, String password, String apiKey, String secretKey, String timeZone);
+    UserAccount updateUser(Long userId, String firstName, String lastName, String email, String userName, String password, String apiKey, String secretKey, String timeZone, String oldPassword);
 
     Account getActiveAccountById(long accountId);
 

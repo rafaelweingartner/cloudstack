@@ -26,9 +26,6 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.cloud.user.Account;
-import com.cloud.user.User;
-import com.cloud.user.UserAccount;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -54,11 +51,14 @@ import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.NetworkRuleConflictException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.DomainService;
+import com.cloud.user.User;
+import com.cloud.user.UserAccount;
 
 @APICommand(name = "importLdapUsers", description = "Import LDAP users", responseObject = LdapUserResponse.class, since = "4.3.0",
-        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class LdapImportUsersCmd extends BaseListCmd {
 
     public static final Logger s_logger = Logger.getLogger(LdapImportUsersCmd.class.getName());
@@ -66,13 +66,13 @@ public class LdapImportUsersCmd extends BaseListCmd {
     private static final String s_name = "ldapuserresponse";
 
     @Parameter(name = ApiConstants.TIMEZONE,
-               type = CommandType.STRING,
-               description = "Specifies a timezone for this command. For more information on the timezone parameter, see Time Zone Format.")
+            type = CommandType.STRING,
+            description = "Specifies a timezone for this command. For more information on the timezone parameter, see Time Zone Format.")
     private String timezone;
 
     @Parameter(name = ApiConstants.ACCOUNT_TYPE,
-               type = CommandType.SHORT,
-               description = "Type of the account.  Specify 0 for user, 1 for root admin, and 2 for domain admin")
+            type = CommandType.SHORT,
+            description = "Type of the account.  Specify 0 for user, 1 for root admin, and 2 for domain admin")
     private Short accountType;
 
     @Parameter(name = ApiConstants.ROLE_ID, type = CommandType.UUID, entityType = RoleResponse.class, description = "Creates the account under the specified role.")
@@ -82,15 +82,15 @@ public class LdapImportUsersCmd extends BaseListCmd {
     private Map<String, String> details;
 
     @Parameter(name = ApiConstants.DOMAIN_ID,
-               type = CommandType.UUID,
-               entityType = DomainResponse.class,
-               description = "Specifies the domain to which the ldap users are to be "
-                   + "imported. If no domain is specified, a domain will created using group parameter. If the group is also not specified, a domain name based on the OU information will be "
-                   + "created. If no OU hierarchy exists, will be defaulted to ROOT domain")
+            type = CommandType.UUID,
+            entityType = DomainResponse.class,
+            description = "Specifies the domain to which the ldap users are to be "
+                    + "imported. If no domain is specified, a domain will created using group parameter. If the group is also not specified, a domain name based on the OU information will be "
+                    + "created. If no OU hierarchy exists, will be defaulted to ROOT domain")
     private Long domainId;
 
     @Parameter(name = ApiConstants.GROUP, type = CommandType.STRING, description = "Specifies the group name from which the ldap users are to be imported. "
-        + "If no group is specified, all the users will be imported.")
+            + "If no group is specified, all the users will be imported.")
     private String groupName;
 
     private Domain _domain;
@@ -124,17 +124,17 @@ public class LdapImportUsersCmd extends BaseListCmd {
             if(csuser == null) {
                 s_logger.debug("No user exists with name: " + user.getUsername() + " creating a user in the account: " + accountName);
                 _accountService.createUser(user.getUsername(), generatePassword(), user.getFirstname(), user.getLastname(), user.getEmail(), timezone, accountName, domain.getId(),
-                                           UUID.randomUUID().toString(), User.Source.LDAP);
+                        UUID.randomUUID().toString(), User.Source.LDAP);
             } else {
                 s_logger.debug("account with name: " + accountName + " exist and user with name: " + user.getUsername() + " exists in the account. Updating the account.");
-                _accountService.updateUser(csuser.getId(), user.getFirstname(), user.getLastname(), user.getEmail(), null, null, null, null, null);
+                _accountService.updateUser(csuser.getId(), user.getFirstname(), user.getLastname(), user.getEmail(), null, null, null, null, null, null);
             }
         }
     }
 
     @Override
     public void execute() throws ResourceUnavailableException, InsufficientCapacityException, ServerApiException, ConcurrentOperationException,
-        ResourceAllocationException, NetworkRuleConflictException {
+    ResourceAllocationException, NetworkRuleConflictException {
         if (getAccountType() == null && getRoleId() == null) {
             throw new ServerApiException(ApiErrorCode.PARAM_ERROR, "Both account type and role ID are not provided");
         }

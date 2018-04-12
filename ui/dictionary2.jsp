@@ -1137,6 +1137,7 @@ under the License.
 'label.disk.newOffering.description': '<fmt:message key="label.disk.newOffering.description" />',
 'label.migrate.volume.newDiskOffering': '<fmt:message key="label.migrate.volume.newDiskOffering" />',
 'label.migrate.volume.newDiskOffering.desc': '<fmt:message key="label.migrate.volume.newDiskOffering.desc" />',
-'label.export.ACLs': '<fmt:message key="label.export.ACLs" />'
+'label.export.ACLs': '<fmt:message key="label.export.ACLs" />',
+'label.old.password': '<fmt:message key="label.old.password" />'
 });
 </script>

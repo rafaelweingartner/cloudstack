@@ -23,6 +23,8 @@
 
 echo -e "#### System Information ####"
 
+echo -e "\nO.S. information:"
+echo $(uname -a)
 echo -e "\nWho am I:"
 whoami
 
@@ -97,10 +99,11 @@ echo "<settings>
 echo -e "\nInstalling some python packages: "
 
 pip install --user --upgrade pip
+pip uninstall pylint
 
 for ((i=0;i<$RETRY_COUNT;i++))
 do
-  pip install --user --upgrade lxml paramiko nose texttable ipmisim pyopenssl mock flask netaddr pylint pep8 > /tmp/piplog
+  pip install --user --upgrade lxml paramiko texttable ipmisim pyopenssl mock flask netaddr nose pylint pycodestyle six astroid Markdown > /tmp/piplog
   if [[ $? -eq 0 ]]; then
     echo -e "\npython packages installed successfully"
     break;
@@ -109,3 +112,6 @@ do
   cat /tmp/piplog
 done
 
+
+echo -e "\nVersion of pip troublesome packages:\n"
+echo $(pip freeze | grep -e six -e mock -e astroid -e enum34)

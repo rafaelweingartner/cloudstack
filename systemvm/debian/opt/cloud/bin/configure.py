@@ -196,7 +196,7 @@ class CsAcl(CsDataBag):
                 egressIpsetStr = ''
                 if sflag and dflag:
                     egressIpsetStr = " -m set --match-set %s src " % sourceIpsetName + \
-                                " -m set --match-set %s dst " % destIpsetName
+                                     " -m set --match-set %s dst " % destIpsetName
                 elif sflag:
                     egressIpsetStr = " -m set --match-set %s src " % sourceIpsetName
                 elif dflag:
@@ -204,10 +204,10 @@ class CsAcl(CsDataBag):
 
                 if rule['protocol'] == "icmp":
                     fwr += egressIpsetStr + " -p %s " % rule['protocol'] + " -m %s " % rule['protocol'] + \
-                                    " --icmp-type %s" % icmp_type
+                                            " --icmp-type %s" % icmp_type
                 elif rule['protocol'] != "all":
                     fwr += egressIpsetStr + " -p %s " % rule['protocol'] + " -m %s " % rule['protocol'] + \
-                           " %s" % rnge
+                                            " %s" % rnge
                 elif rule['protocol'] == "all":
                     fwr += egressIpsetStr
 
@@ -813,69 +813,55 @@ class CsForwardingRules(CsDataBag):
         public_fwports = self.portsToString(rule['public_ports'], ':')
         internal_fwports = self.portsToString(rule['internal_ports'], '-')
         fw1 = "-A PREROUTING -d %s/32 -i %s -p %s -m %s --dport %s -j DNAT --to-destination %s:%s" % \
-              (
-                rule['public_ip'],
+            (rule['public_ip'],
                 public_fwinterface,
                 rule['protocol'],
                 rule['protocol'],
                 public_fwports,
                 rule['internal_ip'],
-                internal_fwports
-              )
+                internal_fwports)
         fw2 = "-A PREROUTING -d %s/32 -i %s -p %s -m %s --dport %s -j DNAT --to-destination %s:%s" % \
-              (
-                rule['public_ip'],
-                internal_fwinterface,
-                rule['protocol'],
-                rule['protocol'],
-                public_fwports,
-                rule['internal_ip'],
-                internal_fwports
-              )
+              (rule['public_ip'],
+               internal_fwinterface,
+               rule['protocol'],
+               rule['protocol'],
+               public_fwports,
+               rule['internal_ip'],
+               internal_fwports)
         fw3 = "-A OUTPUT -d %s/32 -p %s -m %s --dport %s -j DNAT --to-destination %s:%s" % \
-              (
-                rule['public_ip'],
-                rule['protocol'],
-                rule['protocol'],
-                public_fwports,
-                rule['internal_ip'],
-                internal_fwports
-              )
+              (rule['public_ip'],
+               rule['protocol'],
+               rule['protocol'],
+               public_fwports,
+               rule['internal_ip'],
+               internal_fwports)
         fw4 = "-j SNAT --to-source %s -A POSTROUTING -s %s -d %s/32 -o %s -p %s -m %s --dport %s" % \
-              (
-                self.getGuestIp(),
-                self.getNetworkByIp(rule['internal_ip']),
-                rule['internal_ip'],
-                internal_fwinterface,
-                rule['protocol'],
-                rule['protocol'],
-                self.portsToString(rule['internal_ports'], ':')
-              )
+              (self.getGuestIp(),
+               self.getNetworkByIp(rule['internal_ip']),
+               rule['internal_ip'],
+               internal_fwinterface,
+               rule['protocol'],
+               rule['protocol'],
+               self.portsToString(rule['internal_ports'], ':'))
         fw5 = "-A PREROUTING -d %s/32 -i %s -p %s -m %s --dport %s -j MARK --set-xmark %s/0xffffffff" % \
-              (
-                rule['public_ip'],
-                public_fwinterface,
-                rule['protocol'],
-                rule['protocol'],
-                public_fwports,
-                hex(int(public_fwinterface[3:]))
-              )
+              (rule['public_ip'],
+               public_fwinterface,
+               rule['protocol'],
+               rule['protocol'],
+               public_fwports,
+               hex(int(public_fwinterface[3:])))
         fw6 = "-A PREROUTING -d %s/32 -i %s -p %s -m %s --dport %s -m state --state NEW -j CONNMARK --save-mark --nfmask 0xffffffff --ctmask 0xffffffff" % \
-              (
-                rule['public_ip'],
-                public_fwinterface,
-                rule['protocol'],
-                rule['protocol'],
-                public_fwports,
-              )
+              (rule['public_ip'],
+               public_fwinterface,
+               rule['protocol'],
+               rule['protocol'],
+               public_fwports,)
         fw7 = "-A FORWARD -i %s -o %s -p %s -m %s --dport %s -m state --state NEW,ESTABLISHED -j ACCEPT" % \
-              (
-                public_fwinterface,
-                internal_fwinterface,
-                rule['protocol'],
-                rule['protocol'],
-                self.portsToString(rule['internal_ports'], ':')
-              )
+              (public_fwinterface,
+               internal_fwinterface,
+               rule['protocol'],
+               rule['protocol'],
+               self.portsToString(rule['internal_ports'], ':'))
         self.fw.append(["nat", "", fw1])
         self.fw.append(["nat", "", fw2])
         self.fw.append(["nat", "", fw3])

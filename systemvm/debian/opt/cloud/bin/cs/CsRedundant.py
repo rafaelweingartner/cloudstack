@@ -156,13 +156,13 @@ class CsRedundant(object):
 
         conntrackd_tmpl = CsFile(conntrackd_template_conf)
         conntrackd_tmpl.section("Multicast {", "}", [
-                      "IPv4_address 225.0.0.50\n",
-                      "Group 3780\n",
-                      "IPv4_interface %s\n" % guest.get_ip(),
-                      "Interface %s\n" % guest.get_device(),
-                      "SndSocketBuffer 1249280\n",
-                      "RcvSocketBuffer 1249280\n",
-                      "Checksum on\n"])
+                                "IPv4_address 225.0.0.50\n",
+                                "Group 3780\n",
+                                "IPv4_interface %s\n" % guest.get_ip(),
+                                "Interface %s\n" % guest.get_device(),
+                                "SndSocketBuffer 1249280\n",
+                                "RcvSocketBuffer 1249280\n",
+                                "Checksum on\n"])
         conntrackd_tmpl.section("Address Ignore {", "}", self._collect_ignore_ips())
         conntrackd_tmpl.commit()
 

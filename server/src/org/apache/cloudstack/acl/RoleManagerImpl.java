@@ -19,6 +19,7 @@ package org.apache.cloudstack.acl;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 import javax.ejb.Local;
@@ -39,11 +40,13 @@ import org.apache.cloudstack.api.command.admin.acl.UpdateRolePermissionCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.ConfigKey;
 import org.apache.cloudstack.framework.config.Configurable;
+import org.apache.commons.collections.CollectionUtils;
 
 import com.cloud.event.ActionEvent;
 import com.cloud.event.EventTypes;
 import com.cloud.exception.PermissionDeniedException;
 import com.cloud.user.Account;
+import com.cloud.user.AccountManager;
 import com.cloud.user.dao.AccountDao;
 import com.cloud.utils.ListUtils;
 import com.cloud.utils.component.ManagerBase;
@@ -61,6 +64,8 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
     private RoleDao roleDao;
     @Inject
     private RolePermissionsDao rolePermissionsDao;
+    @Inject
+    private AccountManager accountManager;
 
     private void checkCallerAccess() {
         if (!isEnabled()) {
@@ -231,7 +236,29 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
     @Override
     public List<Role> listRoles() {
         List<? extends Role> roles = roleDao.listAll();
+        removeRootAdminRolesIfNeeded(roles);
         return ListUtils.toListOfInterface(roles);
+    }
+
+    private void removeRootAdminRolesIfNeeded(List<? extends Role> roles) {
+        Account account = CallContext.current().getCallingAccount();
+        if (!accountManager.isRootAdmin(account.getId())) {
+            removeRootAdminRoles(roles);
+        }
+    }
+
+    private void removeRootAdminRoles(List<? extends Role> roles) {
+        if (CollectionUtils.isEmpty(roles)) {
+            return;
+        }
+        Iterator<? extends Role> rolesIterator = roles.iterator();
+        while (rolesIterator.hasNext()) {
+            Role role = rolesIterator.next();
+            if (RoleType.Admin == role.getRoleType()) {
+                rolesIterator.remove();
+            }
+        }
+
     }
 
     @Override
@@ -266,4 +293,4 @@ public class RoleManagerImpl extends ManagerBase implements RoleService, Configu
         cmdList.add(DeleteRolePermissionCmd.class);
         return cmdList;
     }
- }
+}

@@ -17,13 +17,10 @@
 
 package org.apache.cloudstack.api.command.admin.acl;
 
-import com.cloud.exception.ConcurrentOperationException;
-import com.cloud.exception.InsufficientCapacityException;
-import com.cloud.exception.NetworkRuleConflictException;
-import com.cloud.exception.ResourceAllocationException;
-import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.user.Account;
-import com.google.common.base.Strings;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.cloudstack.acl.Role;
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
@@ -34,14 +31,18 @@ import org.apache.cloudstack.api.ServerApiException;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.RoleResponse;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import com.cloud.exception.ConcurrentOperationException;
+import com.cloud.exception.InsufficientCapacityException;
+import com.cloud.exception.NetworkRuleConflictException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.user.Account;
+import com.google.common.base.Strings;
 
 @APICommand(name = ListRolesCmd.APINAME, description = "Lists dynamic roles in CloudStack", responseObject = RoleResponse.class,
-        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
-        since = "4.9.0",
-        authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin})
+requestHasSensitiveInfo = false, responseHasSensitiveInfo = false,
+since = "4.9.0",
+authorized = {RoleType.Admin, RoleType.ResourceAdmin, RoleType.DomainAdmin})
 public class ListRolesCmd extends BaseCmd {
     public static final String APINAME = "listRoles";
 

@@ -16,6 +16,19 @@
 // under the License.
 (function(cloudStack) {
 
+    var listDiskOfferings = function (){
+        var diskOfferings = undefined;
+        $.ajax({
+            url: createURL("listDiskOfferings&listall=true"),
+            dataType: "json",
+            async: false,
+            success: function(json){
+                diskOfferings = json.listdiskofferingsresponse.diskoffering;
+            }
+        });
+        return diskOfferings;
+    };
+    
     var migrateVolumeCreateFormAction = {
             title: 'label.migrate.volume',
             fields: {
@@ -78,6 +91,7 @@
                                 args.response.success({
                                     data: items
                                 });
+                                var diskOfferings = listDiskOfferings();
                                 $('select[name=storagePool]').change(function(){
                                     var uuidOfStoragePoolSelected = $(this).val();
                                     var storagePoolSelected = mapStoragePoolsByUuid.get(uuidOfStoragePoolSelected);
@@ -87,6 +101,20 @@
                                     }else{
                                         $('div[rel=newDiskOffering],div[rel=useNewDiskOffering]').show();
                                     }
+                                    var storageType = 'shared';
+                                    if(storagePoolSelected.scope == 'HOST'){
+                                        storageType = 'local';
+                                    }
+                                    $(diskOfferings).each(function(){
+                                        var diskOfferingOption = $('option[value=' + this.id + ']');
+                                        if(this.storagetype == storageType){
+                                            diskOfferingOption.show();
+                                        }else{
+                                            diskOfferingOption.hide();
+                                        }
+                                    });
+                                    var firstAvailableDiskOfferingForStorageType = $('select#label_disk_newOffering').children('option:visible').first().attr('value');
+                                    $('select#label_disk_newOffering').attr('value', firstAvailableDiskOfferingForStorageType);
                                 });
                                 var functionHideShowNewDiskOfferint = function(){
                                     if($('div[rel=useNewDiskOffering] input[type=checkbox]').is(':checked')){
@@ -96,7 +124,6 @@
                                     }  
                                 };
                                 $('div[rel=useNewDiskOffering] input[type=checkbox]').click(functionHideShowNewDiskOfferint);
-                                
                                 $('select[name=storagePool]').change();
                                 functionHideShowNewDiskOfferint();
                             }
@@ -120,24 +147,17 @@
                     required: false
                    },
                 select: function(args){
-                    $.ajax({
-                        url: createURL("listDiskOfferings&listall=true"),
-                        dataType: "json",
-                        async: true,
-                        success: function(json){
-                            var diskOfferings = json.listdiskofferingsresponse.diskoffering;
-                            var items = [];
-                            $(diskOfferings).each(function() {
-                                items.push({
-                                    id: this.id,
-                                    description: this.name
-                                });
+                    var diskOfferings = listDiskOfferings();
+                    var items = [];
+                    $(diskOfferings).each(function() {
+                        items.push({
+                            id: this.id,
+                            description: this.name
                             });
-                            args.response.success({
-                                data: items
-                            });
-                        }
-                    });
+                        });
+                    args.response.success({
+                        data: items
+                        });
                    }
                }
            }

@@ -16,9 +16,9 @@
 // under the License.
 package com.cloud.user;
 
+import java.net.InetAddress;
 import java.util.List;
 import java.util.Map;
-import java.net.InetAddress;
 
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.api.command.admin.account.UpdateAccountCmd;
@@ -59,19 +59,19 @@ public interface AccountManager extends AccountService {
     void logoutUser(long userId);
 
     /**
-      * Authenticates a user when s/he logs in.
-      *
-      * @param username
-      *            required username for authentication
-      * @param password
-      *            password to use for authentication, can be null for single sign-on case
-      * @param domainId
-      *            id of domain where user with username resides
-      * @param requestParameters
-      *            the request parameters of the login request, which should contain timestamp of when the request signature is
-      *            made, and the signature itself in the single sign-on case
-      * @return a user object, null if the user failed to authenticate
-      */
+     * Authenticates a user when s/he logs in.
+     *
+     * @param username
+     *            required username for authentication
+     * @param password
+     *            password to use for authentication, can be null for single sign-on case
+     * @param domainId
+     *            id of domain where user with username resides
+     * @param requestParameters
+     *            the request parameters of the login request, which should contain timestamp of when the request signature is
+     *            made, and the signature itself in the single sign-on case
+     * @return a user object, null if the user failed to authenticate
+     */
     UserAccount authenticateUser(String username, String password, Long domainId, InetAddress loginIpAddress, Map<String, Object[]> requestParameters);
 
     /**

@@ -19,6 +19,7 @@ package com.cloud.api;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,7 +50,6 @@ import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import com.cloud.user.Account;
 import com.cloud.user.AccountService;
 import com.cloud.user.User;
-
 import com.cloud.utils.HttpUtils;
 import com.cloud.utils.StringUtils;
 import com.cloud.utils.db.EntityManager;
@@ -132,9 +132,19 @@ public class ApiServlet extends HttpServlet {
     }
 
     void processRequestInContext(final HttpServletRequest req, final HttpServletResponse resp) {
-        final String remoteAddress = getClientAddress(req);
+        InetAddress remoteAddress = null;
+        try {
+            remoteAddress = getClientAddress(req);
+        } catch (UnknownHostException e) {
+            s_logger.warn("UnknownHostException when trying to lookup remote IP-Address. This should never happen. Blocking request.", e);
+            final String response = apiServer.getSerializedApiError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "UnknownHostException when trying to lookup remote IP-Address", null,
+                    HttpUtils.RESPONSE_TYPE_XML);
+            HttpUtils.writeHttpResponse(resp, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, HttpUtils.RESPONSE_TYPE_XML, "application/json; charset=UTF-8");
+            return;
+        }
+
         final StringBuilder auditTrailSb = new StringBuilder(128);
-        auditTrailSb.append(" ").append(remoteAddress);
+        auditTrailSb.append(" ").append(remoteAddress.getHostAddress());
         auditTrailSb.append(" -- ").append(req.getMethod()).append(' ');
         // get the response format since we'll need it in a couple of places
         String responseType = HttpUtils.RESPONSE_TYPE_XML;
@@ -200,7 +210,7 @@ public class ApiServlet extends HttpServlet {
                     }
 
                     try {
-                        responseString = apiAuthenticator.authenticate(command, params, session, InetAddress.getByName(remoteAddress), responseType, auditTrailSb, req, resp);
+                        responseString = apiAuthenticator.authenticate(command, params, session, remoteAddress, responseType, auditTrailSb, req, resp);
                         if (session != null && session.getAttribute(ApiConstants.SESSIONKEY) != null) {
                             resp.addHeader("SET-COOKIE", String.format("%s=%s;HttpOnly", ApiConstants.SESSIONKEY, session.getAttribute(ApiConstants.SESSIONKEY)));
                         }
@@ -290,7 +300,7 @@ public class ApiServlet extends HttpServlet {
                 CallContext.register(accountMgr.getSystemUser(), accountMgr.getSystemAccount());
             }
 
-            if (apiServer.verifyRequest(params, userId)) {
+            if (apiServer.verifyRequest(params, userId, remoteAddress)) {
                 auditTrailSb.insert(0, "(userId=" + CallContext.current().getCallingUserId() + " accountId=" + CallContext.current().getCallingAccount().getId() +
                         " sessionId=" + (session != null ? session.getId() : null) + ")");
 
@@ -332,15 +342,15 @@ public class ApiServlet extends HttpServlet {
     }
 
     //This method will try to get login IP of user even if servlet is behind reverseProxy or loadBalancer
-    static String getClientAddress(final HttpServletRequest request) {
+    static InetAddress getClientAddress(final HttpServletRequest request) throws UnknownHostException {
         for(final String header : s_clientAddressHeaders) {
             final String ip = getCorrectIPAddress(request.getHeader(header));
             if (ip != null) {
-                return ip;
+                return InetAddress.getByName(ip);
             }
         }
 
-        return request.getRemoteAddr();
+        return InetAddress.getByName(request.getRemoteAddr());
     }
 
     private static String getCorrectIPAddress(String ip) {

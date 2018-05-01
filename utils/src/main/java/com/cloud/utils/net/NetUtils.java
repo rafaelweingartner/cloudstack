@@ -23,6 +23,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.InterfaceAddress;
 import java.net.NetworkInterface;
@@ -479,10 +481,8 @@ public class NetUtils {
     public static String long2Mac(final long macAddress) {
         final StringBuilder result = new StringBuilder(17);
         try (Formatter formatter = new Formatter(result)) {
-            formatter.format("%02x:%02x:%02x:%02x:%02x:%02x",
-                    macAddress >> 40 & 0xff, macAddress >> 32 & 0xff,
-                    macAddress >> 24 & 0xff, macAddress >> 16 & 0xff,
-                    macAddress >> 8 & 0xff, macAddress & 0xff);
+            formatter.format("%02x:%02x:%02x:%02x:%02x:%02x", macAddress >> 40 & 0xff, macAddress >> 32 & 0xff, macAddress >> 24 & 0xff, macAddress >> 16 & 0xff, macAddress >> 8 & 0xff,
+                        macAddress & 0xff);
         }
         return result.toString();
     }
@@ -516,7 +516,7 @@ public class NetUtils {
             return false;
         } else {
             final InetAddress ip = parseIpAddress(ipAddress);
-            if(ip != null) {
+            if (ip != null) {
                 return ip.isSiteLocalAddress();
             }
             return false;
@@ -541,7 +541,7 @@ public class NetUtils {
 
     public static boolean is31PrefixCidr(final String cidr) {
         final boolean isValidCird = isValidCIDR(cidr);
-        if (isValidCird){
+        if (isValidCird) {
             final String[] cidrPair = cidr.split("\\/");
             final String cidrSize = cidrPair[1];
 
@@ -888,7 +888,7 @@ public class NetUtils {
         }
         final String[] cidrPair = cidr.split("\\/");
         if (cidrPair.length != 2) {
-            throw new CloudRuntimeException("cidr is not formatted correctly: "+ cidr);
+            throw new CloudRuntimeException("cidr is not formatted correctly: " + cidr);
         }
         final String cidrAddress = cidrPair[0];
         final String cidrSize = cidrPair[1];
@@ -916,7 +916,7 @@ public class NetUtils {
         } catch (final NumberFormatException e) {
             throw new CloudRuntimeException("cidrsize is not a valid int: " + cidrSize, e);
         }
-        if(cidrSizeNum > 32 || cidrSizeNum < 0) {// assuming IPv4
+        if (cidrSizeNum > 32 || cidrSizeNum < 0) {// assuming IPv4
             throw new CloudRuntimeException("cidr size out of range: " + cidrSizeNum);
         }
         return cidrSizeNum;
@@ -1152,7 +1152,7 @@ public class NetUtils {
             return false;
         }
 
-        for (String block: allowedNetBlocks) {
+        for (String block : allowedNetBlocks) {
             if (isNetworkAWithinNetworkB(cidr, block)) {
                 return true;
             }
@@ -1179,7 +1179,7 @@ public class NetUtils {
             final long shift = MAX_CIDR - (cidrALong[1] > cidrBLong[1] ? cidrBLong[1] : cidrALong[1]);
             return cidrALong[0] >> shift == cidrBLong[0] >> shift;
         } catch (CloudRuntimeException e) {
-            s_logger.error(e.getLocalizedMessage(),e);
+            s_logger.error(e.getLocalizedMessage(), e);
         }
         return false;
     }
@@ -1305,7 +1305,7 @@ public class NetUtils {
                 return null;
             }
         }
-        if( resultAddr != null) {
+        if (resultAddr != null) {
             final IPv6Address ip = IPv6Address.fromInetAddress(resultAddr);
             return ip.toString();
         }
@@ -1434,7 +1434,7 @@ public class NetUtils {
         }
     }
 
-    public static String standardizeIp6Cidr(final String ip6Cidr){
+    public static String standardizeIp6Cidr(final String ip6Cidr) {
         try {
             return IPv6Network.fromString(ip6Cidr).toString();
         } catch (final IllegalArgumentException ex) {
@@ -1573,13 +1573,62 @@ public class NetUtils {
         }
         return false;
     }
-    public static boolean isNetworkorBroadcastIP(String ip, String netmask){
-        String cidr = getCidrFromGatewayAndNetmask(ip,netmask);
+
+    public static boolean isNetworkorBroadcastIP(String ip, String netmask) {
+        String cidr = getCidrFromGatewayAndNetmask(ip, netmask);
         final SubnetUtils subnetUtils = new SubnetUtils(cidr);
         subnetUtils.setInclusiveHostCount(false);
         final boolean isInRange = subnetUtils.getInfo().isInRange(ip);
         return !isInRange;
     }
 
+    public static boolean isIpInCidrList(InetAddress address, String[] cidrlist) {
+        boolean match = false;
+
+        for (String cidr : cidrlist) {
+            try {
+                if (address instanceof Inet6Address && isValidIp6Cidr(cidr)) {
+                    if (isIp6InNetwork(IPv6Address.fromInetAddress(address), IPv6Network.fromString(cidr))) {
+                        match = true;
+                        break;
+                    }
+                } else if (address instanceof Inet4Address && isValidCIDR(cidr)) {
+                    if (NetUtils.isIpWithInCidrRange(address.getHostAddress(), cidr)) {
+                        match = true;
+                        break;
+                    }
+                }
+            } catch (IllegalArgumentException e) {
+                continue;
+            }
+        }
+        return match;
+    }
+
+    public static boolean isIpWithInCidrRange(final String ipAddress, final String cidr) {
+        if (!isValidIp(ipAddress)) {
+            return false;
+        }
+        if (!isValidCIDR(cidr)) {
+            return false;
+        }
+
+        // check if the gatewayip is the part of the ip range being added.
+        // RFC 3021 - 31-Bit Prefixes on IPv4 Point-to-Point Links
+        //     GW              Netmask         Stat IP        End IP
+        // 192.168.24.0 - 255.255.255.254 - 192.168.24.0 - 192.168.24.1
+        // https://tools.ietf.org/html/rfc3021
+        // Added by Wilder Rodrigues
+        final SubnetUtils subnetUtils = new SubnetUtils(cidr);
+        subnetUtils.setInclusiveHostCount(true);
+
+        final boolean isInRange = subnetUtils.getInfo().isInRange(ipAddress);
+
+        return isInRange;
+    }
+
+    public static boolean isIp6InNetwork(final IPv6Address ip, final IPv6Network network) {
+        return network.contains(ip);
+    }
 
 }

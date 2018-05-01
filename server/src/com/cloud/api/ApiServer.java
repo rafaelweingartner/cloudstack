@@ -16,47 +16,47 @@
 // under the License.
 package com.cloud.api;
 
-import com.cloud.api.dispatch.DispatchChainFactory;
-import com.cloud.api.dispatch.DispatchTask;
-import com.cloud.api.response.ApiResponseSerializer;
-import com.cloud.configuration.Config;
-import com.cloud.domain.Domain;
-import com.cloud.domain.DomainVO;
-import com.cloud.domain.dao.DomainDao;
-import com.cloud.event.ActionEventUtils;
-import com.cloud.event.EventCategory;
-import com.cloud.event.EventTypes;
-import com.cloud.exception.AccountLimitException;
-import com.cloud.exception.CloudAuthenticationException;
-import com.cloud.exception.InsufficientCapacityException;
-import com.cloud.exception.InvalidParameterValueException;
-import com.cloud.exception.PermissionDeniedException;
-import com.cloud.exception.RequestLimitException;
-import com.cloud.exception.ResourceAllocationException;
-import com.cloud.exception.ResourceUnavailableException;
-import com.cloud.user.Account;
-import com.cloud.user.AccountManager;
-import com.cloud.user.DomainManager;
-import com.cloud.user.User;
-import com.cloud.user.UserAccount;
-import com.cloud.user.UserVO;
-import com.cloud.utils.ConstantTimeComparator;
-import com.cloud.utils.HttpUtils;
-import com.cloud.utils.NumbersUtil;
-import com.cloud.utils.Pair;
-import com.cloud.utils.ReflectUtil;
-import com.cloud.utils.StringUtils;
-import com.cloud.utils.component.ComponentContext;
-import com.cloud.utils.component.ManagerBase;
-import com.cloud.utils.component.PluggableService;
-import com.cloud.utils.concurrency.NamedThreadFactory;
-import com.cloud.utils.db.EntityManager;
-import com.cloud.utils.db.SearchCriteria;
-import com.cloud.utils.db.TransactionLegacy;
-import com.cloud.utils.db.UUIDManager;
-import com.cloud.utils.exception.CloudRuntimeException;
-import com.cloud.utils.exception.ExceptionProxyObject;
-import com.google.gson.reflect.TypeToken;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InterruptedIOException;
+import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
+import java.security.SecureRandom;
+import java.security.Security;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TimeZone;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import javax.inject.Inject;
+import javax.naming.ConfigurationException;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
 import org.apache.cloudstack.acl.APIChecker;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiConstants;
@@ -97,6 +97,7 @@ import org.apache.cloudstack.api.response.CreateCmdResponse;
 import org.apache.cloudstack.api.response.ExceptionResponse;
 import org.apache.cloudstack.api.response.ListResponse;
 import org.apache.cloudstack.api.response.LoginCmdResponse;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
 import org.apache.cloudstack.framework.config.impl.ConfigurationVO;
@@ -142,45 +143,48 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import javax.inject.Inject;
-import javax.naming.ConfigurationException;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.lang.reflect.Type;
-import java.lang.reflect.Field;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
-import java.security.SecureRandom;
-import java.security.Security;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TimeZone;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.cloud.api.dispatch.DispatchChainFactory;
+import com.cloud.api.dispatch.DispatchTask;
+import com.cloud.api.response.ApiResponseSerializer;
+import com.cloud.configuration.Config;
+import com.cloud.domain.Domain;
+import com.cloud.domain.DomainVO;
+import com.cloud.domain.dao.DomainDao;
+import com.cloud.event.ActionEventUtils;
+import com.cloud.event.EventCategory;
+import com.cloud.event.EventTypes;
+import com.cloud.exception.AccountLimitException;
+import com.cloud.exception.CloudAuthenticationException;
+import com.cloud.exception.InsufficientCapacityException;
+import com.cloud.exception.InvalidParameterValueException;
+import com.cloud.exception.PermissionDeniedException;
+import com.cloud.exception.RequestLimitException;
+import com.cloud.exception.ResourceAllocationException;
+import com.cloud.exception.ResourceUnavailableException;
+import com.cloud.user.Account;
+import com.cloud.user.AccountManager;
+import com.cloud.user.DomainManager;
+import com.cloud.user.User;
+import com.cloud.user.UserAccount;
+import com.cloud.user.UserVO;
+import com.cloud.utils.ConstantTimeComparator;
+import com.cloud.utils.HttpUtils;
+import com.cloud.utils.NumbersUtil;
+import com.cloud.utils.Pair;
+import com.cloud.utils.ReflectUtil;
+import com.cloud.utils.StringUtils;
+import com.cloud.utils.component.ComponentContext;
+import com.cloud.utils.component.ManagerBase;
+import com.cloud.utils.component.PluggableService;
+import com.cloud.utils.concurrency.NamedThreadFactory;
+import com.cloud.utils.db.EntityManager;
+import com.cloud.utils.db.SearchCriteria;
+import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.utils.db.UUIDManager;
+import com.cloud.utils.exception.CloudRuntimeException;
+import com.cloud.utils.exception.ExceptionProxyObject;
+import com.cloud.utils.net.NetUtils;
+import com.google.gson.reflect.TypeToken;
 
 @Component
 public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiServerService {
@@ -248,8 +252,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         AsyncJob job = eventInfo.first();
         String jobEvent = eventInfo.second();
 
-        if (s_logger.isTraceEnabled())
+        if (s_logger.isTraceEnabled()) {
             s_logger.trace("Handle asyjob publish event " + jobEvent);
+        }
 
         EventBus eventBus = null;
         try {
@@ -275,11 +280,13 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
             if (eventTypeObj != null) {
                 cmdEventType = eventTypeObj;
 
-                if (s_logger.isDebugEnabled())
+                if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Retrieved cmdEventType from job info: " + cmdEventType);
+                }
             } else {
-                if (s_logger.isDebugEnabled())
+                if (s_logger.isDebugEnabled()) {
                     s_logger.debug("Unable to locate cmdEventType marker in job info. publish as unknown event");
+                }
             }
         }
         // For some reason, the instanceType / instanceId are not abstract, which means we may get null values.
@@ -657,8 +664,9 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 objectUuid = createCmd.getEntityUuid();
                 params.put("id", objectId.toString());
                 Class entityClass = EventTypes.getEntityClassForEvent(createCmd.getEventType());
-                if (entityClass != null)
+                if (entityClass != null) {
                     ctx.putContextParameter(entityClass, objectUuid);
+                }
             } else {
                 // Extract the uuid before params are processed and id reflects internal db id
                 objectUuid = params.get(ApiConstants.ID);
@@ -798,7 +806,7 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     }
 
     @Override
-    public boolean verifyRequest(final Map<String, Object[]> requestParameters, final Long userId) throws ServerApiException {
+    public boolean verifyRequest(final Map<String, Object[]> requestParameters, final Long userId, InetAddress remoteAddress) throws ServerApiException {
         try {
             String apiKey = null;
             String secretKey = null;
@@ -815,23 +823,16 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
 
             // if userId not null, that mean that user is logged in
             if (userId != null) {
-                final User user = ApiDBUtils.findUserById(userId);
+                User user = ApiDBUtils.findUserById(userId);
 
-                try {
-                    checkCommandAvailable(user, commandName);
-                } catch (final RequestLimitException ex) {
-                    s_logger.debug(ex.getMessage());
-                    throw new ServerApiException(ApiErrorCode.API_LIMIT_EXCEED, ex.getMessage());
-                } catch (final PermissionDeniedException ex) {
-                    s_logger.debug("The user with id:" + userId + " is not allowed to request the API command or the API command does not exist: " + commandName);
-                    throw new ServerApiException(ApiErrorCode.UNSUPPORTED_ACTION_ERROR, "The user is not allowed to request the API command or the API command does not exist");
-                }
-                return true;
+                return commandAvailable(remoteAddress, commandName, user);
             } else {
                 // check against every available command to see if the command exists or not
                 if (!s_apiNameCmdClassMap.containsKey(commandName) && !commandName.equals("login") && !commandName.equals("logout")) {
-                    s_logger.debug("The user with id:" + userId + " is not allowed to request the API command or the API command does not exist: " + commandName);
-                    throw new ServerApiException(ApiErrorCode.UNSUPPORTED_ACTION_ERROR, "The user is not allowed to request the API command or the API command does not exist");
+                    String errorMessage = "The given command " + commandName + " either does not exist, is not available for user, or not available from ip address '" + remoteAddress.getHostAddress()
+                    + "'.";
+                    s_logger.debug(errorMessage);
+                    return false;
                 }
             }
 
@@ -919,15 +920,8 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
                 return false;
             }
 
-            try {
-                checkCommandAvailable(user, commandName);
-            } catch (final RequestLimitException ex) {
-                s_logger.debug(ex.getMessage());
-                throw new ServerApiException(ApiErrorCode.API_LIMIT_EXCEED, ex.getMessage());
-            } catch (final PermissionDeniedException ex) {
-                s_logger.debug("The given command:" + commandName + " does not exist or it is not available for user");
-                throw new ServerApiException(ApiErrorCode.UNSUPPORTED_ACTION_ERROR, "The given command:" + commandName + " does not exist or it is not available for user with id:"
-                        + userId);
+            if (!commandAvailable(remoteAddress, commandName, user)) {
+                return false;
             }
 
             // verify secret key exists
@@ -962,13 +956,28 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         return false;
     }
 
+    private boolean commandAvailable(final InetAddress remoteAddress, final String commandName, final User user) {
+        try {
+            checkCommandAvailable(user, commandName, remoteAddress);
+        } catch (final RequestLimitException ex) {
+            s_logger.debug(ex.getMessage());
+            throw new ServerApiException(ApiErrorCode.API_LIMIT_EXCEED, ex.getMessage());
+        } catch (final PermissionDeniedException ex) {
+            final String errorMessage = "The given command '" + commandName + "' either does not exist, is not available" + " for user, or not available from ip address '" + remoteAddress + "'.";
+            s_logger.debug(errorMessage);
+            return false;
+        }
+        return true;
+    }
+
     @Override
     public Long fetchDomainId(final String domainUUID) {
         final Domain domain = domainMgr.getDomain(domainUUID);
-        if (domain != null)
+        if (domain != null) {
             return domain.getId();
-        else
+        } else {
             return null;
+        }
     }
 
     private ResponseObject createLoginResponse(HttpSession session) {
@@ -1113,9 +1122,21 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
         return true;
     }
 
-    private void checkCommandAvailable(final User user, final String commandName) throws PermissionDeniedException {
+    private void checkCommandAvailable(final User user, final String commandName, InetAddress remoteAddress) throws PermissionDeniedException {
         if (user == null) {
             throw new PermissionDeniedException("User is null for role based API access check for command" + commandName);
+        }
+
+        final Account account = accountMgr.getAccount(user.getAccountId());
+        final String accessAllowedCidrs = ApiServiceConfiguration.ApiAllowedSourceCidrList.valueIn(account.getId()).replaceAll("\\s", "");
+        final Boolean apiSourceCidrChecksEnabled = ApiServiceConfiguration.ApiSourceCidrChecksEnabled.value();
+
+        if (apiSourceCidrChecksEnabled) {
+            s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + accessAllowedCidrs);
+            if (!NetUtils.isIpInCidrList(remoteAddress, accessAllowedCidrs.split(","))) {
+                s_logger.warn("Request by account '" + account.toString() + "' was denied since " + remoteAddress + " does not match " + accessAllowedCidrs);
+                throw new PermissionDeniedException("Calls for domain '" + account.getAccountName() + "' are not allowed from ip address '" + remoteAddress.getHostAddress());
+            }
         }
 
         for (final APIChecker apiChecker : apiAccessCheckers) {
@@ -1126,11 +1147,11 @@ public class ApiServer extends ManagerBase implements HttpRequestHandler, ApiSer
     @Override
     public Class<?> getCmdClass(String cmdName) {
         List<Class<?>> cmdList = s_apiNameCmdClassMap.get(cmdName);
-        if (cmdList == null || cmdList.size() == 0)
+        if (cmdList == null || cmdList.size() == 0) {
             return null;
-        else if (cmdList.size() == 1)
+        } else if (cmdList.size() == 1) {
             return cmdList.get(0);
-        else {
+        } else {
             // determine the cmd class based on calling context
             ResponseView view = ResponseView.Restricted;
             if (CallContext.current() != null

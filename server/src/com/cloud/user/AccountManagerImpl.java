@@ -53,6 +53,7 @@ import org.apache.cloudstack.api.command.admin.account.UpdateAccountCmd;
 import org.apache.cloudstack.api.command.admin.user.DeleteUserCmd;
 import org.apache.cloudstack.api.command.admin.user.RegisterCmd;
 import org.apache.cloudstack.api.command.admin.user.UpdateUserCmd;
+import org.apache.cloudstack.config.ApiServiceConfiguration;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.orchestration.service.NetworkOrchestrationService;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
@@ -2130,6 +2131,24 @@ public class AccountManagerImpl extends ManagerBase implements AccountManager, M
                 return null;
             }
 
+            // We authenticated successfully by now, let's check if we are allowed to login from the ip address the reqest comes from
+            final Account account = getAccount(user.getAccountId());
+            final DomainVO domain = (DomainVO)_domainMgr.getDomain(account.getDomainId());
+
+            // Get the CIDRs from where this account is allowed to make calls
+            final String accessAllowedCidrs = ApiServiceConfiguration.ApiAllowedSourceCidrList.valueIn(account.getId()).replaceAll("\\s", "");
+            final Boolean ApiSourceCidrChecksEnabled = ApiServiceConfiguration.ApiSourceCidrChecksEnabled.value();
+
+            if (ApiSourceCidrChecksEnabled) {
+                s_logger.debug("CIDRs from which account '" + account.toString() + "' is allowed to perform API calls: " + accessAllowedCidrs);
+
+                // Block when is not in the list of allowed IPs
+                if (!NetUtils.isIpInCidrList(loginIpAddress, accessAllowedCidrs.split(","))) {
+                    s_logger.warn("Request by account '" + account.toString() + "' was denied since " + loginIpAddress.toString().replaceAll("/", "") + " does not match " + accessAllowedCidrs);
+                    throw new CloudAuthenticationException("Failed to authenticate user '" + username + "' in domain '" + domain.getPath() + "' from ip "
+                            + loginIpAddress.toString().replaceAll("/", "") + "; please provide valid credentials");
+                }
+            }
             if (s_logger.isDebugEnabled()) {
                 s_logger.debug("User: " + username + " in domain " + domainId + " has successfully logged in");
             }

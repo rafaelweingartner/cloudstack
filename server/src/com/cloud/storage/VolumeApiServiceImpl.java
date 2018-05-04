@@ -1250,6 +1250,7 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
             if (volume.getState() == Volume.State.Allocated) {
                 _volsDao.remove(volumeId);
                 stateTransitTo(volume, Volume.Event.DestroyRequested);
+                _resourceLimitMgr.recalculateResourceCount(volume.getAccountId(), volume.getDomainId(), ResourceType.primary_storage.getOrdinal());
                 return true;
             }
             // expunge volume from primary if volume is on primary

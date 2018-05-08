@@ -19,6 +19,7 @@ package com.cloud.storage;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -2023,9 +2024,8 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         if ((destPool.isShared() && newDiskOffering.getUseLocalStorage()) || destPool.isLocal() && newDiskOffering.isShared()) {
             throw new InvalidParameterValueException("You cannot move the volume to a shared storage and assing a disk offering for local storage and vice versa.");
         }
-        String storageTags = getStoragePoolTags(destPool);
-        if (!StringUtils.areTagsEqual(storageTags, newDiskOffering.getTags())) {
-            throw new InvalidParameterValueException(String.format("Target Storage [id=%s] tags [%s] does not match new disk offering [id=%s] tags [%s].", destPool.getUuid(), storageTags,
+        if (!doesTargetStorageSupportNewDiskOffering(destPool, newDiskOffering)) {
+            throw new InvalidParameterValueException(String.format("Target Storage [id=%s] tags [%s] does not match new disk offering [id=%s] tags [%s].", destPool.getUuid(), getStoragePoolTags(destPool),
                     newDiskOffering.getUuid(), newDiskOffering.getTags()));
         }
         if (vol.getSize() != newDiskOffering.getDiskSize()) {
@@ -2037,7 +2037,24 @@ public class VolumeApiServiceImpl extends ManagerBase implements VolumeApiServic
         s_logger.info(String.format("Changing disk offering to [uuid=%s] while migrating volume [uuid=%s, name=%s].", newDiskOffering.getUuid(), vol.getUuid(), vol.getName()));
     }
 
-    private String getStoragePoolTags(StoragePool destPool) {
+    protected boolean doesTargetStorageSupportNewDiskOffering(StoragePool destPool, DiskOfferingVO newDiskOffering) {
+        String newDiskOfferingTags = newDiskOffering.getTags();
+        boolean isnewDiskOfferingTagsBlank = org.apache.commons.lang.StringUtils.isBlank(newDiskOfferingTags);
+        if (isnewDiskOfferingTagsBlank) {
+            return true;
+        }
+        String storageTags = getStoragePoolTags(destPool);
+        boolean isStorageTagsBlank = org.apache.commons.lang.StringUtils.isBlank(storageTags);
+        if (isStorageTagsBlank) {
+            return false;
+        }
+        String[] storageTagsAsStringArray = org.apache.commons.lang.StringUtils.split(storageTags, ",");
+        String[] newDiskOfferingTagsAsStringArray = org.apache.commons.lang.StringUtils.split(newDiskOfferingTags, ",");
+
+        return CollectionUtils.isSubCollection(Arrays.asList(newDiskOfferingTagsAsStringArray), Arrays.asList(storageTagsAsStringArray));
+    }
+
+    protected String getStoragePoolTags(StoragePool destPool) {
         List<StoragePoolDetailVO> storagePoolDetails = storagePoolDetailsDao.listDetails(destPool.getId());
         if (CollectionUtils.isEmpty(storagePoolDetails)) {
             return null;

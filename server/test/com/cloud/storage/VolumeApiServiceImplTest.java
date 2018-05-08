@@ -32,23 +32,9 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
-import com.cloud.serializer.GsonHelper;
-import com.cloud.user.User;
-import com.cloud.vm.UserVmManager;
-import com.cloud.vm.VirtualMachine;
-import junit.framework.Assert;
-import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
 import org.apache.cloudstack.acl.ControlledEntity;
 import org.apache.cloudstack.acl.SecurityChecker.AccessType;
+import org.apache.cloudstack.api.command.user.volume.CreateVolumeCmd;
 import org.apache.cloudstack.api.command.user.volume.DetachVolumeCmd;
 import org.apache.cloudstack.context.CallContext;
 import org.apache.cloudstack.engine.subsystem.api.storage.SnapshotInfo;
@@ -61,26 +47,40 @@ import org.apache.cloudstack.framework.jobs.dao.AsyncJobJoinMapDao;
 import org.apache.cloudstack.framework.jobs.impl.AsyncJobVO;
 import org.apache.cloudstack.storage.datastore.db.PrimaryDataStoreDao;
 import org.apache.cloudstack.storage.datastore.db.StoragePoolVO;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import com.cloud.exception.InvalidParameterValueException;
 import com.cloud.exception.ResourceAllocationException;
 import com.cloud.hypervisor.Hypervisor.HypervisorType;
+import com.cloud.serializer.GsonHelper;
 import com.cloud.storage.dao.VolumeDao;
 import com.cloud.user.Account;
 import com.cloud.user.AccountManager;
 import com.cloud.user.AccountVO;
+import com.cloud.user.User;
 import com.cloud.user.UserVO;
 import com.cloud.utils.db.TransactionLegacy;
+import com.cloud.vm.UserVmManager;
 import com.cloud.vm.UserVmVO;
+import com.cloud.vm.VirtualMachine;
 import com.cloud.vm.VirtualMachine.State;
 import com.cloud.vm.dao.UserVmDao;
 import com.cloud.vm.dao.VMInstanceDao;
 import com.cloud.vm.snapshot.VMSnapshotVO;
 import com.cloud.vm.snapshot.dao.VMSnapshotDao;
 
+import junit.framework.Assert;
+
 public class VolumeApiServiceImplTest {
     @Inject
-    VolumeApiServiceImpl _svc = new VolumeApiServiceImpl();
+    VolumeApiServiceImpl _svc = Mockito.spy(new VolumeApiServiceImpl());
     @Mock
     VolumeDao _volumeDao;
     @Mock
@@ -146,7 +146,7 @@ public class VolumeApiServiceImplTest {
             // volume of running vm id=1
             VolumeVO volumeOfRunningVm = new VolumeVO("root", 1L, 1L, 1L, 1L, 1L, "root", "root", Storage.ProvisioningType.THIN, 1, null,
                     null, "root", Volume.Type.ROOT);
-            when(_svc._volsDao.findById(1L)).thenReturn(volumeOfRunningVm);
+            Mockito.doReturn(volumeOfRunningVm).when(_volumeDao).findById(1L);
 
             UserVmVO runningVm = new UserVmVO(1L, "vm", "vm", 1, HypervisorType.XenServer, 1L, false,
                     false, 1L, 1L, 1, 1L, null, "vm", null);
@@ -378,7 +378,7 @@ public class VolumeApiServiceImplTest {
 
     @Test
     public void testEmptyGetVolumeNameFromCmd() {
-        when(createVol.getVolumeName()).thenReturn("");
+        Mockito.doReturn("").when(createVol).getVolumeName();
         Assert.assertNotNull(_svc.getVolumeNameFromCommand(createVol));
     }
 
@@ -411,5 +411,83 @@ public class VolumeApiServiceImplTest {
     @After
     public void tearDown() {
         CallContext.unregister();
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingMoreTagsThanStorageTags() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("A,B,C").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("A").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertFalse(result);
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingTagsIsSubSetOfStorageTags() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("A,B,C").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("A,B,C,D,X,Y").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertTrue(result);
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingTagsEmptyAndStorageTagsNotEmpty() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("A,B,C,D,X,Y").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertTrue(result);
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingTagsNotEmptyAndStorageTagsEmpty() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("A").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertFalse(result);
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingTagsEmptyAndStorageTagsEmpty() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertTrue(result);
+    }
+
+    @Test
+    public void doesTargetStorageSupportNewDiskOfferingTestDiskOfferingTagsDifferentFromdStorageTags() {
+        DiskOfferingVO diskOfferingVoMock = Mockito.mock(DiskOfferingVO.class);
+        Mockito.doReturn("A,B").when(diskOfferingVoMock).getTags();
+
+        StoragePool storagePoolMock = Mockito.mock(StoragePool.class);
+        Mockito.doReturn("C,D").when(_svc).getStoragePoolTags(storagePoolMock);
+
+        boolean result = _svc.doesTargetStorageSupportNewDiskOffering(storagePoolMock, diskOfferingVoMock);
+
+        org.junit.Assert.assertFalse(result);
     }
 }

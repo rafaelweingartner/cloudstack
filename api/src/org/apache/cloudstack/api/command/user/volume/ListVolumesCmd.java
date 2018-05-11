@@ -16,9 +16,8 @@
 // under the License.
 package org.apache.cloudstack.api.command.user.volume;
 
-import org.apache.log4j.Logger;
-
 import java.util.List;
+
 import org.apache.cloudstack.acl.RoleType;
 import org.apache.cloudstack.api.APICommand;
 import org.apache.cloudstack.api.ApiCommandJobType;
@@ -34,11 +33,12 @@ import org.apache.cloudstack.api.response.StoragePoolResponse;
 import org.apache.cloudstack.api.response.UserVmResponse;
 import org.apache.cloudstack.api.response.VolumeResponse;
 import org.apache.cloudstack.api.response.ZoneResponse;
+import org.apache.log4j.Logger;
 
 import com.cloud.storage.Volume;
 
 @APICommand(name = "listVolumes", description = "Lists all volumes.", responseObject = VolumeResponse.class, responseView = ResponseView.Restricted, entityType = {Volume.class},
-        requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
+requestHasSensitiveInfo = false, responseHasSensitiveInfo = false)
 public class ListVolumesCmd extends BaseListTaggedResourcesCmd {
     public static final Logger s_logger = Logger.getLogger(ListVolumesCmd.class.getName());
 
@@ -73,12 +73,12 @@ public class ListVolumesCmd extends BaseListTaggedResourcesCmd {
     private Long zoneId;
 
     @Parameter(name = ApiConstants.STORAGE_ID,
-               type = CommandType.UUID,
-               entityType = StoragePoolResponse.class,
-               description = "the ID of the storage pool, available to ROOT admin only",
-               since = "4.3",
-               authorized = {RoleType.Admin})
-    private Long storageId;
+            type = CommandType.STRING,
+            entityType = StoragePoolResponse.class,
+            description = "the ID of the storage pool, available to ROOT admin only",
+            since = "4.3",
+            authorized = {RoleType.Admin})
+    private String storageId;
 
     @Parameter(name = ApiConstants.DISK_OFFERING_ID,
             type = CommandType.UUID,
@@ -126,7 +126,7 @@ public class ListVolumesCmd extends BaseListTaggedResourcesCmd {
         return zoneId;
     }
 
-    public Long getStorageId() {
+    public String getStorageId() {
         return storageId;
     }
 

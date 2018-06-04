@@ -15,6 +15,10 @@
 // specific language governing permissions and limitations
 // under the License.
 (function($, cloudStack) {
+    //The drag and drop function to order ACL rules does not have access to the whole ACL.
+    //Therefore, we store the "state-hash" of the list being displayed for use in the drag and drop function.
+    var accessControlListConsistentyHashForDragAndDropFunction = "";
+    
     var isNumeric = function (n) {
         return !isNaN(parseFloat(n));
     };
@@ -542,7 +546,8 @@
                         data: {
                             id: rule.id,
                             previousaclruleid: previousRuleId, 
-                            nextaclruleid: nextRuleId
+                            nextaclruleid: nextRuleId,
+                            aclconsistencyhash: accessControlListConsistentyHashForDragAndDropFunction
                         },
                         success: function(json) {
                             var pollTimer = setInterval(function() {
@@ -1395,7 +1400,6 @@
                                                 url: createURL('listNetworkACLs&aclid=' + aclListId),
                                                 success: function(json) {
                                                 	var items = json.listnetworkaclsresponse.networkacl;
-                                                	
                                                 	if(items){
                                                 	    items.sort(function(a, b) {
 	                                                        return a.number - b.number;
@@ -1407,6 +1411,11 @@
 	
 	                                                        return acl;
 	                                                    });
+                                                	    var allUuids = '';
+                                                	    items.forEach(function(aclRule){
+                                                	        allUuids += aclRule.id;
+                                                	    });
+                                                	    accessControlListConsistentyHashForDragAndDropFunction = $.md5(allUuids);
                                                 	}
                                                     args.response.success({
                                                         data: items

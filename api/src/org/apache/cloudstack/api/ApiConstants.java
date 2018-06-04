@@ -652,6 +652,7 @@ public class ApiConstants {
     public static final String OVM3_VIP = "ovm3vip";
 
     public static final String ADMIN = "admin";
+    public static final String MOVE_ACL_CONSISTENCY_HASH = "aclconsistencyhash";
 
     public enum HostDetails {
         all, capacity, events, stats, min;

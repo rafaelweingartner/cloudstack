@@ -52,6 +52,9 @@
                         account: {
                             label: 'label.account'
                         },
+                        username: {
+                            label: 'label.username'
+                        },
                         created: {
                             label: 'label.date',
                             converter: cloudStack.converters.toLocalDate
@@ -322,9 +325,17 @@
                                     return true;
                             }
                         },
-
                         account: {
                             label: 'label.account',
+                            isHidden: function(args) {
+                                if (isAdmin() || isDomainAdmin())
+                                    return false;
+                                else
+                                    return true;
+                            }
+                        },
+                        username: {
+                            label: 'label.username',
                             isHidden: function(args) {
                                 if (isAdmin() || isDomainAdmin())
                                     return false;

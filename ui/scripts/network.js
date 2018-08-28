@@ -1611,11 +1611,11 @@
                                                     networkid: args.context.networks[0].id
                                                 },
                                                 dataType: 'json',
-                                                async: true,
+                                                async: false,
                                                 success: function(json) {
                                                     var response = json.listegressfirewallrulesresponse.firewallrule ?
                                                         json.listegressfirewallrulesresponse.firewallrule : [];
-
+                                                    isConfigRulesMsgShown = response.length > 0;
                                                     args.response.success({
                                                         data: $.map(response, function(rule) {
                                                             if (rule.protocol == 'all') {

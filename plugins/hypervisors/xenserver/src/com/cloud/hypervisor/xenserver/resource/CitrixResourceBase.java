@@ -1272,7 +1272,7 @@ public abstract class CitrixResourceBase implements ServerResource, HypervisorRe
         // scaling this VCPU max should
         // be the minumum of
         // recommended value for that template and capacity remaining on host
-
+        s_logger.debug(String.format("Host [%s] supports DMC? [result=%s] -- VM supports DMC [result=%s]", host.getNameLabel(conn), isDmcEnabled(conn, host), vmSpec.isEnableDynamicallyScaleVm()));
         if (isDmcEnabled(conn, host) && vmSpec.isEnableDynamicallyScaleVm()) {
             // scaling is allowed
             vmr.memoryStaticMin = getStaticMin(vmSpec.getOs(), vmSpec.getBootloader() == BootloaderType.CD, vmSpec.getMinRam(), vmSpec.getMaxRam());

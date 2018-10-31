@@ -24,10 +24,10 @@ import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
 
-import com.cloud.agent.api.Command;
 import com.cloud.agent.api.to.DiskTO;
 import com.cloud.agent.api.to.NicTO;
 import com.cloud.agent.api.to.VirtualMachineTO;
+import com.cloud.agent.api.Command;
 import com.cloud.gpu.GPU;
 import com.cloud.network.dao.NetworkDao;
 import com.cloud.network.dao.NetworkVO;
@@ -160,6 +160,8 @@ public abstract class HypervisorGuruBase extends AdapterBase implements Hypervis
         VMInstanceVO vmInstance = _virtualMachineDao.findById(to.getId());
         // check if XStools/VMWare tools are present in the VM and dynamic scaling feature is enabled (per zone/global)
         Boolean isDynamicallyScalable = vmInstance.isDynamicallyScalable() && UserVmManager.EnableDynamicallyScaleVm.valueIn(vm.getDataCenterId());
+        s_logger.debug(
+                String.format("The value of [EnableDynamicallyScaleVm] for vm [%s] is [%s]", vmInstance.getInstanceName(), UserVmManager.EnableDynamicallyScaleVm.valueIn(vm.getDataCenterId())));
         to.setEnableDynamicallyScaleVm(isDynamicallyScalable);
         to.setUuid(vmInstance.getUuid());
 

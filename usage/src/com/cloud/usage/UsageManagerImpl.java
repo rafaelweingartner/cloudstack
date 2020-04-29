@@ -37,6 +37,7 @@ import org.apache.cloudstack.quota.QuotaAlertManager;
 import org.apache.cloudstack.quota.QuotaManager;
 import org.apache.cloudstack.quota.QuotaStatement;
 import org.apache.cloudstack.utils.usage.UsageUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.apache.cloudstack.framework.config.dao.ConfigurationDao;
@@ -980,7 +981,7 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         } else if (isNetworkOfferingEvent(eventType)) {
             createNetworkOfferingEvent(event);
         } else if (isVPNUserEvent(eventType)) {
-            helperVPNUserEvent(event);
+            handleVpnUserEvent(event);
         } else if (isSecurityGroupEvent(eventType)) {
             createSecurityGroupEvent(event);
         } else if (isVmSnapshotEvent(eventType)) {
@@ -1747,45 +1748,75 @@ public class UsageManagerImpl extends ManagerBase implements UsageManager, Runna
         }
     }
 
-    protected void helperVPNUserEvent(UsageEventVO event) {
+    protected void handleVpnUserEvent(UsageEventVO event) {
+        long accountId = event.getAccountId();
 
-        Account acct = _accountDao.findByIdIncludingRemoved(event.getAccountId());
         long zoneId = event.getZoneId();
         long userId = event.getResourceId();
-        List<UsageVPNUserVO> vuVOs = findUsageVPNUsers(acct.getAccountId(), zoneId, userId, acct.getDomainId());
 
-        switch (event.getType()){
-            case EventTypes.EVENT_VPN_USER_ADD:
-                if (vuVOs.size() > 0){
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Wont presist the User: " + userId + " assigned to account: " + event.getAccountId() + " because already exist an entry for this vpn user");
-                    }
-                }else{
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("Creating VPN user: " + userId + " for account: " + event.getAccountId());
-                    }
-                    UsageVPNUserVO vpnUser = new UsageVPNUserVO(zoneId, event.getAccountId(), acct.getDomainId(), userId, event.getResourceName(), event.getCreateDate(), null);
-                    _usageVPNUserDao.persist(vpnUser);
-                }
-                break;
-            case EventTypes.EVENT_VPN_USER_REMOVE:
-                if (vuVOs.size() > 1) {
-                    s_logger.warn("More that one usage entry for vpn user: " + userId + " assigned to account: " + event.getAccountId() + "; marking them all as deleted...");
-                }
-                for (UsageVPNUserVO vuVO : vuVOs) {
-                    if (s_logger.isDebugEnabled()) {
-                        s_logger.debug("deleting vpn user: " + vuVO.getUserId());
-                    }
-                    vuVO.setDeleted(event.getCreateDate()); // there really shouldn't be more than one
-                    _usageVPNUserDao.update(vuVO);
-                }
-                break;
-            default:
-                s_logger.debug("Wont do anything, because the event type isn't ADD or REVOME VPN User");
+        switch (event.getType()) {
+        case EventTypes.EVENT_VPN_USER_ADD:
+            createUsageVpnUser(event);
+            break;
+        case EventTypes.EVENT_VPN_USER_REMOVE:
+            deleteUsageVpnUser(event);
+            break;
+        default:
+            s_logger.debug(String.format("The event [type=%s, zoneId=%s, accountId=%s, userId=%s, resourceName=%s, createDate=%s] is neither of type [%s] nor [%s]",
+                    event.getType(), zoneId, accountId, userId, event.getResourceName(), event.getCreateDate(), EventTypes.EVENT_VPN_USER_ADD, EventTypes.EVENT_VPN_USER_REMOVE));
         }
     }
 
-    private List<UsageVPNUserVO> findUsageVPNUsers(long accountId, long zoneId, long userId, long domainId) {
+    protected void deleteUsageVpnUser(UsageEventVO event) {
+        long userId = event.getResourceId();
+
+        long accountId = event.getAccountId();
+        Account account = _accountDao.findByIdIncludingRemoved(accountId);
+
+        long domainId = account.getDomainId();
+        long zoneId = event.getZoneId();
+        List<UsageVPNUserVO> usageVpnUsers = findUsageVPNUsers(account.getAccountId(), zoneId, userId, domainId);
+
+        if (CollectionUtils.isEmpty(usageVpnUsers)) {
+            s_logger.warn(String.format("No usage entry for vpn user [%s] assigned to account [%s] domain [%s] and zone [%s ]was found.",
+                    userId, accountId, domainId, zoneId));
+        }
+        if (usageVpnUsers.size() > 1) {
+            s_logger.warn(String.format("More that one usage entry for vpn user [%s] assigned to account [%s] domain [%s] and zone [%s]; marking them all as deleted.", userId,
+                    accountId, domainId, zoneId));
+        }
+        for (UsageVPNUserVO vpnUser : usageVpnUsers) {
+            if (s_logger.isDebugEnabled()) {
+                s_logger.debug(String.format("Deleting vpn user [%s] assigned to account [%s] domain [%s] and zone [%s] that was created at [%s].", vpnUser.getUserId(),
+                        vpnUser.getAccountId(), vpnUser.getDomainId(), vpnUser.getZoneId(), vpnUser.getCreated()));
+            }
+            vpnUser.setDeleted(new Date());
+            _usageVPNUserDao.update(vpnUser);
+        }
+    }
+
+    protected void createUsageVpnUser(UsageEventVO event) {
+        long userId = event.getResourceId();
+
+        long accountId = event.getAccountId();
+        Account account = _accountDao.findByIdIncludingRemoved(accountId);
+
+        long domainId = account.getDomainId();
+        long zoneId = event.getZoneId();
+
+        List<UsageVPNUserVO> usageVpnUsers = findUsageVPNUsers(account.getAccountId(), zoneId, userId, domainId);
+
+        if (usageVpnUsers.size() > 0) {
+            s_logger.debug(String.format("We do not need to create the usage VPN user [%s] assigned to account [%s] because it already exists.", userId, accountId));
+        } else {
+            s_logger.debug(String.format("Creating VPN user user [%s] assigned to account [%s] domain [%s], zone [%s], and created at [%s]", userId, accountId, domainId, zoneId,
+                    event.getCreateDate()));
+            UsageVPNUserVO vpnUser = new UsageVPNUserVO(zoneId, accountId, domainId, userId, event.getResourceName(), event.getCreateDate(), null);
+            _usageVPNUserDao.persist(vpnUser);
+        }
+    }
+
+    protected List<UsageVPNUserVO> findUsageVPNUsers(long accountId, long zoneId, long userId, long domainId) {
         SearchCriteria<UsageVPNUserVO> sc = _usageVPNUserDao.createSearchCriteria();
         sc.addAnd("zoneId", SearchCriteria.Op.EQ, zoneId);
         sc.addAnd("accountId", SearchCriteria.Op.EQ, accountId);

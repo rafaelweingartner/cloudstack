@@ -26,13 +26,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import com.cloud.event.EventTypes;
 import com.cloud.event.UsageEventVO;
 import com.cloud.usage.dao.UsageVPNUserDao;
 import com.cloud.user.AccountVO;
 import com.cloud.user.dao.AccountDao;
-import org.mockito.junit.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
 public class UsageManagerImplTest {
@@ -69,11 +69,12 @@ public class UsageManagerImplTest {
     }
 
     @Test
-    public void createUsageVpnUserTestUserExits() {
+    public void createUsageVpnUserTestUserExist() {
         List<UsageVPNUserVO> vpnUsersMock = new ArrayList<UsageVPNUserVO>();
         vpnUsersMock.add(vpnUserMock);
 
         Mockito.doReturn(vpnUsersMock).when(usageManagerImpl).findUsageVpnUsers(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong());
+        Mockito.doReturn(vpnUserMock).when(usageVPNUserDaoMock).persist(Mockito.any(UsageVPNUserVO.class));
 
         usageManagerImpl.createUsageVpnUser(usageEventVOMock, accountMock);
 
@@ -82,7 +83,7 @@ public class UsageManagerImplTest {
     }
 
     @Test
-    public void createUsageVpnUserTestUserDoesNotExits() {
+    public void createUsageVpnUserTestUserDoesNotExist() {
         List<UsageVPNUserVO> vpnUsersMock = new ArrayList<UsageVPNUserVO>();
 
         Mockito.doReturn(vpnUsersMock).when(usageManagerImpl).findUsageVpnUsers(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong());
@@ -99,6 +100,7 @@ public class UsageManagerImplTest {
         List<UsageVPNUserVO> vpnUsersMock = new ArrayList<UsageVPNUserVO>();
 
         Mockito.doReturn(vpnUsersMock).when(usageManagerImpl).findUsageVpnUsers(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong());
+        Mockito.doNothing().when(usageVPNUserDaoMock).update(Mockito.any(UsageVPNUserVO.class));
 
         usageManagerImpl.deleteUsageVpnUser(usageEventVOMock, accountMock);
 

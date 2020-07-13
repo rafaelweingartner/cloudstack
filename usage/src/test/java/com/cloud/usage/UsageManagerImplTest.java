@@ -69,7 +69,7 @@ public class UsageManagerImplTest {
     }
 
     @Test
-    public void createUsageVpnUserTestUserExist() {
+    public void createUsageVpnUserTestUserExit() {
         List<UsageVPNUserVO> vpnUsersMock = new ArrayList<UsageVPNUserVO>();
         vpnUsersMock.add(vpnUserMock);
 
@@ -83,7 +83,7 @@ public class UsageManagerImplTest {
     }
 
     @Test
-    public void createUsageVpnUserTestUserDoesNotExist() {
+    public void createUsageVpnUserTestUserDoesNotExit() {
         List<UsageVPNUserVO> vpnUsersMock = new ArrayList<UsageVPNUserVO>();
 
         Mockito.doReturn(vpnUsersMock).when(usageManagerImpl).findUsageVpnUsers(Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong(), Mockito.anyLong());
@@ -165,5 +165,37 @@ public class UsageManagerImplTest {
 
         Mockito.verify(usageManagerImpl, Mockito.never()).createUsageVpnUser(usageEventVOMock,accountMock);
         Mockito.verify(usageManagerImpl, Mockito.never()).deleteUsageVpnUser(usageEventVOMock, accountMock);
+    }
+
+    @Test
+    public void handleVmSnapshotUserEventCreateSnapshotTest() {
+        Mockito.when(this.usageEventVOMock.getType()).thenReturn(EventTypes.EVENT_VM_SNAPSHOT_CREATE);
+        Mockito.doNothing().when(this.usageManagerImpl).createUsageVMSnapshot(usageEventVOMock);
+
+        this.usageManagerImpl.handleVMSnapshotEvent(usageEventVOMock);
+
+        Mockito.verify(usageManagerImpl).createUsageVMSnapshot(usageEventVOMock);
+        Mockito.verify(usageManagerImpl, Mockito.never()).deleteUsageVMSnapshot(usageEventVOMock);
+    }
+
+    @Test
+    public void handleVmSnapshotEventTestEventIsNeitherCreateNorDelete() {
+        Mockito.when(this.usageEventVOMock.getType()).thenReturn("VPN.USER.UPDATE");
+
+        this.usageManagerImpl.handleVMSnapshotEvent(usageEventVOMock);
+
+        Mockito.verify(usageManagerImpl, Mockito.never()).createUsageVMSnapshot(usageEventVOMock);
+        Mockito.verify(usageManagerImpl, Mockito.never()).deleteUsageVMSnapshot(usageEventVOMock);
+    }
+
+    @Test
+    public void handleVmSnapshotEventDeleteSnapshotTest() {
+        Mockito.when(this.usageEventVOMock.getType()).thenReturn(EventTypes.EVENT_VM_SNAPSHOT_DELETE);
+        Mockito.doNothing().when(this.usageManagerImpl).deleteUsageVMSnapshot(usageEventVOMock);
+
+        this.usageManagerImpl.handleVMSnapshotEvent(usageEventVOMock);
+
+        Mockito.verify(usageManagerImpl, Mockito.never()).createUsageVMSnapshot(usageEventVOMock);
+        Mockito.verify(usageManagerImpl).deleteUsageVMSnapshot(usageEventVOMock);
     }
 }
